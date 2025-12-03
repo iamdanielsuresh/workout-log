@@ -309,6 +309,14 @@ export function ExerciseLogger({
               </button>
             </div>
 
+            {/* Weight comparison */}
+            <div className="w-10">
+              <WeightComparison 
+                current={set.weight} 
+                previous={lastLog?.sets?.[i]?.weight || lastLog?.sets?.[0]?.weight} 
+              />
+            </div>
+
             {/* Remove set button */}
             {sets.length > 1 && (
               <button
@@ -330,20 +338,6 @@ export function ExerciseLogger({
           <Plus className="w-4 h-4" />
           Add Set
         </button>
-      </div>
-    </Card>
-  );
-}
-
-            {/* Weight comparison */}
-            <div className="w-10">
-              <WeightComparison 
-                current={set.weight} 
-                previous={lastLog?.sets?.[i]?.weight || lastLog?.sets?.[0]?.weight} 
-              />
-            </div>
-          </div>
-        ))}
       </div>
     </Card>
   );
