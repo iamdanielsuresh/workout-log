@@ -96,13 +96,25 @@ export const NumberInput = forwardRef(function NumberInput({
 });
 
 /**
- * Textarea component
+ * Textarea component with mobile-friendly keyboard handling
  */
 export const Textarea = forwardRef(function Textarea({
   className = '',
   error,
+  disableAutoEdit = false,
   ...props
 }, ref) {
+  // Props for disabling auto-editing behavior
+  const autoEditProps = disableAutoEdit ? {
+    autoComplete: 'off',
+    autoCorrect: 'off',
+    autoCapitalize: 'none',
+    spellCheck: false,
+    'data-gramm': 'false',
+    'data-gramm_editor': 'false',
+    'data-enable-grammarly': 'false',
+  } : {};
+
   return (
     <textarea
       ref={ref}
@@ -116,6 +128,7 @@ export const Textarea = forwardRef(function Textarea({
         ${error ? 'border-red-500/50 focus:ring-red-500/50' : ''}
         ${className}
       `}
+      {...autoEditProps}
       {...props}
     />
   );

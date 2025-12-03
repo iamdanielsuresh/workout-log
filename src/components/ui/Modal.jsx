@@ -4,6 +4,7 @@ import { Button } from './Button';
 
 /**
  * Modal/Dialog component with focus trap and keyboard support
+ * Enhanced for mobile keyboard handling
  */
 export function Modal({ 
   isOpen, 
@@ -47,11 +48,8 @@ export function Modal({
       }
     };
 
-    // Focus the first focusable element
-    const focusableElements = modalRef.current?.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    focusableElements?.[0]?.focus();
+    // Focus the modal container instead of first element to prevent keyboard issues
+    modalRef.current?.focus();
 
     document.addEventListener('keydown', handleKeyDown);
     
@@ -76,9 +74,17 @@ export function Modal({
     full: 'max-w-[calc(100vw-2rem)]',
   };
 
+  // Prevent backdrop click from closing when interacting with form
+  const handleBackdropClick = (e) => {
+    // Only close if clicking directly on backdrop, not bubbling from children
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -86,22 +92,28 @@ export function Modal({
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" 
-        onClick={onClose}
+        onClick={handleBackdropClick}
         aria-hidden="true"
       />
       
-      {/* Content */}
+      {/* Content - Sheet style on mobile, centered on desktop */}
       <div 
         ref={modalRef}
+        tabIndex={-1}
         className={`
           relative w-full ${sizes[size]}
-          bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl
-          animate-in fade-in zoom-in-95 duration-200
+          bg-gray-900 border border-gray-800 shadow-2xl
+          animate-in fade-in duration-200
+          sm:rounded-2xl sm:zoom-in-95
+          rounded-t-2xl rounded-b-none sm:rounded-b-2xl
+          max-h-[90vh] sm:max-h-[85vh]
+          flex flex-col
+          outline-none
         `}
       >
         {/* Header */}
         {(title || showClose) && (
-          <div className="flex items-center justify-between p-5 border-b border-gray-800">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-800 flex-shrink-0">
             {title && (
               <h3 id="modal-title" className="text-lg font-bold text-gray-100">{title}</h3>
             )}
@@ -117,8 +129,8 @@ export function Modal({
           </div>
         )}
         
-        {/* Body */}
-        <div className="p-5">
+        {/* Body - scrollable */}
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 overscroll-contain">
           {children}
         </div>
       </div>

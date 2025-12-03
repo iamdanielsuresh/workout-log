@@ -277,12 +277,15 @@ Return ONLY valid JSON (no markdown):
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="lg">
-      <div className="p-6 max-h-[85vh] overflow-y-auto">
+      <div className="flex flex-col min-h-0">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <h2 className="text-xl font-bold text-gray-100">Add New Routine</h2>
-          <button onClick={handleClose} className="p-2 hover:bg-gray-800 rounded-lg">
-            <X className="w-5 h-5 text-gray-500" />
+          <button 
+            onClick={handleClose} 
+            className="p-2 hover:bg-gray-800 rounded-xl transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
@@ -292,51 +295,51 @@ Return ONLY valid JSON (no markdown):
             {/* Templates Option */}
             <button
               onClick={() => setMode('templates')}
-              className="w-full p-4 rounded-xl bg-gray-800/50 border-2 border-gray-700 hover:border-emerald-500/50 transition-all text-left group"
+              className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all text-left group"
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20">
+                <div className="p-3 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
                   <ListChecks className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-100 group-hover:text-emerald-400">Choose Template</h3>
+                  <h3 className="font-semibold text-gray-100 group-hover:text-emerald-400 transition-colors">Choose Template</h3>
                   <p className="text-sm text-gray-500">PPL, Upper/Lower, Full Body, Bro Split</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-emerald-400 transition-colors" />
               </div>
             </button>
 
             {/* AI Option */}
             <button
               onClick={() => setMode('ai')}
-              className="w-full p-4 rounded-xl bg-gray-800/50 border-2 border-gray-700 hover:border-purple-500/50 transition-all text-left group"
+              className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-purple-500/50 hover:bg-gray-800/70 transition-all text-left group"
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20">
+                <div className="p-3 rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
                   <Sparkles className="w-6 h-6 text-purple-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-100 group-hover:text-purple-400">AI Generate</h3>
+                  <h3 className="font-semibold text-gray-100 group-hover:text-purple-400 transition-colors">AI Generate</h3>
                   <p className="text-sm text-gray-500">Personalized plan based on your goals</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
               </div>
             </button>
 
             {/* Custom Option */}
             <button
               onClick={() => setMode('custom')}
-              className="w-full p-4 rounded-xl bg-gray-800/50 border-2 border-gray-700 hover:border-blue-500/50 transition-all text-left group"
+              className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-blue-500/50 hover:bg-gray-800/70 transition-all text-left group"
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20">
+                <div className="p-3 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
                   <Plus className="w-6 h-6 text-blue-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-100 group-hover:text-blue-400">Create Custom</h3>
+                  <h3 className="font-semibold text-gray-100 group-hover:text-blue-400 transition-colors">Create Custom</h3>
                   <p className="text-sm text-gray-500">Build your own routine from scratch</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-blue-400 transition-colors" />
               </div>
             </button>
           </div>
@@ -345,7 +348,7 @@ Return ONLY valid JSON (no markdown):
         {/* Templates Selection */}
         {mode === 'templates' && (
           <div className="space-y-4">
-            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} className="mb-4">
+            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm" className="mb-2">
               Back
             </Button>
             <div className="space-y-3">
@@ -353,14 +356,14 @@ Return ONLY valid JSON (no markdown):
                 <button
                   key={template.id}
                   onClick={() => handleSelectTemplate(template.id)}
-                  className="w-full p-4 rounded-xl bg-gray-800/50 border-2 border-gray-700 hover:border-emerald-500/50 transition-all text-left"
+                  className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all text-left"
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-3xl">{template.icon}</span>
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-100">{template.name}</h3>
+                      <h3 className="font-semibold text-gray-100">{template.name}</h3>
                       <p className="text-sm text-gray-500">{template.description}</p>
-                      <span className="text-xs text-emerald-400">{template.frequency}</span>
+                      <span className="text-xs text-emerald-400 font-medium">{template.frequency}</span>
                     </div>
                   </div>
                 </button>
@@ -371,14 +374,14 @@ Return ONLY valid JSON (no markdown):
 
         {/* AI Generation */}
         {mode === 'ai' && !generatedPlan && (
-          <div className="space-y-4">
-            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} className="mb-4">
+          <div className="space-y-5">
+            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm" className="mb-2">
               Back
             </Button>
 
             {/* API Key */}
             {!apiKey && (
-              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl mb-4">
+              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Google AI API Key
                 </label>
@@ -387,6 +390,9 @@ Return ONLY valid JSON (no markdown):
                   value={localApiKey}
                   onChange={(e) => setLocalApiKey(e.target.value)}
                   placeholder="AIza..."
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   Get your key from Google AI Studio
@@ -395,18 +401,19 @@ Return ONLY valid JSON (no markdown):
             )}
 
             {/* Questions */}
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Days per week */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Days per week</label>
+                <label className="block text-sm font-medium text-gray-300 mb-3">Days per week</label>
                 <div className="flex gap-2">
                   {[3, 4, 5, 6].map(d => (
                     <button
                       key={d}
                       onClick={() => setAiQuestions(q => ({ ...q, daysPerWeek: d }))}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         aiQuestions.daysPerWeek === d
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
                       }`}
                     >
                       {d}
@@ -415,17 +422,18 @@ Return ONLY valid JSON (no markdown):
                 </div>
               </div>
 
+              {/* Focus */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Focus</label>
+                <label className="block text-sm font-medium text-gray-300 mb-3">Focus</label>
                 <div className="grid grid-cols-2 gap-2">
                   {['balanced', 'strength', 'hypertrophy', 'upper body', 'lower body'].map(f => (
                     <button
                       key={f}
                       onClick={() => setAiQuestions(q => ({ ...q, focus: f }))}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors capitalize ${
+                      className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all capitalize ${
                         aiQuestions.focus === f
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
                       }`}
                     >
                       {f}
@@ -434,17 +442,18 @@ Return ONLY valid JSON (no markdown):
                 </div>
               </div>
 
+              {/* Session Duration */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Session Duration</label>
-                <div className="flex gap-2">
+                <label className="block text-sm font-medium text-gray-300 mb-3">Session Duration</label>
+                <div className="grid grid-cols-4 gap-2">
                   {['30-45', '45-60', '60-75', '75-90'].map(d => (
                     <button
                       key={d}
                       onClick={() => setAiQuestions(q => ({ ...q, duration: d }))}
-                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
                         aiQuestions.duration === d
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
                       }`}
                     >
                       {d} min
@@ -453,9 +462,10 @@ Return ONLY valid JSON (no markdown):
                 </div>
               </div>
 
+              {/* Equipment */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Equipment</label>
-                <div className="flex gap-2">
+                <label className="block text-sm font-medium text-gray-300 mb-3">Equipment</label>
+                <div className="grid grid-cols-3 gap-2">
                   {[
                     { key: 'full', label: 'Full Gym' },
                     { key: 'minimal', label: 'Minimal' },
@@ -464,10 +474,10 @@ Return ONLY valid JSON (no markdown):
                     <button
                       key={e.key}
                       onClick={() => setAiQuestions(q => ({ ...q, equipment: e.key }))}
-                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
                         aiQuestions.equipment === e.key
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
                       }`}
                     >
                       {e.label}
@@ -476,42 +486,54 @@ Return ONLY valid JSON (no markdown):
                 </div>
               </div>
 
-              {/* Special Notes / Limitations */}
+              {/* Special Notes / Limitations - Enhanced for mobile keyboard */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <AlertCircle className="w-4 h-4 inline mr-2" />
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  <AlertCircle className="w-4 h-4 inline mr-2 text-gray-500" />
                   Anything AI should know?
                 </label>
-                <textarea
-                  value={aiQuestions.specialNotes}
-                  onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
+                <div 
+                  className="relative"
                   onTouchStart={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                  placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
-                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none text-sm"
-                  rows={2}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck="false"
-                />
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <textarea
+                    value={aiQuestions.specialNotes}
+                    onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
+                    placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
+                    className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none text-sm transition-all"
+                    rows={3}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    data-gramm="false"
+                    data-gramm_editor="false"
+                    data-enable-grammarly="false"
+                  />
+                </div>
               </div>
             </div>
 
             {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-lg flex items-center gap-2">
+              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </p>
             )}
 
-            <Button
-              onClick={handleGeneratePlan}
-              loading={generating}
-              className="w-full"
-              icon={Sparkles}
-            >
-              {generating ? 'Generating...' : 'Generate Plan'}
-            </Button>
+            {/* Generate Button - Sticky on mobile */}
+            <div className="pt-2">
+              <Button
+                onClick={handleGeneratePlan}
+                loading={generating}
+                className="w-full"
+                size="lg"
+                icon={Sparkles}
+              >
+                {generating ? 'Generating...' : 'Generate Plan'}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -759,44 +781,51 @@ Return ONLY valid JSON (no markdown):
 
         {/* Custom Plan Builder */}
         {mode === 'custom' && (
-          <div className="space-y-4">
-            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} className="mb-4">
+          <div className="space-y-5">
+            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm" className="mb-2">
               Back
             </Button>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Plan Name *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Plan Name *</label>
               <Input
                 value={customPlan.name}
                 onChange={(e) => setCustomPlan(p => ({ ...p, name: e.target.value }))}
                 placeholder="e.g., Push Day, Upper Body A"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Description</label>
               <Input
                 value={customPlan.desc}
                 onChange={(e) => setCustomPlan(p => ({ ...p, desc: e.target.value }))}
                 placeholder="Brief description of this workout"
+                autoComplete="off"
+                autoCorrect="off"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Exercises</label>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Exercises</label>
               <div className="space-y-3">
                 {customPlan.exercises.map((ex, i) => (
-                  <div key={i} className="p-3 bg-gray-800/50 rounded-xl space-y-2">
+                  <div key={i} className="p-3 bg-gray-800/50 border border-gray-700 rounded-xl space-y-2">
                     <div className="flex items-center gap-2">
                       <Input
                         value={ex.name}
                         onChange={(e) => updateExercise(i, 'name', e.target.value)}
                         placeholder="Exercise name"
                         className="flex-1"
+                        autoComplete="off"
+                        autoCorrect="off"
                       />
                       <button
                         onClick={() => removeExercise(i)}
-                        className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                        className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -809,21 +838,24 @@ Return ONLY valid JSON (no markdown):
                           onChange={(e) => updateExercise(i, 'sets', parseInt(e.target.value) || 3)}
                           placeholder="Sets"
                         />
-                        <span className="text-xs text-gray-500">Sets</span>
+                        <span className="text-xs text-gray-500 mt-1 block">Sets</span>
                       </div>
                       <div className="flex-1">
                         <Input
                           value={ex.range}
                           onChange={(e) => updateExercise(i, 'range', e.target.value)}
                           placeholder="8-12"
+                          autoComplete="off"
                         />
-                        <span className="text-xs text-gray-500">Rep Range</span>
+                        <span className="text-xs text-gray-500 mt-1 block">Rep Range</span>
                       </div>
                     </div>
                     <Input
                       value={ex.tip}
                       onChange={(e) => updateExercise(i, 'tip', e.target.value)}
                       placeholder="Form tip (optional)"
+                      autoComplete="off"
+                      autoCorrect="off"
                     />
                   </div>
                 ))}
@@ -839,12 +871,17 @@ Return ONLY valid JSON (no markdown):
             </div>
 
             {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-lg">{error}</p>
+              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {error}
+              </p>
             )}
 
-            <Button onClick={handleSaveCustomPlan} className="w-full">
-              Save Plan
-            </Button>
+            <div className="pt-2">
+              <Button onClick={handleSaveCustomPlan} className="w-full" size="lg">
+                Save Plan
+              </Button>
+            </div>
           </div>
         )}
       </div>
