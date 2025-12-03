@@ -10,7 +10,10 @@ import {
   getWorkoutsThisWeek,
   getWorkoutsThisMonth,
   getMostWorkedFocus,
-  getWorkoutSummary
+  getWorkoutSummary,
+  calculateOneRepMax,
+  getWeeklyVolume,
+  analyzeStrengthTrends
 } from './workoutStats';
 
 describe('workoutStats', () => {
@@ -253,6 +256,113 @@ describe('workoutStats', () => {
       expect(summary.totalWorkouts).toBe(0);
       expect(summary.currentStreak).toBe(0);
       expect(summary.averageDuration).toBe(0);
+    });
+  });
+
+  describe('calculateOneRepMax', () => {
+    it('calculates 1RM using Epley formula', () => {
+      // 100kg for 1 rep = 100
+      expect(Math.round(calculateOneRepMax(100, 1))).toBe(100);
+      // 100kg for 10 reps = 100 * (1 + 10/30) = 133.33
+      expect(Math.round(calculateOneRepMax(100, 10))).toBe(133);
+    });
+
+    it('returns 0 for invalid inputs', () => {
+      expect(calculateOneRepMax(0, 10)).toBe(0);
+      expect(calculateOneRepMax(100, 0)).toBe(0);
+    });
+  });
+
+  describe('getWeeklyVolume', () => {
+    it('calculates total sets per type for the last 7 days', () => {
+      const today = new Date();
+      const sessions = [
+        {
+          timestamp: today.toISOString(),
+          workout_type: 'Upper Body',
+          exercises: [
+            { sets: [{ weight: 100, reps: 5 }, { weight: 100, reps: 5 }] } // 2 sets
+          ]
+        },
+        {
+          timestamp: today.toISOString(),
+          workout_type: 'Lower Body',
+          exercises: [
+            { sets: [{ weight: 50, reps: 10 }] } // 1 set
+          ]
+        }
+      ];
+      
+      const volume = getWeeklyVolume(sessions);
+      expect(volume['Upper Body']).toBe(2);
+      expect(volume['Lower Body']).toBe(1);
+    });
+
+    it('ignores workouts older than 7 days', () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 8);
+      
+      const sessions = [
+        {
+          timestamp: oldDate.toISOString(),
+          workout_type: 'Upper Body',
+          exercises: [
+            { sets: [{ weight: 100, reps: 5 }] }
+          ]
+        }
+      ];
+      expect(Object.keys(getWeeklyVolume(sessions)).length).toBe(0);
+    });
+  });
+
+  describe('analyzeStrengthTrends', () => {
+    it('identifies improvement in 1RM', () => {
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const sessions = [
+        {
+          timestamp: today.toISOString(),
+          exercises: [
+            { 
+              name: 'Bench Press',
+              sets: [{ weight: 100, reps: 5 }] // 1RM ~117
+            }
+          ]
+        },
+        {
+          timestamp: lastWeek.toISOString(),
+          exercises: [
+            { 
+              name: 'Bench Press',
+              sets: [{ weight: 90, reps: 5 }] // 1RM ~105
+            }
+          ]
+        }
+      ];
+      
+      const trends = analyzeStrengthTrends(sessions);
+      // Keys are lowercased in implementation
+      expect(trends['bench press']).toBeDefined();
+      expect(trends['bench press'].improvement).toBeGreaterThan(0);
+      expect(trends['bench press'].current1RM).toBeGreaterThan(100);
+    });
+
+    it('returns empty object for exercises with insufficient history', () => {
+      const sessions = [
+        {
+          timestamp: new Date().toISOString(),
+          exercises: [
+            { 
+              name: 'New Exercise',
+              sets: [{ weight: 50, reps: 10 }]
+            }
+          ]
+        }
+      ];
+      
+      const trends = analyzeStrengthTrends(sessions);
+      expect(trends['new exercise']).toBeUndefined();
     });
   });
 });

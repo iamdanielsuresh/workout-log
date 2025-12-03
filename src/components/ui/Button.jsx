@@ -72,6 +72,7 @@ export const Button = forwardRef(function Button({
         inline-flex items-center justify-center
         transition-all duration-200
         active:scale-[0.97]
+        select-none
         ${variants[variant]}
         ${sizes[size]}
         ${disabledClass}

@@ -65,11 +65,11 @@ export function useAI(apiKey, enabled = true) {
   }, [apiKey, isAvailable]);
 
   // Suggest weight
-  const suggestWeight = useCallback(async (exerciseName, exerciseHistory, targetReps) => {
+  const suggestWeight = useCallback(async (exerciseName, exerciseHistory, targetReps, userStats) => {
     if (!isAvailable) return null;
     
     try {
-      const suggestion = await aiService.suggestWeight(apiKey, exerciseName, exerciseHistory, targetReps);
+      const suggestion = await aiService.suggestWeight(apiKey, exerciseName, exerciseHistory, targetReps, userStats);
       return suggestion;
     } catch {
       return null;
@@ -77,14 +77,14 @@ export function useAI(apiKey, enabled = true) {
   }, [apiKey, isAvailable]);
 
   // Generate workout summary
-  const generateSummary = useCallback(async (workout, userName) => {
+  const generateSummary = useCallback(async (workout, userStats) => {
     if (!isAvailable) return null;
     
     setLoading(true);
     setError(null);
     
     try {
-      const summary = await aiService.generateWorkoutSummary(apiKey, workout, userName);
+      const summary = await aiService.analyzeWorkoutSession(apiKey, workout, userStats);
       return summary;
     } catch (err) {
       setError(err.message);

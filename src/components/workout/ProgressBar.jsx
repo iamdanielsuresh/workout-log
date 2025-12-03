@@ -5,7 +5,7 @@ export function ProgressBar({ completed, total, showLabel = true }) {
   const percentage = total > 0 ? (completed / total) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 select-none">
       <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden border border-white/5">
         <div
           className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_10px_-2px_rgba(16,185,129,0.5)]"

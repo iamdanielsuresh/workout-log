@@ -22,7 +22,7 @@ export function BottomNavigation({
   if (workoutActive) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-gray-950/80 backdrop-blur-xl border-t border-white/5 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-gray-950/80 backdrop-blur-xl border-t border-white/5 safe-area-bottom select-none">
       <div className="max-w-lg mx-auto px-2">
         <div className="flex items-center justify-around py-2">
           {navItems.map(({ id, icon: Icon, label }) => {
@@ -77,7 +77,7 @@ export function ViewHeader({
   className = ''
 }) {
   return (
-    <header className={`sticky top-0 z-40 backdrop-blur-xl bg-gray-950/90 border-b border-gray-800 safe-area-top ${className}`}>
+    <header className={`sticky top-0 z-40 backdrop-blur-xl bg-gray-950/90 border-b border-gray-800 safe-area-top select-none ${className}`}>
       <div className="px-6 py-4 max-w-lg mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

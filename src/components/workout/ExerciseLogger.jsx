@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, History, Minus, Plus, TrendingUp, TrendingDown, Sparkles, Info, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, History, Minus, Plus, TrendingUp, TrendingDown, Sparkles, Info, Target, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { NumberInput } from '../ui/Input';
 import { sanitizeWeight, sanitizeReps } from '../../utils/sanitize';
@@ -14,6 +14,7 @@ export function ExerciseLogger({
   aiTip,
   onRequestTip,
   onShowInfo,
+  onSuggestWeight,
   aiLoading = false,
   isCompleted = false 
 }) {
@@ -24,6 +25,7 @@ export function ExerciseLogger({
     }));
   });
   const [showTips, setShowTips] = useState(false);
+  const [suggestingWeight, setSuggestingWeight] = useState(false);
 
   const handleChange = (idx, field, value) => {
     // Sanitize input based on field type
@@ -64,6 +66,48 @@ export function ExerciseLogger({
     onUpdate?.(newSets);
   };
 
+  const handleSuggestWeight = async () => {
+    if (!onSuggestWeight || suggestingWeight) return;
+    
+    setSuggestingWeight(true);
+    try {
+      // Parse target reps from range (e.g. "8-12" -> 10)
+      const range = exercise.range || '10';
+      const targetReps = range.includes('-') 
+        ? Math.round((parseInt(range.split('-')[0]) + parseInt(range.split('-')[1])) / 2)
+        : parseInt(range);
+
+      const weight = await onSuggestWeight(targetReps);
+      
+      if (weight) {
+        const newSets = sets.map(set => ({
+          ...set,
+          weight: weight.toString()
+        }));
+        setSets(newSets);
+        onUpdate?.(newSets);
+        if (navigator.vibrate) navigator.vibrate([10, 50, 10]);
+      }
+    } catch (error) {
+      console.error('Error suggesting weight:', error);
+    } finally {
+      setSuggestingWeight(false);
+    }
+  };
+
+  const handleAddSet = () => {
+    const newSets = [...sets, { weight: sets[sets.length - 1]?.weight || '', reps: '' }];
+    setSets(newSets);
+    onUpdate?.(newSets);
+  };
+
+  const handleRemoveSet = (index) => {
+    if (sets.length <= 1) return;
+    const newSets = sets.filter((_, i) => i !== index);
+    setSets(newSets);
+    onUpdate?.(newSets);
+  };
+
   // Check if exercise has detailed tips (from AI-generated plans)
   const hasDetailedTips = exercise.tips && typeof exercise.tips === 'object';
   const quickTip = exercise.tip || exercise.tips?.form?.split('.')[0] || '';
@@ -75,7 +119,7 @@ export function ExerciseLogger({
       className={isCompleted ? 'ring-1 ring-emerald-500/30' : ''}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-800/50 flex justify-between items-start">
+      <div className="p-4 border-b border-gray-800/50 flex justify-between items-start select-none">
         <div className="flex items-start gap-3">
           {isCompleted && (
             <div className="mt-1 p-1 bg-emerald-500/20 rounded-full">
@@ -114,11 +158,25 @@ export function ExerciseLogger({
               Copy Last
             </button>
           )}
+          {onSuggestWeight && lastLog && (
+            <button
+              onClick={handleSuggestWeight}
+              disabled={suggestingWeight}
+              className="text-2xs font-semibold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-lg hover:bg-purple-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
+            >
+              {suggestingWeight ? (
+                <Sparkles className="w-3 h-3 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3" />
+              )}
+              Suggest
+            </button>
+          )}
         </div>
       </div>
 
       {/* Tips Section */}
-      <div className="bg-gray-900/50 p-3 border-b border-gray-800/50 space-y-2">
+      <div className="bg-gray-900/50 p-3 border-b border-gray-800/50 space-y-2 select-none">
         {/* Quick Tip */}
         {quickTip && (
           <div className="flex items-start gap-2">
@@ -195,7 +253,7 @@ export function ExerciseLogger({
       <div className="p-4 space-y-3">
         {sets.map((set, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className={`w-6 text-sm font-display font-bold text-center ${
+            <span className={`w-6 text-sm font-display font-bold text-center select-none ${
               set.weight && set.reps ? 'text-emerald-400' : 'text-gray-600'
             }`}>
               {set.weight && set.reps ? (
@@ -209,7 +267,7 @@ export function ExerciseLogger({
             <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden group focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/50 transition-all">
               <button
                 onClick={() => handleIncrement(i, 'weight', -1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors"
+                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -222,7 +280,7 @@ export function ExerciseLogger({
               />
               <button
                 onClick={() => handleIncrement(i, 'weight', 1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors"
+                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -232,7 +290,7 @@ export function ExerciseLogger({
             <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
               <button
                 onClick={() => handleIncrement(i, 'reps', -1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors"
+                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -245,11 +303,37 @@ export function ExerciseLogger({
               />
               <button
                 onClick={() => handleIncrement(i, 'reps', 1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors"
+                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
               >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Remove set button */}
+            {sets.length > 1 && (
+              <button
+                onClick={() => handleRemoveSet(i)}
+                className="p-2 text-gray-600 hover:text-red-400 transition-colors"
+                aria-label="Remove set"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        {/* Add Set Button */}
+        <button
+          onClick={handleAddSet}
+          className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:text-emerald-400 hover:bg-gray-800/50 rounded-xl border border-dashed border-gray-700 hover:border-emerald-500/30 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          Add Set
+        </button>
+      </div>
+    </Card>
+  );
+}
 
             {/* Weight comparison */}
             <div className="w-10">

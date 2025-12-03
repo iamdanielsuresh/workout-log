@@ -12,7 +12,7 @@ import { ExerciseLogger } from '../workout/ExerciseLogger';
 export function WorkoutView({
   plan, activeLog, history, workoutNote, formatTime,
   aiEnabled, aiTips, aiTipLoading, isSaving,
-  onBack, onFinish, onUpdateLog, onUpdateNote, onRequestTip
+  onBack, onFinish, onUpdateLog, onUpdateNote, onRequestTip, onSuggestWeight
 }) {
   const completedCount = Object.keys(activeLog).filter(name => {
     const log = activeLog[name];
@@ -63,6 +63,7 @@ export function WorkoutView({
             onUpdate={(sets) => onUpdateLog(ex.name, sets)}
             aiTip={aiTips[ex.name]}
             onRequestTip={aiEnabled ? () => onRequestTip(ex.name) : null}
+            onSuggestWeight={aiEnabled ? (targetReps) => onSuggestWeight(ex.name, targetReps) : null}
             aiLoading={aiTipLoading[ex.name]}
             isCompleted={activeLog[ex.name]?.sets?.some(s => s.weight && s.reps)}
           />

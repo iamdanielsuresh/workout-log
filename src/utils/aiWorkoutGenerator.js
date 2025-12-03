@@ -133,25 +133,54 @@ ${specialNotes.trim()}
   // Add user context if available
   let userContextSection = '';
   if (userContext) {
-    const { profile, stats, patterns, weakAreas } = userContext;
+    // Destructure from the new flat context structure
+    const { 
+      experienceLevel, 
+      totalWorkouts, 
+      avgSessionDuration, 
+      avgExercisesPerSession, 
+      muscleGroupDistribution,
+      weakAreas,
+      strengthTrends,
+      weeklyVolume
+    } = userContext;
+    
+    // Format strength trends for the prompt
+    let trendsInfo = '';
+    if (strengthTrends && Object.keys(strengthTrends).length > 0) {
+      const topTrends = Object.entries(strengthTrends)
+        .slice(0, 3)
+        .map(([exercise, data]) => `${exercise}: ${data.improvement > 0 ? '+' : ''}${data.improvement}% (1RM: ${data.current1RM}kg)`);
+      trendsInfo = `\nSTRENGTH TRENDS:\n${topTrends.map(t => `- ${t}`).join('\n')}`;
+    }
+
+    // Format volume info
+    let volumeInfo = '';
+    if (weeklyVolume && Object.keys(weeklyVolume).length > 0) {
+      const topVolume = Object.entries(weeklyVolume)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([group, sets]) => `${group}: ${sets} sets/week`);
+      volumeInfo = `\nCURRENT VOLUME:\n${topVolume.map(v => `- ${v}`).join('\n')}`;
+    }
     
     userContextSection = `
 USER PROFILE:
-- Experience: ${profile?.experienceLevel || 'intermediate'}
-- Age: ${profile?.age || 'not specified'}
-- Training history: ${stats?.totalWorkouts || 0} total workouts
+- Experience: ${experienceLevel || 'intermediate'}
+- Training history: ${totalWorkouts || 0} total workouts
 
 RECENT PATTERNS:
-- Avg exercises per workout: ${patterns?.avgExercisesPerWorkout || 'N/A'}
-- Avg session duration: ${patterns?.avgDurationMins || 'N/A'} minutes
-- Most trained: ${getMostTrained(patterns?.muscleGroupDistribution)}
+- Avg exercises per workout: ${avgExercisesPerSession || 'N/A'}
+- Avg session duration: ${avgSessionDuration || 'N/A'} minutes
+- Most trained: ${getMostTrained(muscleGroupDistribution)}
+${trendsInfo}${volumeInfo}
 
 AREAS TO IMPROVE:
 ${weakAreas?.map(a => `- ${a}`).join('\n') || '- None identified'}
 
 Based on this profile, create a plan that:
 1. Addresses any weak areas identified
-2. Maintains strengths
+2. Maintains strengths shown in trends
 3. Is appropriate for their experience level
 `;
   }

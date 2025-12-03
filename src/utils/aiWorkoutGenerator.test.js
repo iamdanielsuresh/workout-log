@@ -228,19 +228,16 @@ describe('aiWorkoutGenerator', () => {
 
     it('includes user context when provided', () => {
       const userContext = {
-        profile: {
-          experienceLevel: 'beginner',
-          age: 25
+        experienceLevel: 'beginner',
+        totalWorkouts: 10,
+        avgExercisesPerSession: 5,
+        avgSessionDuration: 40,
+        muscleGroupDistribution: { chest: 5, back: 3 },
+        weakAreas: ['Legs', 'Core'],
+        strengthTrends: { 
+          'Bench Press': { improvement: 5, current1RM: 100 } 
         },
-        stats: {
-          totalWorkouts: 10
-        },
-        patterns: {
-          avgExercisesPerWorkout: 5,
-          avgDurationMins: 40,
-          muscleGroupDistribution: { chest: 5, back: 3 }
-        },
-        weakAreas: ['Legs', 'Core']
+        weeklyVolume: { Chest: 10 }
       };
       
       const prompt = buildWorkoutGenerationPrompt({
@@ -254,6 +251,9 @@ describe('aiWorkoutGenerator', () => {
       expect(prompt).toContain('10 total workouts');
       expect(prompt).toContain('Legs');
       expect(prompt).toContain('Core');
+      expect(prompt).toContain('STRENGTH TRENDS');
+      expect(prompt).toContain('Bench Press');
+      expect(prompt).toContain('CURRENT VOLUME');
     });
   });
 });

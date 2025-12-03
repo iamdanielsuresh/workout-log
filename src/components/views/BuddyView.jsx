@@ -49,7 +49,39 @@ export function BuddyView({
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [coachPersona, setCoachPersona] = useState('supportive'); // 'supportive', 'sergeant', 'scientist', 'stoic'
   const chatEndRef = useRef(null);
+
+  // Persona definitions
+  const PERSONAS = {
+    supportive: {
+      name: 'Buddy',
+      icon: Sparkles,
+      prompt: "You're a knowledgeable, friendly gym buddy AI assistant. Be encouraging, practical, and reference their data when relevant."
+    },
+    sergeant: {
+      name: 'Drill Sgt',
+      icon: Flame,
+      prompt: "You are a tough, no-nonsense drill sergeant. Push the user hard, use tough love, demand discipline, and don't accept excuses."
+    },
+    scientist: {
+      name: 'Prof. Lift',
+      icon: Brain,
+      prompt: "You are a sports scientist. Focus on biomechanics, physiology, and data. Be precise, analytical, and cite principles of hypertrophy/strength."
+    },
+    stoic: {
+      name: 'Mentor',
+      icon: Award,
+      prompt: "You are a stoic mentor. Focus on discipline, consistency, and mental fortitude. Keep responses brief, wise, and focused on the long game."
+    }
+  };
+
+  const QUICK_PROMPTS = [
+    "Analyze my week",
+    "Why am I sore?",
+    "Suggest a warm-up",
+    "Give me a challenge"
+  ];
 
   // Check AI availability using centralized config
   const aiAvailability = useMemo(() => 
@@ -203,24 +235,26 @@ export function BuddyView({
     }
   };
 
-  const handleChat = async () => {
-    if (!chatInput.trim() || !aiAvailability.available || chatLoading) return;
+  const handleChat = async (messageOverride = null) => {
+    const messageToSend = messageOverride || chatInput.trim();
+    if (!messageToSend || !aiAvailability.available || chatLoading) return;
     
-    const userMessage = chatInput.trim();
     setChatInput('');
-    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatMessages(prev => [...prev, { role: 'user', content: messageToSend }]);
     setChatLoading(true);
     
     try {
       const contextStr = formatContextForPrompt(userContext);
-      const prompt = `You're a knowledgeable, friendly gym buddy AI assistant.
+      const personaPrompt = PERSONAS[coachPersona].prompt;
+      
+      const prompt = `${personaPrompt}
 
 User Context:
 ${contextStr}
 
-User asks: "${userMessage}"
+User asks: "${messageToSend}"
 
-Give a helpful, concise response (under 60 words). Be encouraging, practical, and reference their data when relevant.`;
+Give a helpful, concise response (under 60 words).`;
       
       const response = await makeAIRequest(prompt);
       setChatMessages(prev => [...prev, { role: 'assistant', content: response }]);
@@ -390,6 +424,32 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
             <p className="text-[10px] text-gray-500">Avg Min</p>
           </div>
         </div>
+
+        {/* Strength Trends */}
+        {userContext.strengthTrends && Object.keys(userContext.strengthTrends).length > 0 && (
+          <div>
+            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider mb-3">Strength Trends</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(userContext.strengthTrends)
+                .sort((a, b) => b[1].improvement - a[1].improvement)
+                .slice(0, 4)
+                .map(([exercise, trend]) => (
+                  <Card key={exercise} hover={false} className="p-3 border-gray-800">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-sm font-bold text-gray-200 truncate capitalize">{exercise}</p>
+                      <span className={`text-xs font-bold ${trend.improvement > 0 ? 'text-emerald-400' : 'text-gray-500'}`}>
+                        {trend.improvement > 0 ? '+' : ''}{trend.improvement}%
+                      </span>
+                    </div>
+                    <div className="flex items-end gap-1">
+                      <p className="text-lg font-display font-bold text-white">{trend.current1RM}</p>
+                      <p className="text-xs text-gray-500 mb-1">kg (1RM)</p>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Motivation Card */}
         <Card 
@@ -575,16 +635,51 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
 
         {/* Chat Section */}
         <div>
-          <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider mb-3">Ask Your Buddy</h3>
-          <Card hover={false} className="overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider">Ask Your Buddy</h3>
+            
+            {/* Persona Selector */}
+            <div className="flex gap-1">
+              {Object.entries(PERSONAS).map(([key, persona]) => {
+                const Icon = persona.icon;
+                const isActive = coachPersona === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setCoachPersona(key)}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      isActive 
+                        ? 'bg-emerald-500 text-gray-950 shadow-lg shadow-emerald-500/20' 
+                        : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                    }`}
+                    title={persona.name}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Card hover={false} className="overflow-hidden flex flex-col h-[400px]">
             {/* Chat Messages */}
-            <div className="h-48 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
               {chatMessages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center">
-                  <MessageCircle className="w-8 h-8 text-gray-700 mb-2" />
-                  <p className="text-gray-500 text-sm">Ask anything about fitness!</p>
-                  <p className="text-gray-600 text-xs mt-1">
-                    "How do I improve my bench press?" • "What should I eat post-workout?"
+                  <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mb-3">
+                    {(() => {
+                      const Icon = PERSONAS[coachPersona].icon;
+                      return <Icon className="w-6 h-6 text-emerald-400" />;
+                    })()}
+                  </div>
+                  <p className="text-gray-300 font-medium mb-1">
+                    {PERSONAS[coachPersona].name} is ready!
+                  </p>
+                  <p className="text-gray-500 text-xs max-w-[200px]">
+                    {coachPersona === 'sergeant' ? "Ready to sweat, recruit?" : 
+                     coachPersona === 'scientist' ? "Let's analyze the data." :
+                     coachPersona === 'stoic' ? "Discipline equals freedom." :
+                     "Ask anything about fitness!"}
                   </p>
                 </div>
               ) : (
@@ -622,24 +717,44 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
                 </>
               )}
             </div>
-            
-            {/* Chat Input */}
-            <div className="p-3 border-t border-gray-800 flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleChat()}
-                placeholder="Ask your AI buddy..."
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-              />
-              <Button
-                onClick={handleChat}
-                disabled={!chatInput.trim() || chatLoading}
-                className="px-4"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+
+            {/* Quick Prompts */}
+            <div className="px-4 pb-2">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {QUICK_PROMPTS.map((prompt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleChat(prompt)}
+                    disabled={chatLoading}
+                    className="flex-shrink-0 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-xs text-gray-300 transition-colors whitespace-nowrap"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Input Area */}
+            <div className="p-3 bg-gray-900/50 border-t border-gray-800">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleChat()}
+                  placeholder={`Ask ${PERSONAS[coachPersona].name}...`}
+                  className="flex-1 bg-gray-800 border-transparent focus:border-emerald-500/50 focus:ring-0 rounded-xl text-sm text-gray-100 placeholder-gray-500"
+                  disabled={chatLoading}
+                />
+                <Button 
+                  size="sm" 
+                  onClick={() => handleChat()} 
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="px-3"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </Card>
         </div>

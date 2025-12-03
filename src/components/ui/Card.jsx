@@ -19,7 +19,7 @@ export const Card = forwardRef(function Card({
   };
 
   const hoverClass = hover && onClick 
-    ? 'hover:bg-gray-800/50 hover:border-white/10 active:scale-[0.98] cursor-pointer' 
+    ? 'hover:bg-gray-800/50 hover:border-white/10 active:scale-[0.98] cursor-pointer select-none' 
     : '';
 
   return (

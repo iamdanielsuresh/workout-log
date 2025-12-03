@@ -47,6 +47,7 @@ import { DEFAULT_WORKOUT_PLANS } from './constants/defaults';
 import { getExerciseTip, verifyApiKey } from './services/ai';
 import { createLogger } from './utils/logger';
 import { getRecommendedWorkout, getNextActionHint, getRecommendationReason } from './utils/workoutRecommendation';
+import { buildUserContextForAI } from './utils/aiContext';
 
 const log = createLogger('App');
 
@@ -97,6 +98,7 @@ export default function App() {
   const [aiTipLoading, setAiTipLoading] = useState({});
 
   const { formatTime, reset: resetTimer } = useTimer(view === 'workout');
+  const { suggestWeight, generateSummary } = useAI(apiKey, aiEnabled);
 
   // Determine if we need onboarding - only after all data is loaded
   const dataLoaded = user && !settingsLoading && !profileLoading && !plansLoading;
@@ -238,6 +240,20 @@ export default function App() {
     setIsSaving(true);
     try {
       const duration = Math.floor((Date.now() - workoutStartTime) / 1000);
+      
+      // Generate AI summary if enabled
+      let aiAnalysis = null;
+      if (aiEnabled && apiKey) {
+        const userContext = buildUserContextForAI({ profile, workouts, streak, plans });
+        // Create a temporary workout object for analysis
+        const workoutForAnalysis = {
+          workoutName: plans[activeWorkoutId]?.name || activeWorkoutId,
+          duration,
+          exercises: exercisesList
+        };
+        aiAnalysis = await generateSummary(workoutForAnalysis, userContext);
+      }
+
       await saveWorkout({
         workoutType: activeWorkoutId,
         workoutName: plans[activeWorkoutId]?.name || activeWorkoutId,
@@ -250,7 +266,8 @@ export default function App() {
       setCompletedWorkoutStats({
         name: plans[activeWorkoutId]?.name || activeWorkoutId,
         duration: duration,
-        exercisesCount: exercisesList.length
+        exercisesCount: exercisesList.length,
+        analysis: aiAnalysis
       });
       setShowCompleteModal(true);
       
@@ -405,11 +422,12 @@ export default function App() {
       {/* Confirm Dialog */}
       <ConfirmDialog
         isOpen={confirmModal.isOpen}
-        title="Leave Workout?"
-        message="You have unsaved exercise data. Are you sure you want to leave?"
+        title="End Workout?"
+        message="You have unsaved progress. If you leave now, your workout data will be lost."
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal({ isOpen: false })}
-        confirmText="Leave"
+        confirmText="End Workout"
+        confirmVariant="danger"
       />
 
       {/* Workout Start Modal */}
@@ -427,10 +445,11 @@ export default function App() {
         workoutName={completedWorkoutStats?.name}
         duration={completedWorkoutStats?.duration}
         exercisesCount={completedWorkoutStats?.exercisesCount}
+        analysis={completedWorkoutStats?.analysis}
         onClose={() => {
           setShowCompleteModal(false);
           setCompletedWorkoutStats(null);
-          setView('home');
+          handleNavigate('home');
         }}
       />
 
@@ -476,6 +495,10 @@ export default function App() {
                 onUpdateLog={(name, sets) => setActiveLog(prev => ({ ...prev, [name]: { name, sets } }))}
                 onUpdateNote={setWorkoutNote}
                 onRequestTip={handleRequestTip}
+                onSuggestWeight={async (exerciseName, targetReps) => {
+                  const userContext = buildUserContextForAI({ profile, workouts, streak, plans });
+                  return await suggestWeight(exerciseName, history[exerciseName]?.sets || [], targetReps, userContext);
+                }}
               />
             )}
 

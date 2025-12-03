@@ -142,16 +142,36 @@ export async function getMotivation(apiKey, context) {
 }
 
 /**
- * Suggest weight for next set based on history
+ * Suggest weight for next set based on history and trends
  */
-export async function suggestWeight(apiKey, exerciseName, exerciseHistory, targetReps) {
+export async function suggestWeight(apiKey, exerciseName, exerciseHistory, targetReps, userStats = null) {
   if (!exerciseHistory || exerciseHistory.length === 0) {
     return null; // No suggestion for first time
   }
 
   const lastSession = exerciseHistory[0];
-  const prompt = `Exercise: ${exerciseName}. Last session: ${lastSession.weight}kg x ${lastSession.reps} reps. Target: ${targetReps} reps.
-  Suggest weight for today (number only, in kg). Consider: if they hit target reps last time, suggest small increase. If they struggled, suggest same or slightly less.`;
+  
+  // Add trend context if available
+  let trendContext = '';
+  if (userStats?.strengthTrends?.[exerciseName.toLowerCase()]) {
+    const trend = userStats.strengthTrends[exerciseName.toLowerCase()];
+    trendContext = `Trend: 1RM has changed by ${trend.improvement}% recently. Current est 1RM: ${trend.current1RM}kg.`;
+  }
+
+  const prompt = `
+  Act as an expert strength coach.
+  Exercise: ${exerciseName}
+  Last session: ${lastSession.weight}kg x ${lastSession.reps} reps
+  Target for today: ${targetReps} reps
+  ${trendContext}
+  
+  Task: Suggest a working weight for today (in kg).
+  Logic:
+  - If they exceeded target reps last time or trend is positive -> Progressive Overload (+2.5-5kg)
+  - If they met target -> Small increase or same weight with better form
+  - If they missed target -> Same weight or slight deload
+  
+  Return ONLY the number (e.g. "60" or "62.5"). No text.`;
 
   try {
     const suggestion = await makeAIRequest(apiKey, prompt);
@@ -163,21 +183,55 @@ export async function suggestWeight(apiKey, exerciseName, exerciseHistory, targe
 }
 
 /**
- * Generate post-workout summary and feedback
+ * Generate detailed post-workout analysis
  */
-export async function generateWorkoutSummary(apiKey, workout, userName = 'User') {
+export async function analyzeWorkoutSession(apiKey, workout, userStats = null) {
   const exerciseSummary = workout.exercises.map(ex => 
     `${ex.name}: ${ex.sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}`
   ).join('; ');
 
-  const prompt = `${userName} just finished: ${workout.workoutName}. Duration: ${Math.round(workout.duration / 60)} min.
-  Exercises: ${exerciseSummary}.
-  Give brief, encouraging feedback (2 sentences max). Highlight one win and one focus for next time.`;
+  // Add PR context if available
+  let prContext = '';
+  if (userStats?.prs) {
+    const newPRs = workout.exercises.filter(ex => {
+      const name = ex.name.toLowerCase();
+      const currentMax = Math.max(...ex.sets.map(s => s.weight * s.reps)); // Volume PR approximation
+      const oldPR = userStats.prs[name];
+      return oldPR && currentMax > oldPR.volume;
+    }).map(ex => ex.name);
+    
+    if (newPRs.length > 0) {
+      prContext = `User hit potential new PRs on: ${newPRs.join(', ')}!`;
+    }
+  }
+
+  const prompt = `
+  Analyze this workout:
+  User: ${userStats?.userName || 'Athlete'} (${userStats?.experienceLevel || 'Intermediate'})
+  Workout: ${workout.workoutName} (${Math.round(workout.duration / 60)} min)
+  Exercises: ${exerciseSummary}
+  ${prContext}
+
+  Provide a JSON response with:
+  1. "summary": 1 sentence overview
+  2. "highlight": The best part of the session (specific exercise or effort)
+  3. "tip": One specific technical or recovery tip for next time
+  4. "rating": Score 1-10 based on volume/intensity
+  
+  Format: {"summary": "...", "highlight": "...", "tip": "...", "rating": 8}`;
 
   try {
-    return await makeAIRequest(apiKey, prompt);
-  } catch {
-    return "Great session! Consistency builds champions. 💪";
+    const response = await makeAIRequest(apiKey, prompt);
+    const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.error('AI Analysis failed:', error);
+    return {
+      summary: "Great session! You put in the work today.",
+      highlight: "Consistency is your superpower.",
+      tip: "Make sure to hydrate and get some protein.",
+      rating: 8
+    };
   }
 }
 

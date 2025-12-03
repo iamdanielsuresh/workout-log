@@ -6,6 +6,11 @@
  */
 
 import { categorizePlan } from './workoutRecommendation';
+import { 
+  getWeeklyVolume, 
+  analyzeStrengthTrends, 
+  getPersonalRecords 
+} from './workoutStats';
 
 /**
  * Calculate workout frequency for a given time period
@@ -196,6 +201,11 @@ export function buildUserContextForAI({ profile, workouts = [], streak = 0, plan
   const patterns = analyzeWorkoutPatterns(workouts);
   const weakAreas = identifyWeakAreas(patterns.muscleGroupDistribution, workouts);
   
+  // Advanced Analytics
+  const weeklyVolume = getWeeklyVolume(workouts);
+  const strengthTrends = analyzeStrengthTrends(workouts);
+  const prs = getPersonalRecords(workouts);
+  
   // Time-based greeting context
   const hour = new Date().getHours();
   const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
@@ -233,6 +243,11 @@ export function buildUserContextForAI({ profile, workouts = [], streak = 0, plan
     
     // Muscle focus
     muscleGroupDistribution: patterns.muscleGroupDistribution,
+    weeklyVolume,
+    
+    // Performance
+    strengthTrends,
+    prs,
     
     // Areas for improvement
     weakAreas,
@@ -266,6 +281,37 @@ export function formatContextForPrompt(context) {
   
   if (context.recentExercises.length > 0) {
     lines.push(`Recent exercises: ${context.recentExercises.slice(0, 6).join(', ')}`);
+  }
+  
+  // Add Strength Trends
+  const trendKeys = Object.keys(context.strengthTrends || {});
+  if (trendKeys.length > 0) {
+    const topTrends = trendKeys
+      .sort((a, b) => context.strengthTrends[b].current1RM - context.strengthTrends[a].current1RM)
+      .slice(0, 3)
+      .map(name => {
+        const t = context.strengthTrends[name];
+        const sign = t.improvement > 0 ? '+' : '';
+        return `${name} 1RM: ${t.current1RM}kg (${sign}${t.improvement}%)`;
+      });
+    lines.push(`Strength Trends: ${topTrends.join(', ')}`);
+  }
+
+  // Add PRs
+  const prKeys = Object.keys(context.prs || {});
+  if (prKeys.length > 0) {
+    const recentPRs = prKeys
+      .filter(k => {
+        const date = new Date(context.prs[k].date);
+        const daysAgo = (Date.now() - date) / (1000 * 60 * 60 * 24);
+        return daysAgo < 30; // Only show PRs from last 30 days
+      })
+      .slice(0, 3)
+      .map(k => `${context.prs[k].name} (${context.prs[k].weight}kg)`);
+      
+    if (recentPRs.length > 0) {
+      lines.push(`Recent PRs: ${recentPRs.join(', ')}`);
+    }
   }
   
   if (context.muscleGroupDistribution && Object.keys(context.muscleGroupDistribution).length > 0) {

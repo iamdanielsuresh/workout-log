@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Trophy, Clock, Dumbbell, Calendar, Share2, Check } from 'lucide-react';
+import { Trophy, Clock, Dumbbell, Calendar, Share2, Check, Sparkles, Star, Zap } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
@@ -9,6 +9,7 @@ export function WorkoutCompleteModal({
   workoutName, 
   duration, 
   exercisesCount, 
+  analysis,
   onClose 
 }) {
   useEffect(() => {
@@ -58,7 +59,7 @@ export function WorkoutCompleteModal({
 
       {/* Modal Content */}
       <div className="relative w-full max-w-sm animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        <Card className="p-8 text-center border-emerald-500/30 shadow-2xl shadow-emerald-500/20">
+        <Card className="p-8 text-center border-emerald-500/30 shadow-2xl shadow-emerald-500/20 select-none">
           {/* Trophy Icon */}
           <div className="w-20 h-20 mx-auto mb-6 relative">
             <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping" />
@@ -91,6 +92,42 @@ export function WorkoutCompleteModal({
               <p className="text-xs text-gray-500 uppercase tracking-wider">Exercises</p>
             </div>
           </div>
+
+          {/* AI Analysis */}
+          {analysis && (
+            <div className="mb-8 text-left bg-gray-900/50 rounded-2xl p-4 border border-gray-800 space-y-3 animate-in fade-in slide-in-from-bottom-2 delay-300">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-sm font-bold uppercase tracking-wide">AI Analysis</span>
+                </div>
+                {analysis.rating && (
+                  <div className="flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <Star className="w-3 h-3 text-emerald-400 fill-emerald-400" />
+                    <span className="text-xs font-bold text-emerald-400">{analysis.rating}/10</span>
+                  </div>
+                )}
+              </div>
+              
+              <p className="text-sm text-gray-300 leading-relaxed">
+                {analysis.summary}
+              </p>
+
+              {analysis.highlight && (
+                <div className="flex items-start gap-2 text-xs bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                  <Zap className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0" />
+                  <span className="text-blue-200">{analysis.highlight}</span>
+                </div>
+              )}
+
+              {analysis.tip && (
+                <div className="flex items-start gap-2 text-xs bg-purple-500/10 p-2 rounded-lg border border-purple-500/20">
+                  <Dumbbell className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                  <span className="text-purple-200">{analysis.tip}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <Button 
             onClick={onClose} 

@@ -274,6 +274,117 @@ export function getPersonalRecords(sessions) {
 }
 
 /**
+ * Calculate estimated One Rep Max (1RM) using Epley formula
+ * @param {number} weight - Weight lifted
+ * @param {number} reps - Reps performed
+ * @returns {number} Estimated 1RM
+ */
+export function calculateOneRepMax(weight, reps) {
+  if (!weight || !reps) return 0;
+  if (reps === 1) return weight;
+  // Epley formula: 1RM = w * (1 + r/30)
+  return Math.round(weight * (1 + reps / 30));
+}
+
+/**
+ * Calculate weekly volume (sets) per muscle group
+ * @param {Array} sessions - Workout sessions
+ * @returns {Object} Map of muscle group to weekly set count
+ */
+export function getWeeklyVolume(sessions) {
+  if (!sessions || sessions.length === 0) return {};
+
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const volume = {};
+
+  sessions.forEach(session => {
+    const date = new Date(session.timestamp || session.created_at);
+    if (date < oneWeekAgo) return;
+
+    // If we have explicit muscle groups in the session data, use them
+    // Otherwise infer from workout type/name (simplified)
+    const type = session.workout_type || 'Other';
+    
+    // Count sets if available, otherwise assume 1 unit of volume per workout
+    let sets = 0;
+    if (session.exercises) {
+      session.exercises.forEach(ex => {
+        sets += Array.isArray(ex.sets) ? ex.sets.length : (ex.sets || 0);
+      });
+    } else {
+      sets = 1; // Fallback
+    }
+
+    volume[type] = (volume[type] || 0) + sets;
+  });
+
+  return volume;
+}
+
+/**
+ * Analyze strength trends for major compound movements
+ * @param {Array} sessions - Workout sessions
+ * @returns {Object} Trends for key exercises
+ */
+export function analyzeStrengthTrends(sessions) {
+  if (!sessions || sessions.length < 2) return {};
+
+  const trends = {};
+  const history = {};
+
+  // Sort sessions chronologically
+  const sortedSessions = [...sessions].sort(
+    (a, b) => new Date(a.timestamp || a.created_at) - new Date(b.timestamp || b.created_at)
+  );
+
+  sortedSessions.forEach(session => {
+    if (!session.exercises) return;
+
+    session.exercises.forEach(ex => {
+      const name = (ex.name || ex.exercise_name || '').toLowerCase();
+      if (!name) return;
+
+      // Calculate max 1RM for this session
+      let max1RM = 0;
+      const sets = Array.isArray(ex.sets) ? ex.sets : [];
+      sets.forEach(set => {
+        const w = parseFloat(set.weight) || 0;
+        const r = parseInt(set.reps) || 0;
+        const oneRM = calculateOneRepMax(w, r);
+        if (oneRM > max1RM) max1RM = oneRM;
+      });
+
+      if (max1RM > 0) {
+        if (!history[name]) history[name] = [];
+        history[name].push({
+          date: session.timestamp || session.created_at,
+          oneRM: max1RM
+        });
+      }
+    });
+  });
+
+  // Calculate trends (improvement over last 5 sessions)
+  Object.keys(history).forEach(name => {
+    const data = history[name];
+    if (data.length >= 2) {
+      const current = data[data.length - 1].oneRM;
+      const previous = data[Math.max(0, data.length - 5)].oneRM;
+      const percentChange = ((current - previous) / previous) * 100;
+      
+      trends[name] = {
+        current1RM: current,
+        improvement: Math.round(percentChange * 10) / 10,
+        history: data.slice(-5) // Keep last 5 data points
+      };
+    }
+  });
+
+  return trends;
+}
+
+/**
  * Get summary statistics object
  * @param {Array} sessions - Array of workout sessions
  * @returns {Object} Summary with all key stats

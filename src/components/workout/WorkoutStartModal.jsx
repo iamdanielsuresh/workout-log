@@ -133,7 +133,7 @@ export function WorkoutStartModal({
       } transition-all duration-300`}>
         <Card 
           hover={false} 
-          className="p-6 pt-8 rounded-t-3xl sm:rounded-3xl border-t border-gray-700 sm:border"
+          className="p-6 pt-8 rounded-t-3xl sm:rounded-3xl border-t border-gray-700 sm:border select-none"
         >
           {/* Close button */}
           {!isStarting && (
