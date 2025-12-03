@@ -2,11 +2,117 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   Dumbbell, ChevronRight, Clock, Plus, Edit3, 
   Trash2, MoreVertical, Check, X, Sparkles, Target,
-  ChevronDown, ChevronUp, Info, Lightbulb, AlertCircle
+  ChevronDown, ChevronUp, Info, Lightbulb, AlertCircle,
+  Folder, FolderPlus, FolderOpen, Layers
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Modal } from '../ui/Modal';
 import { ViewHeader } from '../layout/Navigation';
+
+/**
+ * FolderCard - Displays a folder of workout plans
+ */
+function FolderCard({ 
+  folder, 
+  plans, 
+  isExpanded, 
+  onToggle, 
+  selectionMode,
+  selectedPlans,
+  onSelectPlan,
+  onDeleteFolder,
+  children 
+}) {
+  const planCount = plans.length;
+  const selectedCount = plans.filter(p => selectedPlans.has(p.id)).length;
+  const isAllSelected = planCount > 0 && selectedCount === planCount;
+
+  const handleFolderSelect = (e) => {
+    e.stopPropagation();
+    // Toggle all plans in folder
+    plans.forEach(plan => {
+      onSelectPlan(plan.id, !isAllSelected);
+    });
+  };
+
+  return (
+    <div className="mb-3">
+      <div 
+        className={`
+          relative overflow-hidden rounded-2xl transition-all duration-200
+          ${isExpanded ? 'bg-gray-800/80 ring-1 ring-white/10' : 'bg-gray-900/50 border border-white/5'}
+        `}
+      >
+        <div 
+          className="p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={onToggle}
+        >
+          {/* Icon */}
+          <div className={`
+            w-10 h-10 rounded-xl flex items-center justify-center transition-colors
+            ${isExpanded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}
+          `}>
+            {isExpanded ? <FolderOpen className="w-5 h-5" /> : <Folder className="w-5 h-5" />}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gray-200 truncate">{folder.name}</h3>
+            <p className="text-xs text-gray-500">
+              {planCount} routine{planCount !== 1 ? 's' : ''}
+              {selectionMode && selectedCount > 0 && (
+                <span className="text-emerald-400 ml-2">
+                  • {selectedCount} selected
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {selectionMode ? (
+              <div 
+                className={`
+                  w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
+                  ${isAllSelected 
+                    ? 'bg-emerald-500 border-emerald-500' 
+                    : 'border-gray-600 bg-transparent'}
+                `}
+                onClick={handleFolderSelect}
+              >
+                {isAllSelected && <Check className="w-3.5 h-3.5 text-white" />}
+              </div>
+            ) : (
+              <ChevronRight 
+                className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} 
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      {isExpanded && (
+        <div className="mt-2 pl-4 space-y-3 border-l-2 border-gray-800 ml-4 animate-in slide-in-from-top-2 duration-200">
+          {children}
+          
+          {!selectionMode && (
+            <button 
+              onClick={() => onDeleteFolder(folder.id)}
+              className="w-full py-2 flex items-center justify-center gap-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+              Delete Folder
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 /**
  * SwipeablePlanCard - Handles swipe-to-delete gesture
@@ -20,15 +126,20 @@ function SwipeablePlanCard({
   onEdit, 
   onDelete,
   deleteConfirm,
-  setDeleteConfirm
+  setDeleteConfirm,
+  selectionMode,
+  isSelected,
+  onToggleSelection,
+  onLongPress
 }) {
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
   const startY = useRef(0);
   const currentX = useRef(0);
+  const longPressTimer = useRef(null);
   const isAiGenerated = plan.source === 'ai-generated';
-  const threshold = -100; // Reduced threshold for easier deletion
+  const threshold = -100;
 
   // Reset offset when expanded changes
   useEffect(() => {
@@ -36,6 +147,16 @@ function SwipeablePlanCard({
   }, [isExpanded]);
 
   const handleTouchStart = (e) => {
+    if (selectionMode) return;
+    
+    // Start long press timer
+    longPressTimer.current = setTimeout(() => {
+      if (onLongPress) {
+        onLongPress(plan.id);
+        setIsDragging(false); // Cancel drag
+      }
+    }, 500);
+
     if (isExpanded || deleteConfirm === plan.id) return;
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
@@ -44,39 +165,56 @@ function SwipeablePlanCard({
   };
 
   const handleTouchMove = (e) => {
-    if (!isDragging || isExpanded || deleteConfirm === plan.id) return;
+    // Cancel long press if moved significantly
+    if (longPressTimer.current) {
+      const moveX = Math.abs(e.touches[0].clientX - startX.current);
+      const moveY = Math.abs(e.touches[0].clientY - startY.current);
+      if (moveX > 10 || moveY > 10) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
+
+    if (!isDragging || isExpanded || deleteConfirm === plan.id || selectionMode) return;
     const x = e.touches[0].clientX;
     const y = e.touches[0].clientY;
     const diffX = x - startX.current;
     const diffY = y - startY.current;
     
-    // If vertical scroll is dominant, ignore horizontal swipe
     if (Math.abs(diffY) > Math.abs(diffX)) return;
 
-    // If horizontal swipe is dominant, prevent default to stop scrolling/nav
-    if (Math.abs(diffX) > 10 && e.cancelable) {
-      // e.preventDefault(); // Commented out as it might interfere with passive listeners
-    }
-    
-    // Only allow swiping left, with reduced resistance
     if (diffX < 0) {
-      // Reduced resistance (was 300)
       const resistance = 1 + Math.abs(diffX) / 600;
       setOffset(diffX / resistance);
     }
   };
 
   const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
     if (!isDragging) return;
     setIsDragging(false);
 
     if (offset < threshold) {
-      // Trigger delete confirmation
       setDeleteConfirm(plan.id);
       setOffset(0);
     } else {
-      // Snap back
       setOffset(0);
+    }
+  };
+
+  const handleClick = (e) => {
+    if (selectionMode) {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleSelection(plan.id);
+    } else if (deleteConfirm === plan.id) {
+      // Do nothing, let the delete button handle it
+    } else {
+      // onSelect(plan.id); // Don't select here, let the expand button do it or the start button
     }
   };
 
@@ -99,67 +237,96 @@ function SwipeablePlanCard({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ 
-          transform: `translateX(${offset}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
-        }}
+        onClick={handleClick}
+        style={{ transform: `translateX(${offset}px)` }}
+        className={`
+          relative bg-gray-900 rounded-2xl border transition-all duration-200
+          ${isSelected 
+            ? 'border-emerald-500/50 bg-emerald-500/5' 
+            : 'border-white/5 active:scale-[0.99]'}
+          ${deleteConfirm === plan.id ? 'translate-x-[-100%]' : ''}
+        `}
       >
-        <Card 
-          hover={false} 
-          className="overflow-hidden animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards bg-gray-900/90 backdrop-blur-xl"
-          style={{ animationDelay: `${index * 50 + 300}ms` }}
-        >
-          {/* Plan header */}
-          <div 
-            className="p-4 cursor-pointer active:bg-gray-800/50 transition-colors"
-            onClick={onToggleExpand}
-          >
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl ${
-                isAiGenerated 
-                  ? 'bg-purple-500/20' 
-                  : 'bg-emerald-500/20'
-              }`}>
-                {isAiGenerated ? (
-                  <Sparkles className="w-5 h-5 text-purple-400" />
-                ) : (
-                  <Dumbbell className="w-5 h-5 text-emerald-400" />
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className={`font-display font-bold text-lg truncate ${isSelected ? 'text-emerald-400' : 'text-white'}`}>
+                  {plan.name}
+                </h3>
+                {isAiGenerated && (
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-display font-bold text-lg text-gray-100 truncate tracking-tight">
-                    {plan.name}
-                  </h3>
-                  {isAiGenerated && (
-                    <span className="text-2xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-medium">
-                      AI
-                    </span>
-                  )}
+              
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{plan.duration || '45'} min</span>
                 </div>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-gray-500">
-                    {plan.exercises?.length || 0} exercises
-                  </span>
-                  {plan.estTime && (
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />
-                      {plan.estTime}
-                    </span>
-                  )}
-                </div>
+                <div className="w-1 h-1 rounded-full bg-gray-700" />
+                <span>{plan.exercises?.length || 0} exercises</span>
               </div>
-              <ChevronRight className={`w-5 h-5 text-gray-600 transition-transform ${
-                isExpanded ? 'rotate-90' : ''
-              }`} />
             </div>
+
+            {selectionMode ? (
+              <div className={`
+                w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 mt-1
+                ${isSelected 
+                  ? 'bg-emerald-500 border-emerald-500' 
+                  : 'border-gray-600 bg-transparent'}
+              `}>
+                {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-500 hover:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(plan.id);
+                  }}
+                >
+                  <Edit3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-500 hover:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleExpand();
+                  }}
+                >
+                  <ChevronRight className={`w-5 h-5 text-gray-600 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Expanded content */}
-          {isExpanded && (
-            <div className="border-t border-gray-800 bg-gray-900/50 p-4 animate-in fade-in slide-in-from-top-2">
-              {/* Day tip for AI-generated plans */}
-              {plan.dayTip && (
+          {/* Exercises Preview */}
+          <div className="mt-3 space-y-1">
+            {plan.exercises?.slice(0, 2).map((ex, i) => (
+              <div key={i} className="text-sm text-gray-400 truncate flex items-center gap-2">
+                <div className="w-1 h-1 rounded-full bg-emerald-500/50" />
+                {ex.name}
+              </div>
+            ))}
+            {(plan.exercises?.length || 0) > 2 && (
+              <div className="text-xs text-gray-600 pl-3">
+                +{plan.exercises.length - 2} more exercises
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Expanded Content */}
+        {isExpanded && !selectionMode && (
+          <div className="border-t border-gray-800 bg-gray-900/50 p-4 animate-in fade-in slide-in-from-top-2">
+             {/* Day tip for AI-generated plans */}
+             {plan.dayTip && (
                 <div className="flex items-start gap-2 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 mb-4">
                   <Lightbulb className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
                   <p className="text-sm text-purple-300">{plan.dayTip}</p>
@@ -192,12 +359,6 @@ function SwipeablePlanCard({
                 >
                   Start Workout
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => onEdit?.(plan.id)}
-                  icon={Edit3}
-                  className="px-4"
-                />
                 {deleteConfirm === plan.id ? (
                   <div className="flex gap-1">
                     <Button
@@ -226,13 +387,42 @@ function SwipeablePlanCard({
                   />
                 )}
               </div>
-            </div>
-          )}
-        </Card>
+          </div>
+        )}
+
+        {/* Delete Confirmation Overlay */}
+        {deleteConfirm === plan.id && (
+          <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm rounded-2xl flex items-center justify-center gap-3 z-10 animate-in fade-in duration-200">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteConfirm(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="primary" 
+              className="bg-red-500 hover:bg-red-600 text-white border-none"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(plan.id);
+                setDeleteConfirm(null);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+
 
 /**
  * PlansView - Manage workout plans/routines
@@ -240,6 +430,11 @@ function SwipeablePlanCard({
  */
 export function PlansView({ 
   plans, 
+  folders = {},
+  createFolder,
+  deleteFolder,
+  movePlansToFolder,
+  deletePlans,
   onSelectPlan, 
   onEditPlan,
   onDeletePlan,
@@ -247,53 +442,177 @@ export function PlansView({
 }) {
   const [expandedPlan, setExpandedPlan] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  
+  // Selection Mode State
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPlans, setSelectedPlans] = useState(new Set());
+  
+  // Folder State
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [showMoveModal, setShowMoveModal] = useState(false);
 
   const plansList = Object.values(plans || {});
+  const foldersList = Object.values(folders || {});
 
-  // Calculate unique exercises across all plans
+  // Group plans by folder
+  const uncategorizedPlans = plansList.filter(p => !p.folder_id);
+  const plansByFolder = {};
+  foldersList.forEach(folder => {
+    plansByFolder[folder.id] = plansList.filter(p => p.folder_id === folder.id);
+  });
+
+  // Selection Handlers
+  const toggleSelection = (id) => {
+    const newSelected = new Set(selectedPlans);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedPlans(newSelected);
+  };
+
+  const handleLongPress = (id) => {
+    if (!selectionMode) {
+      setSelectionMode(true);
+      setSelectedPlans(new Set([id]));
+      // Haptic feedback if available
+      if (window.navigator.vibrate) window.navigator.vibrate(50);
+    }
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedPlans(new Set());
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPlans.size === plansList.length) {
+      setSelectedPlans(new Set());
+    } else {
+      setSelectedPlans(new Set(plansList.map(p => p.id)));
+    }
+  };
+
+  // Folder Handlers
+  const toggleFolder = (folderId) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderId)) {
+      newExpanded.delete(folderId);
+    } else {
+      newExpanded.add(folderId);
+    }
+    setExpandedFolders(newExpanded);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    await createFolder(newFolderName);
+    setNewFolderName('');
+    setShowCreateFolder(false);
+  };
+
+  const handleMoveSelected = async (folderId) => {
+    await movePlansToFolder(Array.from(selectedPlans), folderId);
+    exitSelectionMode();
+    setShowMoveModal(false);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`Delete ${selectedPlans.size} plans?`)) {
+      await deletePlans(Array.from(selectedPlans));
+      exitSelectionMode();
+    }
+  };
+
+  // Calculate stats
   const uniqueExercises = new Set();
   plansList.forEach(plan => {
     plan.exercises?.forEach(ex => {
-      if (ex.name) {
-        uniqueExercises.add(ex.name.toLowerCase().trim());
-      }
+      if (ex.name) uniqueExercises.add(ex.name.toLowerCase().trim());
     });
   });
-
-  // Count AI-generated plans
   const aiPlanCount = plansList.filter(p => p.source === 'ai-generated').length;
 
   return (
     <div className="min-h-screen pb-nav animate-in fade-in slide-in-from-bottom-4 duration-500 select-none">
       <ViewHeader 
-        title="Workout Plans" 
-        subtitle={`${plansList.length} routine${plansList.length !== 1 ? 's' : ''}`}
+        title={selectionMode ? `${selectedPlans.size} Selected` : "Workout Plans"}
+        subtitle={selectionMode ? null : `${plansList.length} routine${plansList.length !== 1 ? 's' : ''}`}
+        rightAction={selectionMode ? (
+          <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+            {selectedPlans.size === plansList.length ? 'Deselect All' : 'Select All'}
+          </Button>
+        ) : (
+          <Button variant="ghost" size="sm" onClick={() => setShowCreateFolder(true)}>
+            <FolderPlus className="w-5 h-5" />
+          </Button>
+        )}
       />
 
-      <div className="p-6 max-w-lg mx-auto space-y-4">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-100 fill-mode-backwards">
-            <p className="text-3xl font-display font-bold text-emerald-400">{plansList.length}</p>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Routines</p>
+      <div className="p-6 max-w-lg mx-auto space-y-4 pb-24">
+        {/* Quick Stats (Hide in selection mode) */}
+        {!selectionMode && (
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-100 fill-mode-backwards">
+              <p className="text-3xl font-display font-bold text-emerald-400">{plansList.length}</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Routines</p>
+            </div>
+            <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-200 fill-mode-backwards">
+              <p className="text-3xl font-display font-bold text-blue-400">{uniqueExercises.size}</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Exercises</p>
+            </div>
+            <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-300 fill-mode-backwards">
+              <p className="text-3xl font-display font-bold text-amber-400">{aiPlanCount}</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">AI Plans</p>
+            </div>
           </div>
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-200 fill-mode-backwards">
-            <p className="text-3xl font-display font-bold text-blue-400">
-              {uniqueExercises.size}
-            </p>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Exercises</p>
-          </div>
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-300 fill-mode-backwards">
-            <p className="text-3xl font-display font-bold text-amber-400">
-              {aiPlanCount}
-            </p>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">AI Plans</p>
-          </div>
-        </div>
+        )}
 
-        {/* Plans List */}
+        {/* Folders */}
+        {foldersList.map(folder => (
+          <FolderCard
+            key={folder.id}
+            folder={folder}
+            plans={plansByFolder[folder.id] || []}
+            isExpanded={expandedFolders.has(folder.id)}
+            onToggle={() => toggleFolder(folder.id)}
+            selectionMode={selectionMode}
+            selectedPlans={selectedPlans}
+            onSelectPlan={(id, selected) => {
+              const newSelected = new Set(selectedPlans);
+              if (selected) newSelected.add(id);
+              else newSelected.delete(id);
+              setSelectedPlans(newSelected);
+            }}
+            onDeleteFolder={deleteFolder}
+          >
+            {(plansByFolder[folder.id] || []).map((plan, index) => (
+              <SwipeablePlanCard
+                key={plan.id}
+                plan={plan}
+                index={index}
+                isExpanded={expandedPlan === plan.id}
+                onToggleExpand={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+                onSelect={onSelectPlan}
+                onEdit={onEditPlan}
+                onDelete={onDeletePlan}
+                deleteConfirm={deleteConfirm}
+                setDeleteConfirm={setDeleteConfirm}
+                selectionMode={selectionMode}
+                isSelected={selectedPlans.has(plan.id)}
+                onToggleSelection={toggleSelection}
+                onLongPress={handleLongPress}
+              />
+            ))}
+          </FolderCard>
+        ))}
+
+        {/* Uncategorized Plans */}
         <div className="space-y-3">
-          {plansList.length === 0 ? (
+          {uncategorizedPlans.length === 0 && foldersList.length === 0 ? (
             <Card hover={false} className="p-8 text-center animate-in fade-in zoom-in-95 duration-500 delay-300">
               <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Dumbbell className="w-8 h-8 text-gray-600" />
@@ -307,7 +626,7 @@ export function PlansView({
               </Button>
             </Card>
           ) : (
-            plansList.map((plan, index) => (
+            uncategorizedPlans.map((plan, index) => (
               <SwipeablePlanCard
                 key={plan.id}
                 plan={plan}
@@ -319,13 +638,17 @@ export function PlansView({
                 onDelete={onDeletePlan}
                 deleteConfirm={deleteConfirm}
                 setDeleteConfirm={setDeleteConfirm}
+                selectionMode={selectionMode}
+                isSelected={selectedPlans.has(plan.id)}
+                onToggleSelection={toggleSelection}
+                onLongPress={handleLongPress}
               />
             ))
           )}
         </div>
 
-        {/* Add new plan button */}
-        {plansList.length > 0 && (
+        {/* Add new plan button (Hide in selection mode) */}
+        {!selectionMode && plansList.length > 0 && (
           <Button
             variant="secondary"
             className="w-full mt-4"
@@ -336,6 +659,116 @@ export function PlansView({
           </Button>
         )}
       </div>
+
+      {/* Selection Mode Action Bar */}
+      {selectionMode && (
+        <div className="fixed bottom-20 left-0 right-0 p-4 z-50 animate-in slide-in-from-bottom-10">
+          <div className="max-w-lg mx-auto bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              className="flex-1"
+              onClick={exitSelectionMode}
+            >
+              Cancel
+            </Button>
+            <div className="w-px h-8 bg-gray-800" />
+            <Button 
+              variant="ghost"
+              className="flex-1 text-gray-300 hover:text-white"
+              onClick={() => setShowMoveModal(true)}
+              disabled={selectedPlans.size === 0}
+            >
+              <Folder className="w-4 h-4 mr-2" />
+              Move
+            </Button>
+            <Button 
+              variant="danger"
+              className="flex-1"
+              onClick={handleDeleteSelected}
+              disabled={selectedPlans.size === 0}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete ({selectedPlans.size})
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Create Folder Modal */}
+      <Modal
+        isOpen={showCreateFolder}
+        onClose={() => setShowCreateFolder(false)}
+        title="Create Folder"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Folder Name"
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            placeholder="e.g., Strength, Cardio, Home"
+            autoFocus
+          />
+          <div className="flex gap-3">
+            <Button 
+              variant="ghost" 
+              className="flex-1" 
+              onClick={() => setShowCreateFolder(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1" 
+              onClick={handleCreateFolder}
+              disabled={!newFolderName.trim()}
+            >
+              Create
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Move to Folder Modal */}
+      <Modal
+        isOpen={showMoveModal}
+        onClose={() => setShowMoveModal(false)}
+        title="Move to Folder"
+      >
+        <div className="space-y-2">
+          <button
+            onClick={() => handleMoveSelected(null)}
+            className="w-full p-4 rounded-xl bg-gray-800/50 hover:bg-gray-800 text-left transition-colors flex items-center gap-3"
+          >
+            <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
+              <Layers className="w-5 h-5 text-gray-400" />
+            </div>
+            <span className="font-medium">Uncategorized</span>
+          </button>
+
+          {foldersList.map(folder => (
+            <button
+              key={folder.id}
+              onClick={() => handleMoveSelected(folder.id)}
+              className="w-full p-4 rounded-xl bg-gray-800/50 hover:bg-gray-800 text-left transition-colors flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
+                <Folder className="w-5 h-5 text-emerald-400" />
+              </div>
+              <span className="font-medium">{folder.name}</span>
+            </button>
+          ))}
+          
+          <button
+            onClick={() => {
+              setShowMoveModal(false);
+              setShowCreateFolder(true);
+            }}
+            className="w-full p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-gray-600 text-gray-500 hover:text-gray-400 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Create New Folder
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

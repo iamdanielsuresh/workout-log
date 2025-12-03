@@ -10,22 +10,35 @@ const log = createLogger('useWorkoutPlans');
  */
 export function useWorkoutPlans(userId) {
   const [plans, setPlans] = useState(null);
+  const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch plans when userId changes
+  // Fetch plans and folders when userId changes
   useEffect(() => {
     if (!userId) {
       setPlans(null);
+      setFolders([]);
       setLoading(false);
       return;
     }
 
-    const fetchPlans = async () => {
-      log.log('Fetching plans for user:', userId);
+    const fetchData = async () => {
+      log.log('Fetching plans and folders for user:', userId);
       setError(null);
       
       try {
+        // Fetch folders
+        const { data: foldersData, error: foldersError } = await supabase
+          .from('workout_folders')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (foldersError) throw foldersError;
+        setFolders(foldersData || []);
+
+        // Fetch plans
         const { data, error: fetchError } = await supabase
           .from('workout_plans')
           .select('*')
@@ -33,9 +46,7 @@ export function useWorkoutPlans(userId) {
           .eq('is_active', true)
           .order('sort_order', { ascending: true });
 
-        if (fetchError) {
-          throw fetchError;
-        }
+        if (fetchError) throw fetchError;
         
         if (data && data.length > 0) {
           log.log('Fetched plans:', data);
@@ -50,7 +61,8 @@ export function useWorkoutPlans(userId) {
               estTime: plan.est_time,
               exercises: plan.exercises || [],
               source: plan.source,
-              dbId: plan.id
+              dbId: plan.id,
+              folderId: plan.folder_id
             };
           });
           setPlans(plansObj);
@@ -59,15 +71,129 @@ export function useWorkoutPlans(userId) {
           setPlans(null);
         }
       } catch (err) {
-        log.error('Error fetching workout plans:', err);
-        setError(err.message || 'Failed to load workout plans');
-        setPlans(null);
+        log.error('Error fetching workout data:', err);
+        // Don't show error for missing table (if migration hasn't run)
+        if (err.code === '42P01') { // undefined_table
+          log.warn('Folders table not found, skipping folder features');
+        } else {
+          setError(err.message || 'Failed to load workout plans');
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlans();
+    fetchData();
+  }, [userId]);
+
+  // Create a new folder
+  const createFolder = useCallback(async (name) => {
+    if (!userId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('workout_folders')
+        .insert({ user_id: userId, name })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setFolders(prev => [data, ...prev]);
+      return data;
+    } catch (err) {
+      log.error('Error creating folder:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  // Delete a folder
+  const deleteFolder = useCallback(async (folderId) => {
+    if (!userId) return;
+
+    try {
+      // First update plans to remove folder_id (handled by DB ON DELETE SET NULL usually, but good to be safe)
+      // Actually DB handles it.
+      
+      const { error } = await supabase
+        .from('workout_folders')
+        .delete()
+        .eq('id', folderId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setFolders(prev => prev.filter(f => f.id !== folderId));
+      
+      // Update local plans to remove folderId
+      setPlans(prev => {
+        if (!prev) return null;
+        const newPlans = { ...prev };
+        Object.keys(newPlans).forEach(key => {
+          if (newPlans[key].folderId === folderId) {
+            newPlans[key] = { ...newPlans[key], folderId: null };
+          }
+        });
+        return newPlans;
+      });
+    } catch (err) {
+      log.error('Error deleting folder:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  // Move plans to a folder
+  const movePlansToFolder = useCallback(async (planIds, folderId) => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('workout_plans')
+        .update({ folder_id: folderId })
+        .in('plan_id', planIds)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setPlans(prev => {
+        if (!prev) return null;
+        const newPlans = { ...prev };
+        planIds.forEach(id => {
+          if (newPlans[id]) {
+            newPlans[id] = { ...newPlans[id], folderId };
+          }
+        });
+        return newPlans;
+      });
+    } catch (err) {
+      log.error('Error moving plans:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  // Bulk delete plans
+  const deletePlans = useCallback(async (planIds) => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('workout_plans')
+        .delete()
+        .in('plan_id', planIds)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setPlans(prev => {
+        if (!prev) return null;
+        const newPlans = { ...prev };
+        planIds.forEach(id => delete newPlans[id]);
+        return Object.keys(newPlans).length > 0 ? newPlans : null;
+      });
+    } catch (err) {
+      log.error('Error deleting plans:', err);
+      throw err;
+    }
   }, [userId]);
 
   // Save multiple plans at once (used during onboarding)
@@ -209,6 +335,11 @@ export function useWorkoutPlans(userId) {
     deletePlan,
     hasCustomPlans,
     plansList,
+    folders,
+    createFolder,
+    deleteFolder,
+    movePlansToFolder,
+    deletePlans,
     clearError: () => setError(null),
   };
 }
