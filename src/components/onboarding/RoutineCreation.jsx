@@ -730,9 +730,14 @@ Guidelines:
               <textarea
                 value={aiQuestions.specialNotes}
                 onChange={(e) => setAiQuestions(p => ({ ...p, specialNotes: e.target.value }))}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
                 placeholder="E.g., shoulder injury (avoid overhead pressing), don't like bench press, focus on back development, bad knees..."
                 className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none text-sm"
                 rows={3}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Injuries, exercise preferences, or specific goals

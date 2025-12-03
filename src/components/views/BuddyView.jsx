@@ -262,7 +262,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
     const statusMessage = getAiStatusMessage({ aiEnabled, apiKey });
     
     return (
-      <div className="pb-28 max-w-lg mx-auto min-h-screen">
+      <div className="pb-nav max-w-lg mx-auto min-h-screen">
         <ViewHeader title="AI Buddy" subtitle="Your personal coach" />
         
         <div className="p-6">
@@ -353,7 +353,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
   }
 
   return (
-    <div className="pb-28 max-w-lg mx-auto min-h-screen">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen">
       <ViewHeader 
         title="AI Buddy" 
         subtitle="Your personal coach"

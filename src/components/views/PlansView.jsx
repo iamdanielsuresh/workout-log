@@ -38,7 +38,7 @@ export function PlansView({
   const aiPlanCount = plansList.filter(p => p.source === 'ai-generated').length;
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-nav">
       <ViewHeader 
         title="Workout Plans" 
         subtitle={`${plansList.length} routine${plansList.length !== 1 ? 's' : ''}`}

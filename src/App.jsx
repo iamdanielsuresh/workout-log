@@ -838,7 +838,7 @@ function HistoryView({ workouts, onBack, onDelete }) {
   };
 
   return (
-    <div className="pb-28 max-w-lg mx-auto min-h-screen">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen">
       <ViewHeader 
         title="Workout History" 
         subtitle={`${workouts.length} workout${workouts.length !== 1 ? 's' : ''} logged`}
@@ -1050,7 +1050,7 @@ function SettingsView({ currentSettings, profile, isAnonymous, onSave, onEditPro
   };
 
   return (
-    <div className="pb-28 max-w-lg mx-auto min-h-screen">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen">
       <ViewHeader 
         title="Settings" 
         subtitle="Manage your account"

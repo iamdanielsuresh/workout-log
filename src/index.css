@@ -49,6 +49,11 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Bottom navigation height offset - ensures content isn't hidden behind nav */
+.pb-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* Background with subtle gradient */
 .bg-app {
   background: linear-gradient(180deg, #0a0a0a 0%, #18181b 50%, #0a0a0a 100%);

@@ -485,9 +485,14 @@ Return ONLY valid JSON (no markdown):
                 <textarea
                   value={aiQuestions.specialNotes}
                   onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                   placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
                   className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none text-sm"
                   rows={2}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
                 />
               </div>
             </div>
