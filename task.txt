@@ -1,0 +1,295 @@
+TITLE: Fitness Logger – Incremental AI & UX Improvements (Do NOT change core concept)
+
+GOAL:
+You are working on an existing fitness logger web app with the following main areas:
+- Home (summary + recommended routine + other routines)
+- History
+- Buddy (AI coach)
+- Plans (Workout Plans / routines)
+- Settings (profile, AI features, API key, account actions)
+- Modals for: Routine preview, Add New Routine, AI Generate Routine
+
+Your job is to:
+1. Inspect the current codebase and identify the components implementing these screens.
+2. Improve logic and UX on top of the existing design without changing the core idea, navigation structure, or visual style.
+3. Enhance AI integration (workout generation + AI buddy insights) using the existing API key system.
+4. Keep everything compatible with current data. Prefer refactor + extension over breaking changes.
+
+--------------------------------------------------
+SECTION 1 – CODEBASE DISCOVERY (MANDATORY FIRST STEP)
+--------------------------------------------------
+
+1. Detect the tech stack (framework, styling system, state management, backend).
+2. Locate the following components or closest equivalents:
+   - Home screen (greeting, current streak, recommended routine card, “Other routines” list).
+   - Buddy screen (AI Buddy stats, Daily Motivation, Insights, Pro Tips).
+   - Plans screen (Workout Plans header, routines summary cards, "Add New Routine" button).
+   - Settings screen (profile card, AI Workout Buddy toggle, Google AI Studio API key input, sign out, delete).
+   - Routine preview modal (e.g., “Lower Body Hypertrophy” with exercise preview + slide to start).
+   - Add New Routine modal (Choose Template / AI Generate / Create Custom).
+   - AI Generate form (days per week, focus, session duration, Generate Plan button).
+3. Document the findings in a short internal file: `docs/architecture-notes.md`:
+   - Paths / filenames of key screens and modals.
+   - Data flow for routines and workouts (where plans are stored, how a workout is started).
+   - Where AI calls are implemented (if already present).
+4. From now on, follow existing code style, folder structure, and UI patterns (colors, spacing, typography). Do NOT introduce a completely new design system.
+
+--------------------------------------------------
+SECTION 2 – HOME SCREEN IMPROVEMENTS
+--------------------------------------------------
+
+Current UI:
+- “Hi Daniel” greeting with last routine text.
+- Current Streak card.
+- Recommended routine card (e.g., “Lower Body Hypertrophy” with Start button and duration).
+- Two stat cards: Total Workouts, Day Streak.
+- “Other Routines” list of routine cards.
+
+Tasks:
+1. Ensure Recommended Routine is data-driven, not hardcoded:
+   - Implement a function that picks the recommended routine based on:
+     - Last completed routine.
+     - Overall goal (e.g., alternate upper / lower).
+     - Streak and recent focus (avoid repeating same day type too many times).
+   - Allow this logic to be easily extended (pure function or service).
+
+2. Improve routine cards:
+   - Make sure each routine card shows:
+     - Name.
+     - Exercises count.
+     - Estimated session duration.
+   - Ensure tap behavior:
+     - Tapping routine opens the same preview modal used in Plans.
+
+3. Add subtle “Next Action” hints:
+   - If user has no workout today → show label like “You haven’t trained today – start your recommended routine”.
+   - If streak is broken → small text hint on what to do (e.g., “Restart your streak with a quick 30–45 min session”).
+
+4. Performance & UX:
+   - Make sure Home uses a minimal number of API calls and caches routines where appropriate.
+   - Handle loading and empty states gracefully.
+
+--------------------------------------------------
+SECTION 3 – AI BUDDY SCREEN IMPROVEMENTS
+--------------------------------------------------
+
+Current UI:
+- Top stat cards: Day Streak, Workouts, Level.
+- “Daily Motivation” card with button “Get today’s motivation”.
+- “Your Insights” cards (Strength, Focus Area, Next Goal).
+- “Pro Tips” section with “Generate Tips”.
+
+Goals:
+- Make AI Buddy truly data-driven and connected to real workout history.
+
+Tasks:
+1. Data integration:
+   - Fetch workout history and streak data from the real backend/state.
+   - Ensure Day Streak and Workouts count on Buddy matches what is shown on Home and History.
+
+2. Make insights dynamic:
+   - Implement a function `buildUserContextForAI()` that composes a short JSON/structured summary:
+     - Total workouts, last 7 days frequency.
+     - Primary routine types used (strength vs hypertrophy, upper vs lower).
+     - Average session duration.
+   - Use this context as part of the prompt when calling the AI model.
+
+3. AI prompts (logic only, UI stays same):
+   - Daily Motivation: generate a short, 1–2 sentence motivational message referencing:
+     - Streak status.
+     - Recent workouts.
+   - Insights:
+     - “Strength” → highlight what the user is consistently doing well.
+     - “Focus Area” → identify a weak area (e.g., missed leg days, short duration).
+     - “Next Goal” → propose a very specific, measurable short-term goal.
+   - Pro Tips:
+     - Generate 2–4 practical, concise tips about training, sleep, nutrition, or consistency.
+
+4. UX polish:
+   - Add loading states for buttons “Get today’s motivation”, “Refresh”, and “Generate Tips”.
+   - Add simple error message if AI call fails (e.g., “Couldn’t fetch tips, try again later.”).
+   - Respect the AI toggle + API key from Settings (if AI Buddy is OFF or API key invalid, disable actions).
+
+--------------------------------------------------
+SECTION 4 – PLANS / WORKOUT ROUTINES IMPROVEMENTS
+--------------------------------------------------
+
+Current UI:
+- Header: “Workout Plans” with high-level stats: Routines, Exercises, AI Plans.
+- List of routine cards (name, exercises count, 45–60 min, AI badge).
+- “+ Add New Routine” button leading to modal:
+  - Options: Choose Template, AI Generate, Create Custom.
+- AI Generate form: Days per week, Focus (Balanced/Strength/Hypertrophy/Upper/Lower), Session duration, Generate Plan.
+
+Tasks:
+1. Ensure routines are stored consistently:
+   - Confirm there is a central data model for:
+     - Routine metadata (name, focus, duration, AI-generated flag).
+     - Routine -> list of exercises + set counts.
+   - If not, create or normalize so other features (Home/Buddy) can reliably use this.
+
+2. Enhance Add New Routine:
+   - Keep the three options but refine:
+     - Choose Template:
+       - Provide a few built-in templates (PPL, Upper/Lower, Full Body, 4-day Upper/Lower split, etc.).
+       - Store templates in code or a config file for easy editing.
+     - AI Generate:
+       - Use the AI generator (see Section 5) with the selected parameters.
+     - Create Custom:
+       - Allow user to set name, type (e.g., “Upper Body Strength”), and add exercises manually.
+
+3. Routine list improvements:
+   - Make the summary stats at top dynamic:
+     - Count total routines.
+     - Unique exercises used across all routines.
+     - Number of AI-generated routines.
+   - For each routine card, confirm:
+     - Clicking opens routine detail/preview modal.
+     - Label AI-generated routines with a small “AI” chip (already present in UI – ensure logic correct).
+
+4. Routine editing:
+   - If not already present, add basic edit capabilities:
+     - Rename routine.
+     - Edit focus/duration tags.
+     - Optionally reorder exercises (if feasible with current UI system).
+
+--------------------------------------------------
+SECTION 5 – AI WORKOUT GENERATION IMPROVEMENTS
+--------------------------------------------------
+
+Current UI:
+- AI Generate form: Days per week, Focus (Balanced/Strength/Hypertrophy/Upper/Lower), Session Duration (30–45, 45–60, etc.).
+- Generates named routines like “Upper Body Hypertrophy” / “Lower Body Strength”.
+
+Goal:
+- Keep the UI flow but make the underlying AI logic smarter and more configurable.
+
+Tasks:
+1. Prompt engineering:
+   - Implement a backend or client-side function that calls the AI model using:
+     - Days per week.
+     - Focus.
+     - Session duration.
+     - (If available) user level & age from Settings profile.
+     - (If available) current routines and recent workouts for personalization.
+   - Ask the model to return a structured JSON with:
+     - Routine name.
+     - Day-by-day plan (Day label + target muscles).
+     - For each day: ordered list of exercises, each with:
+       - Name.
+       - Primary muscle.
+       - Sets.
+       - Reps range.
+       - Approx. rest period.
+   - Add validation: if AI returns malformed JSON, show a user-friendly error and option to retry.
+
+2. Integration:
+   - After generation, automatically:
+     - Save the routine with AI flag set (e.g., `isAiGenerated = true`).
+     - Redirect user to a routine detail screen or show a confirmation modal with the new plan preview.
+
+3. Make intensity transparent:
+   - In routine preview modal, show:
+     - Focus (Strength / Hypertrophy / Balanced).
+     - Intensity or difficulty rating (Low/Moderate/High) derived from sets × reps × volume.
+
+--------------------------------------------------
+SECTION 6 – ROUTINE PREVIEW & START WORKOUT FLOW
+--------------------------------------------------
+
+Current UI:
+- Modal for a routine (e.g., Lower Body Hypertrophy):
+  - Routine icon and name.
+  - Focus text.
+  - Top chips: number of exercises, estimated time, intensity.
+  - Exercises preview list.
+  - “Slide to Start Workout” control.
+
+Tasks:
+1. Wire this modal fully to live data:
+   - Ensure exercises list and counts come from the routine stored in the database/state.
+   - If exercises or sets are edited later, preview reflects that.
+
+2. Start workout behavior:
+   - On “Slide to Start Workout”:
+     - Create a new workout session instance based on that routine.
+     - Navigate to the active workout logging screen (if exists).
+   - If an active workout screen does NOT yet exist, create at least a basic session page:
+     - Show exercises and sets to complete.
+     - Allow marking sets as done and logging weights/reps.
+     - Save session on completion.
+
+3. Edge cases:
+   - If a routine has no exercises, block start and show message to user.
+   - Handle network or save errors gracefully when session is created.
+
+--------------------------------------------------
+SECTION 7 – SETTINGS & AI CONFIGURATION
+--------------------------------------------------
+
+Current UI:
+- Profile card with name, level (“Intermediate lifter”), age.
+- AI Features:
+  - AI Workout Buddy toggle.
+  - Google AI Studio API key input with verification status.
+- Account actions:
+  - Sign Out.
+  - Delete Account.
+
+Tasks:
+1. Ensure AI configuration is truly global:
+   - Store AI key and AI Buddy enabled flag in a central configuration (backend or secure local storage).
+   - Expose a small helper module, e.g., `getAiClientConfig()`:
+     - Returns API key, model, and enabled status so all AI features (Buddy, AI Generate, Pro Tips) share same logic.
+
+2. Profile usage:
+   - Ensure profile fields (level, age, name) are:
+     - Editable.
+     - Persisted.
+     - Used in AI prompts (e.g., “intermediate lifter, 23 years old”).
+
+3. UX:
+   - Validate API key on change and show proper success/error messages (already visually present – confirm logic).
+   - Disable AI-related buttons globally if:
+     - Key missing.
+     - Key invalid.
+     - AI toggle OFF.
+
+--------------------------------------------------
+SECTION 8 – HISTORY & ANALYTICS HOOKS (LIGHT TOUCH)
+--------------------------------------------------
+
+Even if History UI is already implemented, ensure:
+1. Sessions created from routines are visible in History.
+2. Basic stats are computable:
+   - Total workouts.
+   - Current streak.
+   - Last workout date.
+3. Expose a small stats helper module that both Home and Buddy can use:
+   - `getCurrentStreak(sessions)`
+   - `getTotalWorkouts(sessions)`
+   - `getAverageSessionDuration(sessions)`
+   - `getRecentFocusDistribution(sessions)` (e.g., Upper/Lower/Full).
+
+--------------------------------------------------
+SECTION 9 – QUALITY, TESTS & DOCUMENTATION
+--------------------------------------------------
+
+1. Do not change the main navigation:
+   - Keep bottom tabs: Home, History, Buddy, Plans, Settings.
+   - Keep the general dark UI theme, card styles, and layout.
+
+2. Where tests already exist:
+   - Update or extend them for new logic (AI generation, recommendations, Buddy insights).
+   - At minimum, add tests for:
+     - Recommendation logic for Home.
+     - Stats helper functions.
+     - Data validation of AI responses.
+
+3. Documentation:
+   - Update or create a `docs/ai-features.md` describing:
+     - Where AI is used (Buddy, Plans, Pro Tips).
+     - Expected environment variables / config for API keys.
+     - Basic structure of the AI prompts and JSON outputs.
+
+END OF TASK
