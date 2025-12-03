@@ -11,6 +11,7 @@ import {
   analyzeStrengthTrends, 
   getPersonalRecords 
 } from './workoutStats';
+import { getDateTimeContext } from './localeFormatters';
 
 /**
  * Calculate workout frequency for a given time period
@@ -206,10 +207,11 @@ export function buildUserContextForAI({ profile, workouts = [], streak = 0, plan
   const strengthTrends = analyzeStrengthTrends(workouts);
   const prs = getPersonalRecords(workouts);
   
-  // Time-based greeting context
-  const hour = new Date().getHours();
-  const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-  const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  // Get locale-aware date/time context
+  const dateTimeContext = getDateTimeContext({
+    timezone: profile?.timezone,
+    country: profile?.country
+  });
   
   // Workout frequency analysis
   const last7Days = getWorkoutFrequency(workouts, 7);
@@ -224,9 +226,24 @@ export function buildUserContextForAI({ profile, workouts = [], streak = 0, plan
     userName: profile?.display_name || 'User',
     experienceLevel: profile?.experience_level || 'intermediate',
     
-    // Time context
-    timeOfDay,
-    dayOfWeek,
+    // Locale info (Task 1)
+    country: profile?.country || null,
+    timezone: profile?.timezone || null,
+    
+    // Time context (locale-aware)
+    timeOfDay: dateTimeContext.timeOfDay,
+    dayOfWeek: dateTimeContext.dayOfWeek,
+    localTime: dateTimeContext.localTime,
+    localDate: dateTimeContext.localDate,
+    
+    // Extended health metrics (Task 6)
+    goals: profile?.goals || null,
+    trainingAge: profile?.training_age || null,
+    injuries: profile?.injuries || null,
+    activityLevel: profile?.activity_level || null,
+    height: profile?.height || null,
+    weight: profile?.weight || null,
+    bodyFat: profile?.body_fat || null,
     
     // Workout stats
     totalWorkouts: workouts.length,
@@ -279,8 +296,43 @@ export function formatContextForPrompt(context) {
     `Typical session: ${context.avgSessionDuration} minutes, ${context.avgExercisesPerSession} exercises`
   ];
   
+  // Add locale-aware time context (Task 1)
+  if (context.localTime && context.localDate) {
+    lines.push(`Current time: ${context.localTime} on ${context.dayOfWeek} (${context.localDate})`);
+  } else {
+    lines.push(`Time: ${context.dayOfWeek} ${context.timeOfDay}`);
+  }
+  
   if (context.recentExercises.length > 0) {
     lines.push(`Recent exercises: ${context.recentExercises.slice(0, 6).join(', ')}`);
+  }
+  
+  // Add extended health context (Task 6)
+  if (context.goals) {
+    lines.push(`Goals: ${context.goals}`);
+  }
+  
+  if (context.injuries) {
+    lines.push(`Injuries/Limitations: ${context.injuries}`);
+  }
+  
+  if (context.activityLevel) {
+    const activityLabels = {
+      sedentary: 'Sedentary',
+      light: 'Lightly Active',
+      moderate: 'Moderately Active',
+      active: 'Active',
+      very_active: 'Very Active'
+    };
+    lines.push(`Activity Level: ${activityLabels[context.activityLevel] || context.activityLevel}`);
+  }
+  
+  if (context.height || context.weight) {
+    const metrics = [];
+    if (context.height) metrics.push(`${context.height}cm`);
+    if (context.weight) metrics.push(`${context.weight}kg`);
+    if (context.bodyFat) metrics.push(`${context.bodyFat}% BF`);
+    lines.push(`Body Metrics: ${metrics.join(', ')}`);
   }
   
   // Add Strength Trends

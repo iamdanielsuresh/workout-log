@@ -1,22 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Dumbbell, ChevronDown, ChevronUp, Trash2, Search, 
-  Plus, Filter, Play, History, List 
+  Plus, Filter, Play, History, List, Calendar as CalendarIcon, Clock
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal, ConfirmDialog } from '../ui/Modal';
 import { ViewHeader } from '../layout/Navigation';
+import { Calendar } from '../ui/Calendar';
 import { getExercises, createExercise } from '../../services/supabase';
+import { formatDuration } from '../../utils/localeFormatters';
 
 /**
  * HistoryView - Workout history and Exercise Library
+ * Task 3: Shows time details
+ * Task 4: Calendar view
  */
 export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, initialTab = 'history' }) {
-  const [activeTab, setActiveTab] = useState(initialTab); // 'history' | 'exercises'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'history' | 'calendar' | 'exercises'
   const [expandedId, setExpandedId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   
   // Exercises State
   const [exercises, setExercises] = useState([]);
@@ -25,6 +30,20 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: '', muscle_group: '', equipment: '' });
   const [creatingExercise, setCreatingExercise] = useState(false);
+
+  // Get all dates that have workouts for calendar marking
+  const workoutDates = useMemo(() => {
+    return workouts.map(w => w.workoutDate || w.timestamp?.toISOString().split('T')[0]);
+  }, [workouts]);
+
+  // Filter workouts by selected date
+  const filteredWorkouts = useMemo(() => {
+    if (!selectedDate) return workouts;
+    return workouts.filter(w => {
+      const workoutDateStr = w.workoutDate || w.timestamp?.toISOString().split('T')[0];
+      return workoutDateStr === selectedDate;
+    });
+  }, [workouts, selectedDate]);
 
   useEffect(() => {
     if (activeTab === 'exercises' && exercises.length === 0) {
@@ -64,9 +83,20 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
     ex.muscle_group?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatDuration = (seconds) => {
-    if (!seconds) return null;
-    return `${Math.floor(seconds / 60)} min`;
+  // Format time for display (Task 3)
+  const formatTimeDisplay = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  // Handle date selection from calendar
+  const handleDateSelect = (dateStr) => {
+    setSelectedDate(dateStr);
+  };
+
+  // Clear date filter
+  const clearDateFilter = () => {
+    setSelectedDate(null);
   };
 
   return (
@@ -94,6 +124,17 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
             History
           </button>
           <button
+            onClick={() => setActiveTab('calendar')}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'calendar' 
+                ? 'bg-gray-800 text-white shadow-sm' 
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <CalendarIcon className="w-4 h-4" />
+            Calendar
+          </button>
+          <button
             onClick={() => setActiveTab('exercises')}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
               activeTab === 'exercises' 
@@ -102,7 +143,7 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
             }`}
           >
             <List className="w-4 h-4" />
-            My Exercises
+            Exercises
           </button>
         </div>
       </div>
@@ -123,6 +164,7 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
           {workouts.map((session, index) => {
             const isExpanded = expandedId === session.id;
             const date = session.timestamp;
+            const startTime = session.startTime;
 
             return (
               <Card 
@@ -138,10 +180,17 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-display font-bold text-lg text-gray-200 tracking-tight">{session.workoutName}</h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className="text-xs text-gray-500">
                           {date?.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                         </span>
+                        {/* Task 3: Show start time */}
+                        {startTime && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatTimeDisplay(startTime)}
+                          </span>
+                        )}
                         {session.duration && (
                           <span className="text-xs bg-gray-800 px-2 py-0.5 rounded text-gray-500">
                             {formatDuration(session.duration)}
@@ -199,6 +248,75 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
               </Card>
             );
           })}
+        </div>
+      ) : activeTab === 'calendar' ? (
+        /* Task 4: Calendar View */
+        <div className="p-6 pt-0 space-y-4">
+          <Calendar
+            selectedDate={selectedDate}
+            onSelectDate={handleDateSelect}
+            markedDates={workoutDates}
+            maxDate={new Date().toISOString().split('T')[0]}
+          />
+
+          {/* Selected Date Workouts */}
+          {selectedDate && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-gray-400">
+                  {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                </h3>
+                <button
+                  onClick={clearDateFilter}
+                  className="text-xs text-emerald-400 hover:text-emerald-300"
+                >
+                  Clear filter
+                </button>
+              </div>
+
+              {filteredWorkouts.length === 0 ? (
+                <Card hover={false} className="p-6 text-center">
+                  <Dumbbell className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No workouts on this date</p>
+                </Card>
+              ) : (
+                filteredWorkouts.map((session) => {
+                  const startTime = session.startTime;
+                  return (
+                    <Card key={session.id} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-gray-200">{session.workoutName}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            {startTime && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatTimeDisplay(startTime)}
+                              </span>
+                            )}
+                            {session.duration && (
+                              <span className="text-xs bg-gray-800 px-2 py-0.5 rounded text-gray-500">
+                                {formatDuration(session.duration)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {session.exercises?.length || 0} exercises
+                        </span>
+                      </div>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {!selectedDate && (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">Select a date to view workouts</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-6 pt-0 space-y-4">

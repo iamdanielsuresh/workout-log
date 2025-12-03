@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { User, Calendar, Ruler, Scale, Percent, X, Save, Camera } from 'lucide-react';
+import { User, Calendar, Ruler, Scale, Percent, X, Save, Camera, Globe, Clock, Target, AlertTriangle, Activity } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
+import { COUNTRIES, TIMEZONES, getDefaultTimezone, detectUserTimezone } from '../../constants/countries';
 
 /**
  * Edit Profile Modal - Allows editing profile after onboarding
@@ -22,7 +23,14 @@ export function EditProfileModal({
     height: '',
     weight: '',
     bodyFat: '',
-    experienceLevel: 'intermediate'
+    experienceLevel: 'intermediate',
+    country: '',
+    timezone: '',
+    // Extended health metrics (Task 6)
+    goals: '',
+    trainingAge: '',
+    injuries: '',
+    activityLevel: ''
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -37,11 +45,26 @@ export function EditProfileModal({
         height: profile.height ? String(profile.height) : '',
         weight: profile.weight ? String(profile.weight) : '',
         bodyFat: profile.body_fat ? String(profile.body_fat) : '',
-        experienceLevel: profile.experience_level || 'intermediate'
+        experienceLevel: profile.experience_level || 'intermediate',
+        country: profile.country || '',
+        timezone: profile.timezone || detectUserTimezone(),
+        // Extended health metrics
+        goals: profile.goals || '',
+        trainingAge: profile.training_age ? String(profile.training_age) : '',
+        injuries: profile.injuries || '',
+        activityLevel: profile.activity_level || ''
       });
       setErrors({});
     }
   }, [profile, isOpen]);
+
+  // Auto-set timezone when country changes
+  const handleCountryChange = (countryCode) => {
+    updateField('country', countryCode);
+    if (countryCode && !formData.timezone) {
+      updateField('timezone', getDefaultTimezone(countryCode));
+    }
+  };
 
   const calculateAge = (dob) => {
     if (!dob) return null;
@@ -88,7 +111,14 @@ export function EditProfileModal({
         weight: formData.weight ? parseFloat(formData.weight) : null,
         body_fat: formData.bodyFat ? parseFloat(formData.bodyFat) : null,
         photo_url: userPhoto || profile?.photo_url || null,
-        experience_level: formData.experienceLevel
+        experience_level: formData.experienceLevel,
+        country: formData.country || null,
+        timezone: formData.timezone || null,
+        // Extended health metrics
+        goals: formData.goals || null,
+        training_age: formData.trainingAge ? parseInt(formData.trainingAge) : null,
+        injuries: formData.injuries || null,
+        activity_level: formData.activityLevel || null
       });
       onClose();
     } catch (error) {
@@ -249,6 +279,106 @@ export function EditProfileModal({
                 className="text-center"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Location & Timezone (Task 1) */}
+        <div className="pt-2 border-t border-gray-800">
+          <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+            <Globe className="w-3 h-3" />
+            Location & Timezone
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Country</label>
+              <select
+                value={formData.country}
+                onChange={(e) => handleCountryChange(e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
+              >
+                <option value="">Select Country</option>
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Timezone</label>
+              <select
+                value={formData.timezone}
+                onChange={(e) => updateField('timezone', e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
+              >
+                <option value="">Select Timezone</option>
+                {TIMEZONES.map((tz) => (
+                  <option key={tz.value} value={tz.value}>{tz.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Extended Health Metrics (Task 6) */}
+        <div className="pt-2 border-t border-gray-800">
+          <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+            <Target className="w-3 h-3" />
+            Health & Fitness Goals (Helps AI personalization)
+          </p>
+          
+          {/* Goals */}
+          <div className="mb-3">
+            <label className="block text-xs text-gray-400 mb-1">Fitness Goals</label>
+            <textarea
+              value={formData.goals}
+              onChange={(e) => updateField('goals', e.target.value)}
+              placeholder="e.g., Build muscle, lose fat, improve strength..."
+              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm resize-none"
+              rows={2}
+            />
+          </div>
+
+          {/* Training Age & Activity Level */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Training Age (years)</label>
+              <Input
+                type="number"
+                value={formData.trainingAge}
+                onChange={(e) => updateField('trainingAge', e.target.value)}
+                placeholder="2"
+                className="text-center"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Activity Level</label>
+              <select
+                value={formData.activityLevel}
+                onChange={(e) => updateField('activityLevel', e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
+              >
+                <option value="">Select Level</option>
+                <option value="sedentary">Sedentary (Desk Job)</option>
+                <option value="light">Light (1-2 days/week)</option>
+                <option value="moderate">Moderate (3-5 days/week)</option>
+                <option value="active">Active (6-7 days/week)</option>
+                <option value="very_active">Very Active (Athlete)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Injuries/Limitations */}
+          <div>
+            <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              Injuries or Limitations
+            </label>
+            <textarea
+              value={formData.injuries}
+              onChange={(e) => updateField('injuries', e.target.value)}
+              placeholder="e.g., Lower back pain, shoulder mobility issues..."
+              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm resize-none"
+              rows={2}
+            />
           </div>
         </div>
 

@@ -43,6 +43,9 @@ export function useWorkouts(userId) {
           workoutType: row.workout_type,
           workoutName: row.workout_name,
           timestamp: new Date(row.created_at),
+          // Task 3: Include start_time and workout_date
+          startTime: row.start_time ? new Date(row.start_time) : null,
+          workoutDate: row.workout_date || new Date(row.created_at).toISOString().split('T')[0],
           exercises: row.exercises || [],
           note: row.note,
           duration: row.duration
@@ -98,6 +101,10 @@ export function useWorkouts(userId) {
   const saveWorkout = useCallback(async (workout) => {
     if (!userId) throw new Error('No user ID');
 
+    // Task 3: Include start_time and workout_date
+    const workoutDate = workout.workoutDate || new Date().toISOString().split('T')[0];
+    const startTime = workout.startTime || new Date().toISOString();
+
     const { error } = await supabase
       .from('workout_logs')
       .insert({
@@ -106,7 +113,9 @@ export function useWorkouts(userId) {
         workout_name: workout.workoutName,
         exercises: workout.exercises,
         note: workout.note,
-        duration: workout.duration
+        duration: workout.duration,
+        start_time: startTime,
+        workout_date: workoutDate
       });
 
     if (error) throw error;
