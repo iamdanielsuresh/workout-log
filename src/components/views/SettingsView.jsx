@@ -234,6 +234,15 @@ export function SettingsView({
               </div>
             )}
           </div>
+
+          <Button 
+            onClick={handleSave} 
+            loading={saving}
+            className="w-full"
+            icon={Check}
+          >
+            Save Changes
+          </Button>
         </div>
 
         {/* Account Section */}

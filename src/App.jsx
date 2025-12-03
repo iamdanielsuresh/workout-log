@@ -91,12 +91,14 @@ export default function App() {
   
   // Active workout state
   const [activeWorkoutId, setActiveWorkoutId] = useState(null);
+  const [tempPlan, setTempPlan] = useState(null); // For quick workouts
   const [activeLog, setActiveLog] = useState({});
   const [workoutNote, setWorkoutNote] = useState('');
   const [workoutStartTime, setWorkoutStartTime] = useState(null);
   
   // UI state
   const [toast, setToast] = useState(null);
+  const [historyTab, setHistoryTab] = useState('history');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -222,6 +224,27 @@ export default function App() {
     setAiTips({});
     setWorkoutStartTime(Date.now());
     resetTimer();
+    setView('workout');
+  };
+
+  const handleStartQuickWorkout = (exercise) => {
+    const quickPlan = {
+      id: 'quick-log',
+      name: exercise.name,
+      exercises: [{
+        name: exercise.name,
+        sets: 3,
+        range: '8-12',
+        muscleGroup: exercise.muscle_group,
+        tip: exercise.description
+      }],
+      estTime: '15 min'
+    };
+    setTempPlan(quickPlan);
+    setActiveWorkoutId('quick-log');
+    setWorkoutStartTime(Date.now());
+    setActiveLog({});
+    setWorkoutNote('');
     setView('workout');
   };
 
@@ -489,15 +512,23 @@ export default function App() {
                 recommendationLabel={recommendationLabel}
                 nextActionHint={nextActionHint}
                 onSelectWorkout={handleSelectWorkout}
-                onViewHistory={() => handleNavigate('history')}
+                onViewHistory={() => {
+                  setHistoryTab('history');
+                  handleNavigate('history');
+                }}
+                onQuickLog={() => {
+                  setHistoryTab('exercises');
+                  handleNavigate('history');
+                }}
                 onSettings={() => handleNavigate('settings')}
+                onBuddy={() => handleNavigate('buddy')}
               />
             )}
 
             {/* Workout View */}
             {view === 'workout' && activeWorkoutId && (
               <WorkoutView
-                plan={plans[activeWorkoutId]}
+                plan={activeWorkoutId === 'quick-log' ? tempPlan : plans[activeWorkoutId]}
                 activeLog={activeLog}
                 history={history}
                 workoutNote={workoutNote}
@@ -522,11 +553,15 @@ export default function App() {
             {view === 'history' && (
               <HistoryView
                 workouts={workouts}
+                initialTab={historyTab}
                 onBack={() => handleNavigate('home')}
+                onStartQuickWorkout={handleStartQuickWorkout}
                 onDelete={async (id) => {
                   await deleteWorkout(id);
                   setToast({ message: 'Session deleted', type: 'success' });
                 }}
+                activeTab={historyTab}
+                onTabChange={setHistoryTab}
               />
             )}
 

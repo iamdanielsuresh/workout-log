@@ -8,6 +8,7 @@ import {
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { verifyApiKey } from '../../services/ai';
 import { buildWorkoutGenerationPrompt } from '../../utils/aiWorkoutGenerator';
 import { AiPreferencesForm } from '../plans/AiPreferencesForm';
 
@@ -247,6 +248,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
 
   const LOADING_STAGES = [
@@ -419,6 +421,29 @@ Return ONLY valid JSON (no markdown):
     });
   };
 
+  const handleVerifyAndContinue = async () => {
+    if (!apiKey) {
+      setError('Please enter an API key');
+      return;
+    }
+
+    setVerifying(true);
+    setError('');
+
+    try {
+      const result = await verifyApiKey(apiKey);
+      if (result.valid) {
+        setShowApiKeyInput(false);
+      } else {
+        setError(result.error || 'Invalid API key');
+      }
+    } catch (err) {
+      setError('Verification failed. Please try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   // Initial choice screen
   if (!mode) {
     return (
@@ -580,12 +605,13 @@ Return ONLY valid JSON (no markdown):
 
           <div className="space-y-3">
             <Button 
-              onClick={() => setShowApiKeyInput(false)} 
-              disabled={!apiKey.startsWith('AIza')}
+              onClick={handleVerifyAndContinue} 
+              disabled={!apiKey || verifying}
+              loading={verifying}
               className="w-full"
               icon={ChevronRight}
             >
-              Continue
+              {verifying ? 'Verifying...' : 'Verify & Continue'}
             </Button>
             <Button variant="ghost" onClick={() => setMode(null)} className="w-full" icon={ChevronLeft}>
               Back
