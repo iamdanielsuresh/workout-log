@@ -237,3 +237,6 @@ export function EditProfileModal({
     </Modal>
   );
 }
+
+
+export default EditProfileModal;

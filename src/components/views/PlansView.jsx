@@ -320,3 +320,6 @@ function ExercisePreviewCard({ exercise, isAiGenerated }) {
     </div>
   );
 }
+
+
+export default PlansView;

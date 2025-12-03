@@ -647,3 +647,6 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
     </div>
   );
 }
+
+
+export default BuddyView;
