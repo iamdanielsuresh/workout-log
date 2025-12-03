@@ -492,26 +492,26 @@ Return ONLY valid JSON (no markdown):
                   <AlertCircle className="w-4 h-4 inline mr-2 text-gray-500" />
                   Anything AI should know?
                 </label>
-                <div 
-                  className="relative"
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  <textarea
-                    value={aiQuestions.specialNotes}
-                    onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
-                    placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none text-sm transition-all"
-                    rows={3}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="none"
-                    spellCheck="false"
-                    data-gramm="false"
-                    data-gramm_editor="false"
-                    data-enable-grammarly="false"
-                  />
-                </div>
+                <textarea
+                  value={aiQuestions.specialNotes}
+                  onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
+                  onFocus={(e) => {
+                    // Scroll textarea into view when focused on mobile
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                  }}
+                  placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
+                  className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none text-sm transition-all"
+                  rows={3}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
+                  data-gramm="false"
+                  data-gramm_editor="false"
+                  data-enable-grammarly="false"
+                />
               </div>
             </div>
 

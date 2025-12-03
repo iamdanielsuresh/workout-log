@@ -48,8 +48,23 @@ export function Modal({
       }
     };
 
-    // Focus the modal container instead of first element to prevent keyboard issues
-    modalRef.current?.focus();
+    // Handle visual viewport changes (mobile keyboard)
+    const handleViewportChange = () => {
+      if (modalRef.current) {
+        // Keep modal in view when keyboard opens
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+          setTimeout(() => {
+            activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      }
+    };
+
+    // Listen for visual viewport changes (keyboard open/close)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+    }
 
     document.addEventListener('keydown', handleKeyDown);
     
@@ -58,6 +73,9 @@ export function Modal({
     
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      }
       document.body.style.overflow = '';
       // Restore focus to previously focused element
       previousFocusRef.current?.focus();
@@ -84,7 +102,7 @@ export function Modal({
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -96,17 +114,16 @@ export function Modal({
         aria-hidden="true"
       />
       
-      {/* Content - Sheet style on mobile, centered on desktop */}
+      {/* Content - Centered modal with safe area padding */}
       <div 
         ref={modalRef}
         tabIndex={-1}
         className={`
           relative w-full ${sizes[size]}
           bg-gray-900 border border-gray-800 shadow-2xl
-          animate-in fade-in duration-200
-          sm:rounded-2xl sm:zoom-in-95
-          rounded-t-2xl rounded-b-none sm:rounded-b-2xl
-          max-h-[90vh] sm:max-h-[85vh]
+          animate-in fade-in zoom-in-95 duration-200
+          rounded-2xl
+          max-h-[calc(100vh-8rem)] sm:max-h-[85vh]
           flex flex-col
           outline-none
         `}
