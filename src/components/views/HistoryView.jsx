@@ -10,6 +10,9 @@ import { Modal, ConfirmDialog } from '../ui/Modal';
 import { ViewHeader } from '../layout/Navigation';
 import { getExercises, createExercise } from '../../services/supabase';
 
+// Default exercise duration estimate (15 minutes in milliseconds)
+const DEFAULT_EXERCISE_DURATION_MS = 15 * 60 * 1000;
+
 /**
  * HistoryView - Workout history and Exercise Library
  */
@@ -187,13 +190,15 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
                             )}
                           </div>
                           
-                          {/* Exercise list with timestamps - always visible */}
+                          {/* Exercise list with timestamps */}
                           <div className="space-y-4 mt-4 border-t border-gray-800 pt-4">
                             {session.exercises?.map((ex, i) => {
-                              // Calculate approximate time for each exercise
+                              // Calculate approximate time for each exercise based on workout duration
+                              const exerciseDurationMs = session.duration 
+                                ? (session.duration * 1000 / (session.exercises?.length || 1)) 
+                                : DEFAULT_EXERCISE_DURATION_MS;
                               const exerciseTime = session.timestamp ? new Date(
-                                session.timestamp.getTime() + 
-                                (i * (session.duration ? (session.duration * 1000 / (session.exercises?.length || 1)) : 900000))
+                                session.timestamp.getTime() + (i * exerciseDurationMs)
                               ).toLocaleTimeString('en-US', { 
                                 hour: '2-digit', 
                                 minute: '2-digit',
