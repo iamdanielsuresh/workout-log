@@ -17,6 +17,8 @@ import { useProfile } from './hooks/useProfile';
 import { useWorkoutPlans } from './hooks/useWorkoutPlans';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
 import { useNotes } from './hooks/useNotes';
+import { useNotifications } from './hooks/useNotifications';
+import { useExerciseTips } from './hooks/useExerciseTips';
 
 // Eagerly loaded components (critical path)
 import { Card } from './components/ui/Card';
@@ -42,6 +44,10 @@ const BuddyView = lazy(() => import('./components/views/BuddyView'));
 const EditProfileModal = lazy(() => import('./components/profile/EditProfileModal'));
 const AddPlanModal = lazy(() => import('./components/plans/AddPlanModal'));
 const EditPlanModal = lazy(() => import('./components/plans/EditPlanModal'));
+const QuickPlanGenerator = lazy(() => import('./components/plans/QuickPlanGenerator'));
+const ExportModal = lazy(() => import('./components/views/ExportModal'));
+const AddPastWorkoutModal = lazy(() => import('./components/workout/AddPastWorkoutModal'));
+const NotificationSettingsModal = lazy(() => import('./components/settings/NotificationSettingsModal'));
 
 // Constants & Services
 import { DEFAULT_WORKOUT_PLANS } from './constants/defaults';
@@ -83,6 +89,14 @@ export default function App() {
   const { workouts, history, lastWorkout, streak, loading: workoutsLoading, saveWorkout, deleteWorkout } = useWorkouts(user?.id);
   const { isOnline, wasOffline } = useNetworkStatus();
   const { notes, saveNote, deleteNote, loading: notesLoading } = useNotes(user?.id);
+  const { 
+    settings: notificationSettings, 
+    saveSettings: saveNotificationSettings, 
+    requestPermission: requestNotificationPermission,
+    sendTestNotification,
+    permissionStatus: notificationPermissionStatus 
+  } = useNotifications(user?.id);
+  const { getTips: getExerciseFormTips, loading: exerciseTipsLoading } = useExerciseTips(apiKey);
   
   // Navigation state
   const [view, setView] = useState('home');
@@ -107,6 +121,12 @@ export default function App() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddPlan, setShowAddPlan] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState(null);
+  
+  // New modal states (Tasks 5, 7, 8, 10)
+  const [showQuickPlanGenerator, setShowQuickPlanGenerator] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showAddPastWorkout, setShowAddPastWorkout] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   
   // AI tips state
   const [aiTips, setAiTips] = useState({});
@@ -564,6 +584,8 @@ export default function App() {
                 }}
                 activeTab={historyTab}
                 onTabChange={setHistoryTab}
+                onExport={() => setShowExportModal(true)}
+                onAddPastWorkout={() => setShowAddPastWorkout(true)}
               />
             )}
 
@@ -614,6 +636,7 @@ export default function App() {
                   setToast({ message: 'Settings saved!', type: 'success' });
                 }}
                 onEditProfile={() => setShowEditProfile(true)}
+                onNotificationSettings={() => setShowNotificationSettings(true)}
                 onSignOut={signOut}
                 onDeleteAccount={async () => {
                   try {
@@ -731,6 +754,72 @@ export default function App() {
                 }
               });
             }}
+          />
+
+          {/* Quick Plan Generator Modal (Task 5) */}
+          <QuickPlanGenerator
+            isOpen={showQuickPlanGenerator}
+            onClose={() => setShowQuickPlanGenerator(false)}
+            apiKey={apiKey}
+            profile={profile}
+            onLogWorkout={async (workoutData) => {
+              try {
+                await saveWorkout(workoutData);
+                setToast({ message: 'Workout logged!', type: 'success' });
+              } catch (error) {
+                log.error('Error saving workout:', error);
+                setToast({ message: 'Failed to log workout', type: 'error' });
+              }
+            }}
+            onSaveAsTemplate={async (templateData) => {
+              try {
+                const existingPlans = plans || {};
+                const mergedPlans = { ...existingPlans, [templateData.id]: templateData };
+                await savePlans(mergedPlans, 'ai-generated');
+                setToast({ message: 'Saved to routines!', type: 'success' });
+              } catch (error) {
+                log.error('Error saving template:', error);
+                setToast({ message: 'Failed to save template', type: 'error' });
+              }
+            }}
+            onToast={setToast}
+          />
+
+          {/* Export Modal (Task 8) */}
+          <ExportModal
+            isOpen={showExportModal}
+            onClose={() => setShowExportModal(false)}
+            workouts={workouts}
+            onToast={setToast}
+          />
+
+          {/* Add Past Workout Modal (Task 10) */}
+          <AddPastWorkoutModal
+            isOpen={showAddPastWorkout}
+            onClose={() => setShowAddPastWorkout(false)}
+            plans={plans}
+            onSave={async (workoutData) => {
+              try {
+                await saveWorkout(workoutData);
+                setToast({ message: 'Past workout logged!', type: 'success' });
+              } catch (error) {
+                log.error('Error saving past workout:', error);
+                setToast({ message: 'Failed to log workout', type: 'error' });
+              }
+            }}
+            onToast={setToast}
+          />
+
+          {/* Notification Settings Modal (Task 7) */}
+          <NotificationSettingsModal
+            isOpen={showNotificationSettings}
+            onClose={() => setShowNotificationSettings(false)}
+            settings={notificationSettings}
+            permissionStatus={notificationPermissionStatus}
+            onSave={saveNotificationSettings}
+            onRequestPermission={requestNotificationPermission}
+            onTestNotification={sendTestNotification}
+            onToast={setToast}
           />
           </Suspense>
 

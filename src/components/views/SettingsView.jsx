@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   User, Sparkles, Key, Check, X, LogOut, 
-  UserX, AlertTriangle, Edit3, ExternalLink 
+  UserX, AlertTriangle, Edit3, ExternalLink, Bell
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -13,7 +13,7 @@ import { verifyApiKey } from '../../services/ai';
  */
 export function SettingsView({ 
   currentSettings, profile, isAnonymous, 
-  onSave, onEditProfile, onSignOut, onDeleteAccount 
+  onSave, onEditProfile, onNotificationSettings, onSignOut, onDeleteAccount 
 }) {
   const [aiEnabled, setAiEnabled] = useState(currentSettings?.ai_enabled || false);
   const [apiKey, setApiKey] = useState(currentSettings?.google_api_key || '');
@@ -242,6 +242,20 @@ export function SettingsView({
             icon={Check}
           >
             Save Changes
+          </Button>
+        </div>
+
+        {/* Notifications Section (Task 7) */}
+        <div className="space-y-3 pt-4">
+          <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider px-1">Notifications</h3>
+          
+          <Button
+            onClick={onNotificationSettings}
+            variant="secondary"
+            className="w-full"
+            icon={Bell}
+          >
+            Notification Settings
           </Button>
         </div>
 
