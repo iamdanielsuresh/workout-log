@@ -12,9 +12,9 @@ export const Card = forwardRef(function Card({
   ...props 
 }, ref) {
   const variants = {
-    default: 'bg-gradient-to-br from-gray-900 to-gray-900/50 border-white/5 shadow-xl shadow-black/20',
-    elevated: 'bg-gray-800 border-white/10 shadow-2xl shadow-black/40',
-    accent: 'bg-gradient-to-br from-gray-900 to-emerald-900/20 border-emerald-500/20 shadow-lg shadow-emerald-900/10',
+    default: 'bg-gray-900/40 backdrop-blur-2xl border-white/5 shadow-xl shadow-black/20',
+    elevated: 'bg-gray-800/80 backdrop-blur-xl border-white/10 shadow-2xl shadow-black/40',
+    accent: 'bg-gradient-to-br from-gray-900/60 to-emerald-900/20 backdrop-blur-xl border-emerald-500/20 shadow-lg shadow-emerald-900/10',
     ghost: 'bg-transparent border-white/5',
   };
 

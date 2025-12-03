@@ -38,7 +38,7 @@ export function PlansView({
   const aiPlanCount = plansList.filter(p => p.source === 'ai-generated').length;
 
   return (
-    <div className="min-h-screen pb-nav">
+    <div className="min-h-screen pb-nav animate-in fade-in slide-in-from-bottom-4 duration-500">
       <ViewHeader 
         title="Workout Plans" 
         subtitle={`${plansList.length} routine${plansList.length !== 1 ? 's' : ''}`}
@@ -47,17 +47,17 @@ export function PlansView({
       <div className="p-6 max-w-lg mx-auto space-y-4">
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20">
+          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-100 fill-mode-backwards">
             <p className="text-3xl font-display font-bold text-emerald-400">{plansList.length}</p>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Routines</p>
           </div>
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20">
+          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-200 fill-mode-backwards">
             <p className="text-3xl font-display font-bold text-blue-400">
               {uniqueExercises.size}
             </p>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Exercises</p>
           </div>
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20">
+          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20 animate-in fade-in zoom-in-95 duration-500 delay-300 fill-mode-backwards">
             <p className="text-3xl font-display font-bold text-amber-400">
               {aiPlanCount}
             </p>
@@ -68,7 +68,7 @@ export function PlansView({
         {/* Plans List */}
         <div className="space-y-3">
           {plansList.length === 0 ? (
-            <Card hover={false} className="p-8 text-center">
+            <Card hover={false} className="p-8 text-center animate-in fade-in zoom-in-95 duration-500 delay-300">
               <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Dumbbell className="w-8 h-8 text-gray-600" />
               </div>
@@ -81,7 +81,7 @@ export function PlansView({
               </Button>
             </Card>
           ) : (
-            plansList.map((plan) => {
+            plansList.map((plan, index) => {
               const isExpanded = expandedPlan === plan.id;
               const isAiGenerated = plan.source === 'ai-generated';
 
@@ -89,7 +89,8 @@ export function PlansView({
                 <Card 
                   key={plan.id} 
                   hover={false} 
-                  className="overflow-hidden"
+                  className="overflow-hidden animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards"
+                  style={{ animationDelay: `${index * 50 + 300}ms` }}
                 >
                   {/* Plan header */}
                   <div 

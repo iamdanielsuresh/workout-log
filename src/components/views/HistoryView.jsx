@@ -18,7 +18,7 @@ export function HistoryView({ workouts, onBack, onDelete }) {
   };
 
   return (
-    <div className="pb-nav max-w-lg mx-auto min-h-screen">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       <ViewHeader 
         title="Workout History" 
         subtitle={`${workouts.length} workout${workouts.length !== 1 ? 's' : ''} logged`}
@@ -26,7 +26,7 @@ export function HistoryView({ workouts, onBack, onDelete }) {
 
       <div className="p-6 space-y-3">
         {workouts.length === 0 && (
-          <Card hover={false} className="p-8 text-center">
+          <Card hover={false} className="p-8 text-center animate-in fade-in zoom-in-95 duration-500">
             <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <Dumbbell className="w-8 h-8 text-gray-600" />
             </div>
@@ -36,12 +36,17 @@ export function HistoryView({ workouts, onBack, onDelete }) {
           </Card>
         )}
 
-        {workouts.map((session) => {
+        {workouts.map((session, index) => {
           const isExpanded = expandedId === session.id;
           const date = session.timestamp;
 
           return (
-            <Card key={session.id} hover={false} className="overflow-hidden">
+            <Card 
+              key={session.id} 
+              hover={false} 
+              className="overflow-hidden animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
               <div
                 className="p-4 cursor-pointer"
                 onClick={() => setExpandedId(isExpanded ? null : session.id)}

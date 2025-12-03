@@ -24,8 +24,10 @@ import { Input, Textarea } from './components/ui/Input';
 import { Toast } from './components/ui/Toast';
 import { Modal, ConfirmDialog } from './components/ui/Modal';
 import { WorkoutStartModal } from './components/workout/WorkoutStartModal';
+import { WorkoutCompleteModal } from './components/workout/WorkoutCompleteModal';
 import { OnboardingFlow } from './components/onboarding';
 import { BottomNavigation } from './components/layout/Navigation';
+import { BackgroundEffects } from './components/ui/BackgroundEffects';
 
 // Lazy loaded view components (code splitting)
 const HomeView = lazy(() => import('./components/views/HomeView'));
@@ -72,6 +74,8 @@ export default function App() {
   const [view, setView] = useState('home');
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(null);
   const [showStartModal, setShowStartModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completedWorkoutStats, setCompletedWorkoutStats] = useState(null);
   
   // Active workout state
   const [activeWorkoutId, setActiveWorkoutId] = useState(null);
@@ -233,15 +237,24 @@ export default function App() {
 
     setIsSaving(true);
     try {
+      const duration = Math.floor((Date.now() - workoutStartTime) / 1000);
       await saveWorkout({
         workoutType: activeWorkoutId,
         workoutName: plans[activeWorkoutId]?.name || activeWorkoutId,
         exercises: exercisesList,
         note: workoutNote,
-        duration: Math.floor((Date.now() - workoutStartTime) / 1000)
+        duration: duration
       });
-      setToast({ message: 'Workout saved! 💪', type: 'success' });
-      setView('home');
+      
+      // Show completion modal instead of toast
+      setCompletedWorkoutStats({
+        name: plans[activeWorkoutId]?.name || activeWorkoutId,
+        duration: duration,
+        exercisesCount: exercisesList.length
+      });
+      setShowCompleteModal(true);
+      
+      // Reset active state but keep view until modal closes
       setActiveWorkoutId(null);
     } catch (error) {
       log.error('Error saving workout:', error);
@@ -351,7 +364,9 @@ export default function App() {
   const displayName = profile?.display_name || userName;
 
   return (
-    <div className="min-h-screen bg-gray-950 font-sans">
+    <div className="min-h-screen bg-gray-950 font-sans relative">
+      <BackgroundEffects />
+      
       {/* Onboarding Flow */}
       {showOnboarding && (
         <OnboardingFlow
@@ -404,6 +419,19 @@ export default function App() {
         lastWorkout={lastWorkout}
         onStart={handleStartWorkout}
         onClose={() => setShowStartModal(false)}
+      />
+
+      {/* Workout Complete Modal */}
+      <WorkoutCompleteModal
+        isOpen={showCompleteModal}
+        workoutName={completedWorkoutStats?.name}
+        duration={completedWorkoutStats?.duration}
+        exercisesCount={completedWorkoutStats?.exercisesCount}
+        onClose={() => {
+          setShowCompleteModal(false);
+          setCompletedWorkoutStats(null);
+          setView('home');
+        }}
       />
 
       {/* Main Views - Lazy loaded with Suspense */}

@@ -116,7 +116,7 @@ export function SettingsView({
   };
 
   return (
-    <div className="pb-nav max-w-lg mx-auto min-h-screen">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       <ViewHeader 
         title="Settings" 
         subtitle="Manage your account"

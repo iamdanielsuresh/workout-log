@@ -20,7 +20,7 @@ export function WorkoutView({
   }).length;
 
   return (
-    <div className="pb-40 max-w-lg mx-auto min-h-screen safe-area-top">
+    <div className="pb-40 max-w-lg mx-auto min-h-screen safe-area-top animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-gray-950/90 border-b border-gray-800 px-6 py-4">
         <div className="flex items-center justify-between mb-3">
@@ -35,8 +35,8 @@ export function WorkoutView({
             <div>
               <h2 className="text-2xl font-display font-bold text-gray-100 tracking-tight">{plan.name}</h2>
               <div className="flex items-center gap-3 mt-1">
-                <span className="flex items-center gap-1 text-xs text-emerald-400 font-semibold">
-                  <Timer className="w-3 h-3" />
+                <span className="flex items-center gap-1 text-sm text-emerald-400 font-display font-bold tracking-wide tabular-nums">
+                  <Timer className="w-4 h-4" />
                   {formatTime()}
                 </span>
               </div>

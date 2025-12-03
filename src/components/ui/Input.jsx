@@ -78,7 +78,7 @@ export const NumberInput = forwardRef(function NumberInput({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-center text-gray-100 font-semibold 
+        className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg
                    placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
         {...props}
       />

@@ -28,7 +28,7 @@ export function HomeView({
   };
 
   return (
-    <div className="p-6 pb-nav max-w-lg mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 safe-area-top">
+    <div className="p-6 pb-nav max-w-lg mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 safe-area-top">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">

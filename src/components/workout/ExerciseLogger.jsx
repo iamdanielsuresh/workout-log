@@ -35,9 +35,19 @@ export function ExerciseLogger({
     newSets[idx] = { ...newSets[idx], [field]: sanitizedValue };
     setSets(newSets);
     onUpdate?.(newSets);
+
+    // Haptic feedback when set is completed (both fields filled)
+    if (sanitizedValue && newSets[idx].weight && newSets[idx].reps) {
+      const otherField = field === 'weight' ? 'reps' : 'weight';
+      // Only vibrate if the other field was already present (meaning we just completed the set)
+      if (sets[idx][otherField] && navigator.vibrate) {
+        navigator.vibrate(10);
+      }
+    }
   };
 
   const handleIncrement = (idx, field, delta) => {
+    if (navigator.vibrate) navigator.vibrate(5); // Light tap
     const currentVal = parseFloat(sets[idx][field]) || 0;
     const increment = field === 'weight' ? 2.5 : 1;
     const newVal = Math.max(0, currentVal + (delta * increment));
@@ -185,18 +195,18 @@ export function ExerciseLogger({
       <div className="p-4 space-y-3">
         {sets.map((set, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className={`w-6 text-sm font-semibold text-center ${
+            <span className={`w-6 text-sm font-display font-bold text-center ${
               set.weight && set.reps ? 'text-emerald-400' : 'text-gray-600'
             }`}>
               {set.weight && set.reps ? (
                 <Check className="w-4 h-4 mx-auto" />
               ) : (
-                `#${i + 1}`
+                i + 1
               )}
             </span>
 
             {/* Weight input */}
-            <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
+            <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden group focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/50 transition-all">
               <button
                 onClick={() => handleIncrement(i, 'weight', -1)}
                 className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors"
@@ -208,7 +218,7 @@ export function ExerciseLogger({
                 placeholder="kg"
                 value={set.weight}
                 onChange={(e) => handleChange(i, 'weight', e.target.value)}
-                className="flex-1 bg-transparent text-center text-gray-100 font-semibold placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
+                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
               />
               <button
                 onClick={() => handleIncrement(i, 'weight', 1)}
@@ -231,7 +241,7 @@ export function ExerciseLogger({
                 placeholder="reps"
                 value={set.reps}
                 onChange={(e) => handleChange(i, 'reps', e.target.value)}
-                className="flex-1 bg-transparent text-center text-gray-100 font-semibold placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
+                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
               />
               <button
                 onClick={() => handleIncrement(i, 'reps', 1)}

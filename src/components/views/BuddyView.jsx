@@ -353,7 +353,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
   }
 
   return (
-    <div className="pb-nav max-w-lg mx-auto min-h-screen">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       <ViewHeader 
         title="AI Buddy" 
         subtitle="Your personal coach"

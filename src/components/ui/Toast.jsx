@@ -28,7 +28,7 @@ export function Toast({ message, type = 'success', onClose, duration = 3000 }) {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-top-2 duration-200">
-      <div className={`flex items-center gap-3 px-5 py-3 rounded-xl ${styles[type]}`}>
+      <div className={`relative overflow-hidden flex items-center gap-3 px-5 py-3 rounded-xl ${styles[type]}`}>
         <Icon className="w-5 h-5 shrink-0" />
         <span className="font-medium text-sm">{message}</span>
         <button 
@@ -37,7 +37,24 @@ export function Toast({ message, type = 'success', onClose, duration = 3000 }) {
         >
           <X className="w-4 h-4" />
         </button>
+        
+        {/* Progress Bar */}
+        <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full">
+          <div 
+            className="h-full bg-white/60"
+            style={{ 
+              width: '100%',
+              animation: `shrink ${duration}ms linear forwards`
+            }} 
+          />
+        </div>
       </div>
+      <style>{`
+        @keyframes shrink {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
     </div>
   );
 }
