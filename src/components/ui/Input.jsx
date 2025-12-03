@@ -19,13 +19,13 @@ export const Input = forwardRef(function Input({
         ref={ref}
         type={type}
         className={`
-          w-full bg-gray-800/50 border border-gray-700
-          text-gray-100 placeholder:text-gray-500
+          w-full bg-gray-900/50 border border-white/10
+          text-gray-100 placeholder:text-gray-600
           rounded-xl transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
+          focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
           disabled:opacity-50 disabled:cursor-not-allowed
           ${Icon ? 'pl-10 pr-4' : 'px-4'} py-3
-          ${error ? 'border-red-500/50 focus:ring-red-500/50' : ''}
+          ${error ? 'border-red-500/50 focus:ring-red-500/20' : ''}
           ${className}
         `}
         {...props}
@@ -119,13 +119,13 @@ export const Textarea = forwardRef(function Textarea({
     <textarea
       ref={ref}
       className={`
-        w-full bg-gray-800/50 border border-gray-700
-        text-gray-100 placeholder:text-gray-500
+        w-full bg-gray-900/50 border border-white/10
+        text-gray-100 placeholder:text-gray-600
         rounded-xl px-4 py-3 transition-all duration-200
-        focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
+        focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
         disabled:opacity-50 disabled:cursor-not-allowed
         resize-none
-        ${error ? 'border-red-500/50 focus:ring-red-500/50' : ''}
+        ${error ? 'border-red-500/50 focus:ring-red-500/20' : ''}
         ${className}
       `}
       {...autoEditProps}

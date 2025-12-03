@@ -23,7 +23,7 @@ export function WorkoutCard({
               <Dumbbell className="w-5 h-5 text-gray-400" />
             </div>
             <div>
-              <h4 className="font-semibold text-gray-100">{workout.name}</h4>
+              <h4 className="font-display font-bold text-lg text-gray-100 tracking-tight">{workout.name}</h4>
               <div className="flex items-center gap-3 mt-0.5">
                 <span className="flex items-center gap-1 text-xs text-gray-500">
                   <Target className="w-3 h-3" />
@@ -67,7 +67,7 @@ export function WorkoutCard({
           </div>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-100 mb-1">{workout.name}</h2>
+        <h2 className="text-2xl font-display font-bold text-gray-100 mb-1 tracking-tight">{workout.name}</h2>
         {workout.desc && (
           <p className="text-gray-500 text-sm mb-4">{workout.desc}</p>
         )}
@@ -101,7 +101,7 @@ export function StreakCard({ streak }) {
           </div>
           <div>
             <p className="text-xs text-gray-500 font-medium">Current Streak</p>
-            <p className="text-xl font-bold text-gray-100">
+            <p className="text-2xl font-display font-bold text-gray-100">
               {streak} day{streak !== 1 ? 's' : ''}
             </p>
           </div>

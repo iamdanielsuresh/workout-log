@@ -6,14 +6,14 @@ export function ProgressBar({ completed, total, showLabel = true }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden border border-white/5">
         <div
-          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+          className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_10px_-2px_rgba(16,185,129,0.5)]"
           style={{ width: `${percentage}%` }}
         />
       </div>
       {showLabel && (
-        <span className="text-xs font-semibold text-gray-400 min-w-[40px] text-right">
+        <span className="text-xs font-semibold text-gray-400 min-w-[40px] text-right font-display">
           {completed}/{total}
         </span>
       )}
@@ -53,7 +53,7 @@ export function CircularProgress({ value, max = 100, size = 48, strokeWidth = 4 
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         strokeLinecap="round"
-        className="text-emerald-500 transition-all duration-500"
+        className="text-emerald-500 transition-all duration-500 ease-out drop-shadow-[0_0_4px_rgba(16,185,129,0.5)]"
       />
     </svg>
   );

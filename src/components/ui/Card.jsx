@@ -12,14 +12,14 @@ export const Card = forwardRef(function Card({
   ...props 
 }, ref) {
   const variants = {
-    default: 'bg-gray-900/80 border-gray-800',
-    elevated: 'bg-gray-800/90 border-gray-700',
-    accent: 'bg-gray-900/80 border-emerald-500/30',
-    ghost: 'bg-transparent border-gray-800/50',
+    default: 'bg-gradient-to-br from-gray-900 to-gray-900/50 border-white/5 shadow-xl shadow-black/20',
+    elevated: 'bg-gray-800 border-white/10 shadow-2xl shadow-black/40',
+    accent: 'bg-gradient-to-br from-gray-900 to-emerald-900/20 border-emerald-500/20 shadow-lg shadow-emerald-900/10',
+    ghost: 'bg-transparent border-white/5',
   };
 
   const hoverClass = hover && onClick 
-    ? 'hover:bg-gray-800/90 hover:border-gray-700 active:scale-[0.98] cursor-pointer' 
+    ? 'hover:bg-gray-800/50 hover:border-white/10 active:scale-[0.98] cursor-pointer' 
     : '';
 
   return (

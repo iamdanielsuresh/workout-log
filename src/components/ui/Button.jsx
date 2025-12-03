@@ -18,20 +18,21 @@ export const Button = forwardRef(function Button({
 }, ref) {
   const variants = {
     primary: `
-      bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700
-      text-gray-950 font-semibold
-      shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30
+      bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600
+      text-gray-950 font-bold tracking-wide
+      shadow-[0_0_20px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_0_25px_-5px_rgba(16,185,129,0.6)]
       focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-950
+      transition-all duration-300
     `,
     secondary: `
       bg-gray-800 hover:bg-gray-700 active:bg-gray-600
       text-gray-100 font-medium
-      border border-gray-700
+      border border-white/10 hover:border-white/20
       focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950
     `,
     ghost: `
       bg-transparent hover:bg-gray-800/50 active:bg-gray-800
-      text-gray-300 hover:text-gray-100 font-medium
+      text-gray-400 hover:text-gray-100 font-medium
       focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-gray-950
     `,
     danger: `
@@ -43,7 +44,8 @@ export const Button = forwardRef(function Button({
     outline: `
       bg-transparent hover:bg-emerald-500/10
       text-emerald-400 hover:text-emerald-300 font-medium
-      border border-emerald-500/50 hover:border-emerald-500
+      border border-emerald-500/50 hover:border-emerald-400
+      shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)] hover:shadow-[0_0_15px_-5px_rgba(16,185,129,0.3)]
       focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-950
     `,
   };

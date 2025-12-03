@@ -40,7 +40,7 @@ export function HomeView({
             </div>
           )}
           <div>
-            <h1 className="text-xl font-bold text-gray-100">
+            <h1 className="text-3xl font-display font-bold text-gray-100 tracking-tight">
               {isFirstTime ? `Welcome${userName !== 'there' ? `, ${userName}` : ''}! 👋` : `Hi ${userName}`}
             </h1>
             <p className="text-gray-500 text-xs">
@@ -89,12 +89,12 @@ export function HomeView({
       <div className="grid grid-cols-2 gap-4">
         <Card onClick={onViewHistory} className="p-4 flex flex-col items-center gap-2">
           <History className="w-6 h-6 text-emerald-400" />
-          <span className="text-sm font-bold text-gray-200">{workouts.length}</span>
+          <span className="text-2xl font-display font-bold text-gray-200">{workouts.length}</span>
           <span className="text-xs text-gray-500">Total Workouts</span>
         </Card>
         <Card className="p-4 flex flex-col items-center gap-2">
           <Flame className="w-6 h-6 text-amber-400" />
-          <span className="text-sm font-bold text-gray-200">{streak}</span>
+          <span className="text-2xl font-display font-bold text-gray-200">{streak}</span>
           <span className="text-xs text-gray-500">Day Streak</span>
         </Card>
       </div>

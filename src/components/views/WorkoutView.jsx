@@ -33,7 +33,7 @@ export function WorkoutView({
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-lg font-bold text-gray-100">{plan.name}</h2>
+              <h2 className="text-2xl font-display font-bold text-gray-100 tracking-tight">{plan.name}</h2>
               <div className="flex items-center gap-3 mt-1">
                 <span className="flex items-center gap-1 text-xs text-emerald-400 font-semibold">
                   <Timer className="w-3 h-3" />
@@ -44,7 +44,7 @@ export function WorkoutView({
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-500">Progress</p>
-            <p className="text-sm font-bold text-emerald-400">
+            <p className="text-xl font-display font-bold text-emerald-400">
               {completedCount}/{plan.exercises.length}
             </p>
           </div>

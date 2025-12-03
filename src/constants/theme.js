@@ -6,10 +6,10 @@
 export const colors = {
   // Primary background shades (dark)
   bg: {
-    primary: '#0a0a0a',    // Main background
-    secondary: '#111111',   // Card backgrounds
-    tertiary: '#1a1a1a',    // Elevated elements
-    hover: '#222222',       // Hover states
+    primary: '#050505',    // Main background (Deepest)
+    secondary: '#0a0a0a',   // Card backgrounds
+    tertiary: '#171717',    // Elevated elements
+    hover: '#262626',       // Hover states
   },
   
   // Green accent (emerald)
@@ -28,16 +28,16 @@ export const colors = {
   
   // Text colors
   text: {
-    primary: '#f5f5f5',     // Main text
-    secondary: '#a3a3a3',   // Secondary text
+    primary: '#f4f4f5',     // Main text
+    secondary: '#a1a1aa',   // Secondary text
     muted: '#737373',       // Muted/disabled
-    inverse: '#0a0a0a',     // Text on accent bg
+    inverse: '#050505',     // Text on accent bg
   },
   
   // Border colors
   border: {
     default: '#262626',
-    light: '#333333',
+    light: '#404040',
     accent: '#10b981',
   },
   
