@@ -272,16 +272,19 @@ export default function App() {
     }
 
     setIsSaving(true);
+    const isQuickWorkout = activeWorkoutId === 'quick-log';
+    const workoutName = isQuickWorkout ? tempPlan?.name : plans[activeWorkoutId]?.name || activeWorkoutId;
+    
     try {
       const duration = Math.floor((Date.now() - workoutStartTime) / 1000);
       
-      // Generate AI summary if enabled
+      // Generate AI summary if enabled (skip for quick workouts since we don't show the modal)
       let aiAnalysis = null;
-      if (aiEnabled && apiKey) {
+      if (aiEnabled && apiKey && !isQuickWorkout) {
         const userContext = buildUserContextForAI({ profile, workouts, streak, plans });
         // Create a temporary workout object for analysis
         const workoutForAnalysis = {
-          workoutName: plans[activeWorkoutId]?.name || activeWorkoutId,
+          workoutName: workoutName,
           duration,
           exercises: exercisesList
         };
@@ -290,23 +293,31 @@ export default function App() {
 
       await saveWorkout({
         workoutType: activeWorkoutId,
-        workoutName: plans[activeWorkoutId]?.name || activeWorkoutId,
+        workoutName: workoutName,
         exercises: exercisesList,
         note: workoutNote,
         duration: duration
       });
       
-      // Show completion modal instead of toast
-      setCompletedWorkoutStats({
-        name: plans[activeWorkoutId]?.name || activeWorkoutId,
-        duration: duration,
-        exercisesCount: exercisesList.length,
-        analysis: aiAnalysis
-      });
-      setShowCompleteModal(true);
-      
-      // Reset active state but keep view until modal closes
-      setActiveWorkoutId(null);
+      // For quick workouts, skip celebration modal and show toast instead
+      if (isQuickWorkout) {
+        setToast({ message: 'Workout logged!', type: 'success' });
+        setActiveWorkoutId(null);
+        setTempPlan(null);
+        handleNavigate('home');
+      } else {
+        // Show completion modal for regular workouts
+        setCompletedWorkoutStats({
+          name: workoutName,
+          duration: duration,
+          exercisesCount: exercisesList.length,
+          analysis: aiAnalysis
+        });
+        setShowCompleteModal(true);
+        
+        // Reset active state but keep view until modal closes
+        setActiveWorkoutId(null);
+      }
     } catch (error) {
       log.error('Error saving workout:', error);
       setToast({ message: 'Failed to save workout', type: 'error' });
