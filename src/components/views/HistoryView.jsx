@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   Dumbbell, ChevronDown, ChevronUp, Trash2, Search, 
-  Plus, Filter, Play, History, List, Calendar as CalendarIcon, Clock
+  Plus, Filter, Play, History, List, Calendar as CalendarIcon, Clock,
+  Download, PlusCircle
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -16,8 +17,18 @@ import { formatDuration } from '../../utils/localeFormatters';
  * HistoryView - Workout history and Exercise Library
  * Task 3: Shows time details
  * Task 4: Calendar view
+ * Task 8: Export functionality
+ * Task 10: Add old logs by date
  */
-export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, initialTab = 'history' }) {
+export function HistoryView({ 
+  workouts, 
+  onBack, 
+  onDelete, 
+  onStartQuickWorkout, 
+  onExport,
+  onAddPastWorkout,
+  initialTab = 'history' 
+}) {
   const [activeTab, setActiveTab] = useState(initialTab); // 'history' | 'calendar' | 'exercises'
   const [expandedId, setExpandedId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -102,10 +113,36 @@ export function HistoryView({ workouts, onBack, onDelete, onStartQuickWorkout, i
   return (
     <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       <ViewHeader 
-        title={activeTab === 'history' ? 'Workout History' : 'Exercise Library'} 
+        title={activeTab === 'history' ? 'Workout History' : activeTab === 'calendar' ? 'Calendar' : 'Exercise Library'} 
         subtitle={activeTab === 'history' 
           ? `${workouts.length} workout${workouts.length !== 1 ? 's' : ''} logged`
-          : 'Browse and log exercises'
+          : activeTab === 'calendar' 
+            ? 'View workouts by date'
+            : 'Browse and log exercises'
+        }
+        rightAction={
+          activeTab === 'history' && (
+            <div className="flex items-center gap-2">
+              {onExport && (
+                <button
+                  onClick={onExport}
+                  className="p-2 text-gray-500 hover:text-gray-300 transition-colors"
+                  title="Export workouts"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              )}
+              {onAddPastWorkout && (
+                <button
+                  onClick={onAddPastWorkout}
+                  className="p-2 text-emerald-400 hover:text-emerald-300 transition-colors"
+                  title="Add past workout"
+                >
+                  <PlusCircle className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          )
         }
       />
 

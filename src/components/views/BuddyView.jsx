@@ -3,10 +3,12 @@ import {
   Sparkles, TrendingUp, Target, Flame, Brain, 
   MessageCircle, ChevronRight, Zap, Trophy, 
   Calendar, Dumbbell, RefreshCw, Send, X,
-  ArrowUp, Heart, Star, Award, AlertCircle, Key, Settings, Clock
+  ArrowUp, Heart, Star, Award, AlertCircle, Key, Settings, Clock,
+  Bookmark, BookmarkCheck, StickyNote, Search, Filter, Trash2
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import { ViewHeader } from '../layout/Navigation';
 import { 
   buildUserContextForAI, 
@@ -29,6 +31,7 @@ import {
 
 /**
  * AI Buddy View - Interactive AI coaching with reports, insights, tips
+ * Task 2: Added notes saving functionality
  * Only available when AI is enabled
  */
 export function BuddyView({ 
@@ -38,6 +41,9 @@ export function BuddyView({
   workouts, 
   streak,
   plans,
+  notes = [],
+  onSaveNote,
+  onDeleteNote,
   onNavigate 
 }) {
   const [activeSection, setActiveSection] = useState(null);
@@ -48,6 +54,10 @@ export function BuddyView({
   const [errors, setErrors] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [savedMessageIds, setSavedMessageIds] = useState(new Set());
+  const [showNotes, setShowNotes] = useState(false);
+  const [notesSearchQuery, setNotesSearchQuery] = useState('');
+  const [notesCategoryFilter, setNotesCategoryFilter] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [coachPersona, setCoachPersona] = useState('supportive'); // 'supportive', 'sergeant', 'scientist', 'stoic'
   const chatEndRef = useRef(null);
@@ -257,16 +267,45 @@ User asks: "${messageToSend}"
 Give a helpful, concise response (under 60 words).`;
       
       const response = await makeAIRequest(prompt);
-      setChatMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: response, id: `msg-${Date.now()}` }]);
     } catch (error) {
       setChatMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Sorry, I couldn't process that right now. Try again in a moment!" 
+        content: "Sorry, I couldn't process that right now. Try again in a moment!",
+        id: `msg-${Date.now()}`
       }]);
     } finally {
       setChatLoading(false);
     }
   };
+
+  // Task 2: Save note handler
+  const handleSaveNote = async (messageContent, messageId, category = 'chat') => {
+    if (!onSaveNote || savedMessageIds.has(messageId)) return;
+    
+    try {
+      await onSaveNote(messageContent, category, 'chat');
+      setSavedMessageIds(prev => new Set([...prev, messageId]));
+    } catch (error) {
+      console.error('Error saving note:', error);
+    }
+  };
+
+  // Filter notes based on search and category
+  const filteredNotes = useMemo(() => {
+    let result = notes || [];
+    
+    if (notesSearchQuery) {
+      const query = notesSearchQuery.toLowerCase();
+      result = result.filter(note => note.text.toLowerCase().includes(query));
+    }
+    
+    if (notesCategoryFilter) {
+      result = result.filter(note => note.category === notesCategoryFilter);
+    }
+    
+    return result;
+  }, [notes, notesSearchQuery, notesCategoryFilter]);
 
   const getTipIcon = (iconType) => {
     switch (iconType) {
@@ -633,6 +672,84 @@ Give a helpful, concise response (under 60 words).`;
           )}
         </div>
 
+        {/* Task 2: Saved Notes Section */}
+        {notes && notes.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <StickyNote className="w-4 h-4" />
+                Saved Notes ({notes.length})
+              </h3>
+              <button
+                onClick={() => setShowNotes(!showNotes)}
+                className="text-xs text-emerald-400 hover:text-emerald-300"
+              >
+                {showNotes ? 'Hide' : 'Show All'}
+              </button>
+            </div>
+
+            {showNotes && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                {/* Search & Filter */}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Search notes..."
+                      icon={Search}
+                      value={notesSearchQuery}
+                      onChange={(e) => setNotesSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <select
+                    value={notesCategoryFilter || ''}
+                    onChange={(e) => setNotesCategoryFilter(e.target.value || null)}
+                    className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-gray-200 text-sm focus:border-emerald-500 outline-none"
+                  >
+                    <option value="">All</option>
+                    <option value="chat">Chat</option>
+                    <option value="tip">Tips</option>
+                    <option value="insight">Insights</option>
+                    <option value="motivation">Motivation</option>
+                  </select>
+                </div>
+
+                {/* Notes List */}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {filteredNotes.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">No notes found</p>
+                  ) : (
+                    filteredNotes.map((note) => (
+                      <Card key={note.id} hover={false} className="p-3 group">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-200 line-clamp-3">{note.text}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded text-gray-500 capitalize">
+                                {note.category}
+                              </span>
+                              <span className="text-[10px] text-gray-600">
+                                {note.createdAt?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                          </div>
+                          {onDeleteNote && (
+                            <button
+                              onClick={() => onDeleteNote(note.id)}
+                              className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Chat Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -684,20 +801,44 @@ Give a helpful, concise response (under 60 words).`;
                 </div>
               ) : (
                 <>
-                  {chatMessages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
-                    >
-                      <div className={`max-w-[80%] p-3 rounded-2xl ${
-                        msg.role === 'user'
-                          ? 'bg-emerald-500 text-gray-950 rounded-br-md'
-                          : 'bg-gray-800 text-gray-200 rounded-bl-md'
-                      }`}>
-                        <p className="text-sm">{msg.content}</p>
+                  {chatMessages.map((msg, i) => {
+                    const isSaved = msg.id && savedMessageIds.has(msg.id);
+                    return (
+                      <div
+                        key={msg.id || i}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 group`}
+                      >
+                        <div className={`max-w-[80%] ${msg.role === 'assistant' ? 'relative' : ''}`}>
+                          <div className={`p-3 rounded-2xl ${
+                            msg.role === 'user'
+                              ? 'bg-emerald-500 text-gray-950 rounded-br-md'
+                              : 'bg-gray-800 text-gray-200 rounded-bl-md'
+                          }`}>
+                            <p className="text-sm">{msg.content}</p>
+                          </div>
+                          {/* Task 2: Save Note button for AI messages */}
+                          {msg.role === 'assistant' && onSaveNote && (
+                            <button
+                              onClick={() => handleSaveNote(msg.content, msg.id, 'chat')}
+                              disabled={isSaved}
+                              className={`absolute -right-8 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${
+                                isSaved 
+                                  ? 'text-emerald-400 bg-emerald-500/10' 
+                                  : 'text-gray-500 hover:text-emerald-400 hover:bg-gray-700 opacity-0 group-hover:opacity-100'
+                              }`}
+                              title={isSaved ? 'Saved!' : 'Save as note'}
+                            >
+                              {isSaved ? (
+                                <BookmarkCheck className="w-4 h-4" />
+                              ) : (
+                                <Bookmark className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {chatLoading && (
                     <div className="flex justify-start">
                       <div className="bg-gray-800 p-3 rounded-2xl rounded-bl-md">

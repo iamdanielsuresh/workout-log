@@ -16,6 +16,7 @@ import { useAI } from './hooks/useAI';
 import { useProfile } from './hooks/useProfile';
 import { useWorkoutPlans } from './hooks/useWorkoutPlans';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
+import { useNotes } from './hooks/useNotes';
 
 // Eagerly loaded components (critical path)
 import { Card } from './components/ui/Card';
@@ -81,6 +82,7 @@ export default function App() {
   } = useWorkoutPlans(user?.id);
   const { workouts, history, lastWorkout, streak, loading: workoutsLoading, saveWorkout, deleteWorkout } = useWorkouts(user?.id);
   const { isOnline, wasOffline } = useNetworkStatus();
+  const { notes, saveNote, deleteNote, loading: notesLoading } = useNotes(user?.id);
   
   // Navigation state
   const [view, setView] = useState('home');
@@ -634,6 +636,9 @@ export default function App() {
                 plans={plans}
                 aiEnabled={aiEnabled}
                 apiKey={apiKey}
+                notes={notes}
+                onSaveNote={saveNote}
+                onDeleteNote={deleteNote}
                 onNavigate={handleNavigate}
               />
             )}
