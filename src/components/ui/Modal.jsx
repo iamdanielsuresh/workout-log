@@ -120,7 +120,7 @@ export function Modal({
         tabIndex={-1}
         className={`
           relative w-full ${sizes[size]}
-          bg-gray-900 border border-gray-800 shadow-2xl
+          bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50
           animate-in fade-in zoom-in-95 duration-200
           rounded-2xl
           max-h-[calc(100vh-8rem)] sm:max-h-[85vh]
@@ -130,14 +130,14 @@ export function Modal({
       >
         {/* Header */}
         {(title || showClose) && (
-          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-800 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/5 flex-shrink-0">
             {title && (
-              <h3 id="modal-title" className="text-lg font-bold text-gray-100">{title}</h3>
+              <h3 id="modal-title" className="text-xl font-display font-bold text-gray-100 tracking-tight">{title}</h3>
             )}
             {showClose && (
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="p-2 text-gray-400 hover:text-gray-200 hover:bg-white/5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 aria-label="Close modal"
               >
                 <X className="w-5 h-5" />

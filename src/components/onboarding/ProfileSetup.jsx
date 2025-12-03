@@ -11,6 +11,7 @@ import { Input } from '../ui/Input';
 export function ProfileSetup({ userPhoto, userName, onComplete }) {
   const [profile, setProfile] = useState({
     displayName: userName || '',
+    gender: '',
     dateOfBirth: '',
     height: '',
     weight: '',
@@ -37,6 +38,9 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
     if (!profile.displayName.trim()) {
       newErrors.displayName = 'Name is required';
     }
+    if (!profile.gender) {
+      newErrors.gender = 'Gender is required';
+    }
     if (!profile.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
     } else if (age < 13 || age > 120) {
@@ -45,11 +49,12 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  const handleSubmit = () => {
-    if (validate()) {
       onComplete({
         display_name: profile.displayName.trim(),
+        gender: profile.gender,
+        date_of_birth: profile.dateOfBirth,
+        age,
+        height: profile.height ? parseFloat(profile.height) : null,
         date_of_birth: profile.dateOfBirth,
         age,
         height: profile.height ? parseFloat(profile.height) : null,
@@ -109,6 +114,29 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
             icon={User}
             error={errors.displayName}
           />
+        </div>
+
+        {/* Gender - Required */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">
+            Gender <span className="text-red-400">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {['male', 'female'].map((g) => (
+              <button
+                key={g}
+                onClick={() => updateProfile('gender', g)}
+                className={`p-3 rounded-xl border transition-all ${
+                  profile.gender === g
+                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                    : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:bg-gray-800'
+                }`}
+              >
+                <span className="capitalize font-medium">{g}</span>
+              </button>
+            ))}
+          </div>
+          {errors.gender && <p className="text-xs text-red-400 mt-1">{errors.gender}</p>}
         </div>
 
         {/* Date of Birth - Required */}

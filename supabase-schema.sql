@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   body_fat DECIMAL(4,1), -- percentage
   photo_url TEXT,
   experience_level TEXT CHECK (experience_level IN ('beginner', 'intermediate', 'professional')),
+  gender TEXT CHECK (gender IN ('male', 'female', 'other')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

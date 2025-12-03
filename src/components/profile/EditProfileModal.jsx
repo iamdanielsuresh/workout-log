@@ -17,6 +17,7 @@ export function EditProfileModal({
 }) {
   const [formData, setFormData] = useState({
     displayName: '',
+    gender: '',
     dateOfBirth: '',
     height: '',
     weight: '',
@@ -31,6 +32,7 @@ export function EditProfileModal({
     if (profile && isOpen) {
       setFormData({
         displayName: profile.display_name || '',
+        gender: profile.gender || '',
         dateOfBirth: profile.date_of_birth || '',
         height: profile.height ? String(profile.height) : '',
         weight: profile.weight ? String(profile.weight) : '',
@@ -60,6 +62,9 @@ export function EditProfileModal({
     if (!formData.displayName.trim()) {
       newErrors.displayName = 'Name is required';
     }
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
+    }
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
     } else if (age < 13 || age > 120) {
@@ -76,6 +81,7 @@ export function EditProfileModal({
     try {
       await onSave({
         display_name: formData.displayName.trim(),
+        gender: formData.gender,
         date_of_birth: formData.dateOfBirth,
         age,
         height: formData.height ? parseFloat(formData.height) : null,
@@ -144,6 +150,29 @@ export function EditProfileModal({
             icon={User}
             error={errors.displayName}
           />
+        </div>
+
+        {/* Gender */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Gender <span className="text-red-400">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {['male', 'female'].map((g) => (
+              <button
+                key={g}
+                onClick={() => updateField('gender', g)}
+                className={`p-3 rounded-xl border transition-all ${
+                  formData.gender === g
+                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                    : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:bg-gray-800'
+                }`}
+              >
+                <span className="capitalize font-medium">{g}</span>
+              </button>
+            ))}
+          </div>
+          {errors.gender && <p className="text-xs text-red-400 mt-1">{errors.gender}</p>}
         </div>
 
         {/* Date of Birth */}

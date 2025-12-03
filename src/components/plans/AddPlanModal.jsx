@@ -302,7 +302,7 @@ Return ONLY valid JSON (no markdown):
                   <ListChecks className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-100 group-hover:text-emerald-400 transition-colors">Choose Template</h3>
+                  <h3 className="font-display font-bold text-lg text-gray-100 group-hover:text-emerald-400 transition-colors">Choose Template</h3>
                   <p className="text-sm text-gray-500">PPL, Upper/Lower, Full Body, Bro Split</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-emerald-400 transition-colors" />
@@ -319,7 +319,7 @@ Return ONLY valid JSON (no markdown):
                   <Sparkles className="w-6 h-6 text-purple-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-100 group-hover:text-purple-400 transition-colors">AI Generate</h3>
+                  <h3 className="font-display font-bold text-lg text-gray-100 group-hover:text-purple-400 transition-colors">AI Generate</h3>
                   <p className="text-sm text-gray-500">Personalized plan based on your goals</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
@@ -336,7 +336,7 @@ Return ONLY valid JSON (no markdown):
                   <Plus className="w-6 h-6 text-blue-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-100 group-hover:text-blue-400 transition-colors">Create Custom</h3>
+                  <h3 className="font-display font-bold text-lg text-gray-100 group-hover:text-blue-400 transition-colors">Create Custom</h3>
                   <p className="text-sm text-gray-500">Build your own routine from scratch</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-blue-400 transition-colors" />
@@ -361,7 +361,7 @@ Return ONLY valid JSON (no markdown):
                   <div className="flex items-center gap-4">
                     <span className="text-3xl">{template.icon}</span>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-100">{template.name}</h3>
+                      <h3 className="font-display font-bold text-lg text-gray-100">{template.name}</h3>
                       <p className="text-sm text-gray-500">{template.description}</p>
                       <span className="text-xs text-emerald-400 font-medium">{template.frequency}</span>
                     </div>
