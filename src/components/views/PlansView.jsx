@@ -25,9 +25,10 @@ function SwipeablePlanCard({
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
+  const startY = useRef(0);
   const currentX = useRef(0);
   const isAiGenerated = plan.source === 'ai-generated';
-  const threshold = -120; // Pixel threshold to trigger delete
+  const threshold = -100; // Reduced threshold for easier deletion
 
   // Reset offset when expanded changes
   useEffect(() => {
@@ -37,6 +38,7 @@ function SwipeablePlanCard({
   const handleTouchStart = (e) => {
     if (isExpanded || deleteConfirm === plan.id) return;
     startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
     currentX.current = startX.current;
     setIsDragging(true);
   };
@@ -44,13 +46,23 @@ function SwipeablePlanCard({
   const handleTouchMove = (e) => {
     if (!isDragging || isExpanded || deleteConfirm === plan.id) return;
     const x = e.touches[0].clientX;
-    const diff = x - startX.current;
+    const y = e.touches[0].clientY;
+    const diffX = x - startX.current;
+    const diffY = y - startY.current;
     
-    // Only allow swiping left, with some resistance
-    if (diff < 0) {
-      // Add resistance as we swipe further
-      const resistance = 1 + Math.abs(diff) / 300;
-      setOffset(diff / resistance);
+    // If vertical scroll is dominant, ignore horizontal swipe
+    if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+    // If horizontal swipe is dominant, prevent default to stop scrolling/nav
+    if (Math.abs(diffX) > 10 && e.cancelable) {
+      // e.preventDefault(); // Commented out as it might interfere with passive listeners
+    }
+    
+    // Only allow swiping left, with reduced resistance
+    if (diffX < 0) {
+      // Reduced resistance (was 300)
+      const resistance = 1 + Math.abs(diffX) / 600;
+      setOffset(diffX / resistance);
     }
   };
 
