@@ -100,6 +100,7 @@ function parseReps(range) {
  * @param {string} options.focus - Training focus (balanced, strength, hypertrophy, etc.)
  * @param {string} options.duration - Session duration range
  * @param {string} options.equipment - Available equipment
+ * @param {string} options.specialNotes - User's special notes (injuries, preferences, etc.)
  * @param {Object} options.userContext - User context from buildUserContextForAI
  * @returns {string} Enhanced prompt for AI
  */
@@ -108,6 +109,7 @@ export function buildWorkoutGenerationPrompt({
   focus,
   duration,
   equipment = 'full',
+  specialNotes = '',
   userContext = null
 }) {
   // Base requirements
@@ -117,6 +119,16 @@ export function buildWorkoutGenerationPrompt({
     `Session duration: ${duration} minutes`,
     `Equipment: ${equipment === 'full' ? 'Full gym' : equipment === 'minimal' ? 'Minimal (dumbbells, bands)' : 'Bodyweight only'}`
   ];
+
+  // Add special notes section if provided
+  let specialNotesSection = '';
+  if (specialNotes && specialNotes.trim()) {
+    specialNotesSection = `
+
+USER SPECIAL NOTES (IMPORTANT - must strictly accommodate these):
+${specialNotes.trim()}
+`;
+  }
 
   // Add user context if available
   let userContextSection = '';
@@ -148,7 +160,7 @@ Based on this profile, create a plan that:
 
 REQUIREMENTS:
 ${requirements.map(r => `- ${r}`).join('\n')}
-${userContextSection}
+${specialNotesSection}${userContextSection}
 
 IMPORTANT INSTRUCTIONS:
 1. Return ONLY valid JSON - no markdown, no comments, no extra text
@@ -157,6 +169,7 @@ IMPORTANT INSTRUCTIONS:
 4. Balance muscle groups throughout the week
 5. Start with compound movements, end with isolation
 6. Consider recovery - don't hit same muscles on consecutive days
+7. CRITICAL: If user mentioned injuries, limitations, or exercise preferences in special notes, strictly follow them
 
 Return this exact JSON structure:
 {

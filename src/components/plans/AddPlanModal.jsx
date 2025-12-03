@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { 
   X, Sparkles, ListChecks, ChevronRight, ChevronLeft, 
   Dumbbell, Key, Loader2, Check, Plus, Trash2, Zap, Clock, Target,
-  AlertCircle, RefreshCw
+  AlertCircle, RefreshCw, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Card } from '../ui/Card';
@@ -51,9 +51,13 @@ export function AddPlanModal({
     daysPerWeek: 3,
     focus: 'balanced',
     duration: '45-60',
-    equipment: 'full'
+    equipment: 'full',
+    specialNotes: ''
   });
   const [generatedPlan, setGeneratedPlan] = useState(null);
+  const [expandedDays, setExpandedDays] = useState({});
+  const [expandedExercises, setExpandedExercises] = useState({});
+  const [loadingAlternative, setLoadingAlternative] = useState(null);
 
   // Custom plan state
   const [customPlan, setCustomPlan] = useState({
@@ -67,6 +71,9 @@ export function AddPlanModal({
     setMode(null);
     setSelectedTemplate(null);
     setGeneratedPlan(null);
+    setExpandedDays({});
+    setExpandedExercises({});
+    setLoadingAlternative(null);
     setError('');
     setCustomPlan({
       name: '',
@@ -75,6 +82,77 @@ export function AddPlanModal({
       exercises: [{ name: '', sets: 3, range: '8-12', tip: '' }]
     });
     onClose();
+  };
+
+  const toggleDayExpanded = (dayId) => {
+    setExpandedDays(prev => ({ ...prev, [dayId]: !prev[dayId] }));
+  };
+
+  const toggleExerciseExpanded = (exerciseKey) => {
+    setExpandedExercises(prev => ({ ...prev, [exerciseKey]: !prev[exerciseKey] }));
+  };
+
+  const findAlternativeExercise = async (dayId, exerciseIndex, exercise) => {
+    const loadingKey = `${dayId}-${exerciseIndex}`;
+    setLoadingAlternative(loadingKey);
+    const key = effectiveApiKey;
+
+    try {
+      const prompt = `Suggest ONE alternative exercise to replace "${exercise.name}" that targets the same muscle group (${exercise.muscleGroup || 'similar muscles'}).
+
+Requirements:
+- Equipment: ${aiQuestions.equipment === 'full' ? 'Full gym' : aiQuestions.equipment === 'minimal' ? 'Minimal equipment' : 'Bodyweight'}
+- Experience level: ${experienceLevel}
+${aiQuestions.specialNotes ? `- User notes: ${aiQuestions.specialNotes}` : ''}
+
+Return ONLY valid JSON (no markdown):
+{
+  "name": "Alternative Exercise Name",
+  "sets": ${exercise.sets},
+  "range": "${exercise.range}",
+  "muscleGroup": "${exercise.muscleGroup || 'Primary muscle'}",
+  "tip": "Quick form tip",
+  "tips": {
+    "form": "Detailed form instructions",
+    "cues": ["Cue 1", "Cue 2"],
+    "mistakes": ["Common mistake"],
+    "goal": "What this achieves",
+    "progression": "How to progress"
+  },
+  "reason": "Brief reason why this is a good alternative"
+}`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to get alternative');
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const alternative = JSON.parse(cleanedText);
+
+      // Update the generated plan with the alternative
+      setGeneratedPlan(prev => {
+        const newPlan = JSON.parse(JSON.stringify(prev));
+        newPlan.plans[dayId].exercises[exerciseIndex] = {
+          ...alternative,
+          replacedFrom: exercise.name
+        };
+        return newPlan;
+      });
+    } catch (err) {
+      console.error('Error finding alternative:', err);
+      setError('Failed to find alternative. Try again.');
+    } finally {
+      setLoadingAlternative(null);
+    }
   };
 
   const handleSelectTemplate = (templateId) => {
@@ -116,6 +194,7 @@ export function AddPlanModal({
         focus: aiQuestions.focus,
         duration: aiQuestions.duration,
         equipment: aiQuestions.equipment,
+        specialNotes: aiQuestions.specialNotes,
         userContext
       });
 
@@ -396,6 +475,21 @@ export function AddPlanModal({
                   ))}
                 </div>
               </div>
+
+              {/* Special Notes / Limitations */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <AlertCircle className="w-4 h-4 inline mr-2" />
+                  Anything AI should know?
+                </label>
+                <textarea
+                  value={aiQuestions.specialNotes}
+                  onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
+                  placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
+                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none text-sm"
+                  rows={2}
+                />
+              </div>
             </div>
 
             {error && (
@@ -427,9 +521,16 @@ export function AddPlanModal({
                 {generatedPlan.programName || 'Plan Generated!'}
               </h3>
               <p className="text-sm text-gray-500">
-                {generatedPlan.programDescription || `${Object.keys(generatedPlan.plans).length} workout days created`}
+                Tap days to expand • Tap exercises for details
               </p>
             </div>
+
+            {error && (
+              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {error}
+              </p>
+            )}
 
             {/* Focus recommendations */}
             {aiQuestions.focus && (
@@ -444,43 +545,188 @@ export function AddPlanModal({
               </div>
             )}
 
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {Object.values(generatedPlan.plans).map((plan) => (
-                <div key={plan.id} className="p-3 bg-gray-800/50 rounded-xl">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium text-gray-200">{plan.name}</h4>
-                    {plan.intensity && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        plan.intensity.level === 'Low' ? 'bg-blue-500/20 text-blue-400' :
-                        plan.intensity.level === 'Moderate' ? 'bg-emerald-500/20 text-emerald-400' :
-                        plan.intensity.level === 'High' ? 'bg-orange-500/20 text-orange-400' :
-                        'bg-red-500/20 text-red-400'
-                      }`}>
-                        <Zap className="w-3 h-3 inline mr-1" />
-                        {plan.intensity.level}
-                      </span>
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              {Object.entries(generatedPlan.plans).map(([dayId, plan]) => {
+                const isDayExpanded = expandedDays[dayId];
+                
+                return (
+                  <div key={dayId} className="bg-gray-800/50 rounded-xl overflow-hidden">
+                    {/* Day Header - Clickable */}
+                    <button
+                      onClick={() => toggleDayExpanded(dayId)}
+                      className="w-full p-3 flex items-center justify-between text-left"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-gray-200">{plan.name}</h4>
+                          {plan.intensity && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              plan.intensity.level === 'Low' ? 'bg-blue-500/20 text-blue-400' :
+                              plan.intensity.level === 'Moderate' ? 'bg-emerald-500/20 text-emerald-400' :
+                              plan.intensity.level === 'High' ? 'bg-orange-500/20 text-orange-400' :
+                              'bg-red-500/20 text-red-400'
+                            }`}>
+                              <Zap className="w-3 h-3 inline mr-1" />
+                              {plan.intensity.level}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                          <span className="flex items-center gap-1">
+                            <Dumbbell className="w-3 h-3" />
+                            {plan.exercises?.length} exercises
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {plan.estTime}
+                          </span>
+                        </div>
+                      </div>
+                      {isDayExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+
+                    {/* Expanded Day Content */}
+                    {isDayExpanded && (
+                      <div className="px-3 pb-3 space-y-2">
+                        {plan.desc && (
+                          <p className="text-xs text-gray-500 mb-2">{plan.desc}</p>
+                        )}
+                        {plan.dayTip && (
+                          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 mb-2">
+                            <p className="text-xs text-purple-300">💡 {plan.dayTip}</p>
+                          </div>
+                        )}
+                        
+                        {plan.exercises?.map((ex, exIdx) => {
+                          const exerciseKey = `${dayId}-${exIdx}`;
+                          const isExerciseExpanded = expandedExercises[exerciseKey];
+                          const isLoadingAlt = loadingAlternative === exerciseKey;
+                          
+                          return (
+                            <div 
+                              key={exIdx} 
+                              className="bg-gray-900/50 rounded-lg overflow-hidden"
+                            >
+                              {/* Exercise Row - Clickable */}
+                              <button
+                                onClick={() => toggleExerciseExpanded(exerciseKey)}
+                                className="w-full p-2 flex items-center justify-between text-left"
+                              >
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-200 text-sm">{ex.name}</span>
+                                    {ex.replacedFrom && (
+                                      <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">
+                                        swapped
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-xs text-gray-500">{ex.sets} × {ex.range}</span>
+                                    {ex.muscleGroup && (
+                                      <>
+                                        <span className="text-gray-700">•</span>
+                                        <span className="text-xs text-gray-600">{ex.muscleGroup}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                {isExerciseExpanded ? (
+                                  <ChevronUp className="w-4 h-4 text-gray-600" />
+                                ) : (
+                                  <Info className="w-4 h-4 text-gray-600" />
+                                )}
+                              </button>
+
+                              {/* Expanded Exercise Details */}
+                              {isExerciseExpanded && (
+                                <div className="px-2 pb-2 space-y-2">
+                                  {/* Form Tip */}
+                                  {(ex.tip || ex.tips?.form) && (
+                                    <div className="bg-gray-800/50 rounded p-2">
+                                      <p className="text-xs font-medium text-gray-400 mb-1">Form</p>
+                                      <p className="text-xs text-gray-300">{ex.tips?.form || ex.tip}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Cues */}
+                                  {ex.tips?.cues?.length > 0 && (
+                                    <div className="bg-gray-800/50 rounded p-2">
+                                      <p className="text-xs font-medium text-gray-400 mb-1">Cues</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {ex.tips.cues.map((cue, i) => (
+                                          <span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                            {cue}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Common Mistakes */}
+                                  {ex.tips?.mistakes?.length > 0 && (
+                                    <div className="bg-red-500/5 border border-red-500/10 rounded p-2">
+                                      <p className="text-xs font-medium text-red-400 mb-1">Avoid</p>
+                                      <ul className="text-xs text-gray-400 space-y-0.5">
+                                        {ex.tips.mistakes.map((m, i) => (
+                                          <li key={i}>• {m}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {/* Goal */}
+                                  {ex.tips?.goal && (
+                                    <div className="bg-emerald-500/5 border border-emerald-500/10 rounded p-2">
+                                      <p className="text-xs font-medium text-emerald-400 mb-1">Goal</p>
+                                      <p className="text-xs text-gray-300">{ex.tips.goal}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Replaced Info */}
+                                  {ex.replacedFrom && ex.reason && (
+                                    <div className="bg-purple-500/10 border border-purple-500/20 rounded p-2">
+                                      <p className="text-xs text-purple-300">
+                                        Replaced {ex.replacedFrom}: {ex.reason}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {/* Find Alternative Button */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      findAlternativeExercise(dayId, exIdx, ex);
+                                    }}
+                                    disabled={isLoadingAlt}
+                                    className="w-full mt-1 py-2 px-3 bg-gray-700/50 hover:bg-gray-700 rounded flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+                                  >
+                                    {isLoadingAlt ? (
+                                      <>
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Finding alternative...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <RefreshCw className="w-3 h-3" />
+                                        Find Alternative
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Dumbbell className="w-3 h-3" />
-                      {plan.exercises?.length} exercises
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {plan.estTime}
-                    </span>
-                    {plan.intensity?.breakdown && (
-                      <span className="text-gray-600">
-                        {plan.intensity.breakdown.compoundCount} compound
-                      </span>
-                    )}
-                  </div>
-                  {plan.desc && (
-                    <p className="text-xs text-gray-500 mt-1">{plan.desc}</p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Weekly volume summary */}
