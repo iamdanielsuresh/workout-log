@@ -3,7 +3,7 @@ import {
   Dumbbell, ChevronRight, Clock, Plus, Edit3, 
   Trash2, MoreVertical, Check, X, Sparkles, Target,
   ChevronDown, ChevronUp, Info, Lightbulb, AlertCircle,
-  Folder, FolderPlus, FolderOpen, Layers
+  Folder, FolderPlus, FolderOpen, Layers, Flame, Activity
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -262,7 +262,7 @@ function SwipeablePlanCard({
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>{plan.duration || '45'} min</span>
+                  <span>{plan.estTime || plan.duration || '45 min'}</span>
                 </div>
                 <div className="w-1 h-1 rounded-full bg-gray-700" />
                 <span>{plan.exercises?.length || 0} exercises</span>
@@ -283,18 +283,18 @@ function SwipeablePlanCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-white"
+                  className="h-10 w-10 p-0 text-gray-500 hover:text-white hover:bg-gray-800 rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(plan.id);
                   }}
                 >
-                  <Edit3 className="w-4 h-4" />
+                  <Edit3 className="w-5 h-5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-white"
+                  className="h-10 w-10 p-0 text-gray-500 hover:text-white hover:bg-gray-800 rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggleExpand();
@@ -306,20 +306,22 @@ function SwipeablePlanCard({
             )}
           </div>
 
-          {/* Exercises Preview */}
-          <div className="mt-3 space-y-1">
-            {plan.exercises?.slice(0, 2).map((ex, i) => (
-              <div key={i} className="text-sm text-gray-400 truncate flex items-center gap-2">
-                <div className="w-1 h-1 rounded-full bg-emerald-500/50" />
-                {ex.name}
-              </div>
-            ))}
-            {(plan.exercises?.length || 0) > 2 && (
-              <div className="text-xs text-gray-600 pl-3">
-                +{plan.exercises.length - 2} more exercises
-              </div>
-            )}
-          </div>
+          {/* Exercises Preview (Collapsed) */}
+          {!isExpanded && (
+            <div className="mt-3 space-y-1">
+              {plan.exercises?.slice(0, 2).map((ex, i) => (
+                <div key={i} className="text-sm text-gray-400 truncate flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500/50 shrink-0" />
+                  <span className="truncate">{ex.name}</span>
+                </div>
+              ))}
+              {(plan.exercises?.length || 0) > 2 && (
+                <div className="text-xs text-gray-600 pl-3">
+                  +{plan.exercises.length - 2} more exercises
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Expanded Content */}
@@ -338,16 +340,29 @@ function SwipeablePlanCard({
                 <p className="text-sm text-gray-500 mb-4">{plan.desc}</p>
               )}
 
+              {/* Warmup Section */}
+              {plan.warmup && plan.warmup.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-orange-500" />
+                    Warm Up
+                  </h4>
+                  <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl overflow-hidden">
+                    {plan.warmup.map((w, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 border-b border-orange-500/10 last:border-0">
+                        <span className="text-xs text-gray-300">{w.name}</span>
+                        <span className="text-xs font-mono text-orange-400/80">{w.duration}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Exercises list with tips */}
               <div className="space-y-2 mb-4">
-                {plan.exercises?.slice(0, 8).map((ex, i) => (
+                {plan.exercises?.map((ex, i) => (
                   <ExercisePreviewCard key={i} exercise={ex} isAiGenerated={isAiGenerated} />
                 ))}
-                {(plan.exercises?.length || 0) > 8 && (
-                  <p className="text-xs text-gray-600 text-center py-2">
-                    +{plan.exercises.length - 8} more exercises
-                  </p>
-                )}
               </div>
 
               {/* Actions */}
@@ -774,86 +789,99 @@ export function PlansView({
 }
 
 /**
- * ExercisePreviewCard - Shows exercise with expandable tips
+ * ExercisePreviewCard - Displays exercise details in expanded view
  */
 function ExercisePreviewCard({ exercise, isAiGenerated }) {
   const [expanded, setExpanded] = useState(false);
-  const hasDetailedTips = exercise.tips && typeof exercise.tips === 'object';
-  const quickTip = exercise.tip || exercise.tips?.form?.split('.')[0] || '';
+  const hasDetailedTips = exercise.tips && (exercise.tips.form || exercise.tips.cues || exercise.tips.mistakes);
+  const quickTip = exercise.tip || (exercise.tips && exercise.tips.goal);
 
   return (
     <div className="bg-gray-800/50 rounded-xl overflow-hidden">
-      {/* Exercise header */}
-      <div 
-        className={`flex items-center justify-between py-2.5 px-3 ${hasDetailedTips ? 'cursor-pointer' : ''}`}
-        onClick={() => hasDetailedTips && setExpanded(!expanded)}
+      {/* Exercise Row - Clickable */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full p-3 flex items-center justify-between text-left"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm text-gray-300 truncate">{exercise.name}</span>
-          {exercise.muscleGroup && (
-            <span className="text-2xs bg-gray-700 text-gray-500 px-1.5 py-0.5 rounded shrink-0">
-              {exercise.muscleGroup}
-            </span>
-          )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-200 font-medium text-sm truncate">{exercise.name}</span>
+            {exercise.replacedFrom && (
+              <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded shrink-0">
+                swapped
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-gray-500">{exercise.sets} × {exercise.range || exercise.reps}</span>
+            {exercise.rpe && (
+              <>
+                <span className="text-gray-700">•</span>
+                <span className="text-xs text-amber-500/80">RPE {exercise.rpe}</span>
+              </>
+            )}
+            {exercise.muscleGroup && (
+              <>
+                <span className="text-gray-700">•</span>
+                <span className="text-xs text-gray-600 truncate">{exercise.muscleGroup}</span>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">
-            {exercise.sets} × {exercise.range || exercise.reps}
-          </span>
-          {hasDetailedTips && (
-            expanded 
-              ? <ChevronUp className="w-4 h-4 text-gray-600" />
-              : <ChevronDown className="w-4 h-4 text-gray-600" />
-          )}
-        </div>
-      </div>
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-gray-600 shrink-0 ml-2" />
+        ) : (
+          <Info className="w-4 h-4 text-gray-600 shrink-0 ml-2" />
+        )}
+      </button>
 
-      {/* Quick tip */}
-      {quickTip && !expanded && (
-        <div className="px-3 pb-2 flex items-start gap-1.5">
-          <Target className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
-          <span className="text-2xs text-gray-500">{quickTip}</span>
-        </div>
-      )}
-
-      {/* Expanded tips (for AI-generated) */}
-      {expanded && hasDetailedTips && (
-        <div className="px-3 pb-3 pt-1 border-t border-gray-700/50 space-y-2 animate-in fade-in">
-          {/* Form tip */}
-          {exercise.tips.form && (
-            <div className="flex items-start gap-2">
-              <Target className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-gray-400">{exercise.tips.form}</p>
-            </div>
-          )}
-
-          {/* Form cues */}
-          {exercise.tips.cues && (
-            <div className="flex flex-wrap gap-1">
-              {exercise.tips.cues.map((cue, i) => (
-                <span key={i} className="text-2xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">
-                  {cue}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Common mistakes */}
-          {exercise.tips.mistakes && exercise.tips.mistakes.length > 0 && (
-            <div className="flex items-start gap-2">
-              <X className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
-              <div className="text-xs text-gray-500">
-                <span className="text-red-400 font-medium">Avoid: </span>
-                {exercise.tips.mistakes[0]}
+      {/* Expanded Exercise Details */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-2 animate-in slide-in-from-top-1 duration-200">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            {exercise.tempo && (
+              <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                  <Activity className="w-3 h-3" />
+                  <span className="text-[10px] uppercase">Tempo</span>
+                </div>
+                <span className="text-xs font-mono text-gray-300">{exercise.tempo}</span>
               </div>
+            )}
+            {exercise.rest && (
+              <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                  <Clock className="w-3 h-3" />
+                  <span className="text-[10px] uppercase">Rest</span>
+                </div>
+                <span className="text-xs font-mono text-gray-300">{exercise.rest}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Tips */}
+          {quickTip && (
+            <div className="flex items-start gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+              <Target className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-gray-400">{quickTip}</p>
             </div>
           )}
 
-          {/* Goal */}
-          {exercise.tips.goal && (
-            <div className="flex items-start gap-2">
-              <Lightbulb className="w-3.5 h-3.5 text-yellow-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-gray-500">{exercise.tips.goal}</p>
+          {hasDetailedTips && (
+            <div className="space-y-2 pt-1">
+              {exercise.tips.form && (
+                <div className="text-xs text-gray-500">
+                  <span className="text-emerald-400 font-medium">Form: </span>
+                  {exercise.tips.form}
+                </div>
+              )}
+              {exercise.tips.mistakes && exercise.tips.mistakes.length > 0 && (
+                <div className="text-xs text-gray-500">
+                  <span className="text-red-400 font-medium">Avoid: </span>
+                  {exercise.tips.mistakes[0]}
+                </div>
+              )}
             </div>
           )}
         </div>

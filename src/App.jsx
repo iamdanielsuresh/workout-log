@@ -697,8 +697,8 @@ export default function App() {
             plan={editingPlanId !== null ? { id: editingPlanId, ...plans[editingPlanId] } : null}
             onSave={async (updatedPlan) => {
               try {
-                const { id, ...planData } = updatedPlan;
-                await updatePlan(id, planData);
+                // Use editingPlanId directly since updatedPlan might not contain the ID
+                await updatePlan(editingPlanId, updatedPlan);
                 setEditingPlanId(null);
                 setToast({ message: 'Plan updated successfully!', type: 'success' });
               } catch (error) {
