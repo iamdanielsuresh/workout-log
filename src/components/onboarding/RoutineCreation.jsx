@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { 
   Sparkles, ListChecks, ChevronRight, ChevronLeft, Check, 
-  Dumbbell, Key, X, Loader2, Calendar, Target, ArrowRight
+  Dumbbell, Key, X, Loader2, Calendar, Target, ArrowRight,
+  ChevronDown, ChevronUp, RefreshCw, AlertCircle, Info
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -234,11 +235,85 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
     daysPerWeek: 4,
     focus: 'balanced',
     duration: '45-60',
-    equipment: 'full'
+    equipment: 'full',
+    specialNotes: ''
   });
+  const [expandedDays, setExpandedDays] = useState({});
+  const [expandedExercises, setExpandedExercises] = useState({});
+  const [loadingAlternative, setLoadingAlternative] = useState(null);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+
+  const toggleDayExpanded = (dayId) => {
+    setExpandedDays(prev => ({ ...prev, [dayId]: !prev[dayId] }));
+  };
+
+  const toggleExerciseExpanded = (exerciseKey) => {
+    setExpandedExercises(prev => ({ ...prev, [exerciseKey]: !prev[exerciseKey] }));
+  };
+
+  const findAlternativeExercise = async (dayId, exerciseIndex, exercise) => {
+    const loadingKey = `${dayId}-${exerciseIndex}`;
+    setLoadingAlternative(loadingKey);
+
+    try {
+      const prompt = `Suggest ONE alternative exercise to replace "${exercise.name}" that targets the same muscle group (${exercise.muscleGroup || 'similar muscles'}).
+
+Requirements:
+- Equipment: ${aiQuestions.equipment === 'full' ? 'Full gym' : aiQuestions.equipment === 'dumbbells' ? 'Dumbbells only' : 'Bodyweight'}
+- Experience level: ${experienceLevel}
+${aiQuestions.specialNotes ? `- User notes: ${aiQuestions.specialNotes}` : ''}
+
+Return ONLY valid JSON (no markdown):
+{
+  "name": "Alternative Exercise Name",
+  "sets": ${exercise.sets},
+  "range": "${exercise.range}",
+  "muscleGroup": "${exercise.muscleGroup || 'Primary muscle'}",
+  "tip": "Quick form tip",
+  "tips": {
+    "form": "Detailed form instructions",
+    "cues": ["Cue 1", "Cue 2"],
+    "mistakes": ["Common mistake"],
+    "goal": "What this achieves",
+    "progression": "How to progress"
+  },
+  "reason": "Brief reason why this is a good alternative"
+}`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to get alternative');
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const alternative = JSON.parse(cleanedText);
+
+      // Update the generated plan with the alternative
+      setGeneratedPlan(prev => {
+        const newPlan = JSON.parse(JSON.stringify(prev));
+        newPlan.plans[dayId].exercises[exerciseIndex] = {
+          ...alternative,
+          replacedFrom: exercise.name
+        };
+        return newPlan;
+      });
+    } catch (err) {
+      console.error('Error finding alternative:', err);
+      setError('Failed to find alternative. Try again.');
+    } finally {
+      setLoadingAlternative(null);
+    }
+  };
 
   const handleSelectTemplate = (templateId) => {
     const template = WORKOUT_TEMPLATES[templateId];
@@ -261,12 +336,18 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
     setAiStep('generating');
 
     try {
+      // Build special notes section if provided
+      const specialNotesSection = aiQuestions.specialNotes.trim() 
+        ? `\n\nUSER SPECIAL NOTES (IMPORTANT - must accommodate these):
+${aiQuestions.specialNotes.trim()}`
+        : '';
+
       const prompt = `Create a ${aiQuestions.daysPerWeek}-day workout plan for a ${experienceLevel} lifter.
 
 Requirements:
 - Focus: ${aiQuestions.focus} (balanced/upper body/lower body/strength/hypertrophy)
 - Session duration: ${aiQuestions.duration} minutes
-- Equipment: ${aiQuestions.equipment} (full gym/dumbbells only/bodyweight)
+- Equipment: ${aiQuestions.equipment} (full gym/dumbbells only/bodyweight)${specialNotesSection}
 
 Return ONLY valid JSON (no markdown, no code blocks) with this structure:
 {
@@ -306,7 +387,8 @@ Guidelines:
 - Make form tips specific and actionable
 - Common mistakes should be what ${experienceLevel}s typically do wrong
 - Goals should explain WHY each exercise is included
-- Progression tips should be appropriate for ${experienceLevel} level`;
+- Progression tips should be appropriate for ${experienceLevel} level
+- IMPORTANT: If user mentioned injuries, limitations, or exercise preferences, strictly follow them`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -638,6 +720,24 @@ Guidelines:
                 ))}
               </div>
             </div>
+
+            {/* Special Notes / Limitations */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <AlertCircle className="w-4 h-4 inline mr-2" />
+                Anything AI should know?
+              </label>
+              <textarea
+                value={aiQuestions.specialNotes}
+                onChange={(e) => setAiQuestions(p => ({ ...p, specialNotes: e.target.value }))}
+                placeholder="E.g., shoulder injury (avoid overhead pressing), don't like bench press, focus on back development, bad knees..."
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none text-sm"
+                rows={3}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Injuries, exercise preferences, or specific goals
+              </p>
+            </div>
           </div>
 
           {error && (
@@ -695,29 +795,182 @@ Guidelines:
               <Check className="w-8 h-8 text-emerald-400" />
             </div>
             <h2 className="text-2xl font-bold text-gray-100 mb-2">Your Plan is Ready!</h2>
-            <p className="text-gray-500 text-sm">Review your AI-generated workout plan</p>
+            <p className="text-gray-500 text-sm">Tap each day to expand • Tap exercises for details</p>
           </div>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {Object.values(generatedPlan.plans).map((day, idx) => (
-              <Card key={day.id} hover={false} className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-gray-100">{day.name}</h3>
-                  <span className="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-400">
-                    {day.estTime}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mb-3">{day.desc}</p>
-                <div className="space-y-1">
-                  {day.exercises.map((ex, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">{ex.name}</span>
-                      <span className="text-gray-600">{ex.sets} × {ex.range}</span>
+          {error && (
+            <p className="text-sm text-red-400 flex items-center gap-1 justify-center">
+              <X className="w-4 h-4" /> {error}
+            </p>
+          )}
+
+          <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+            {Object.entries(generatedPlan.plans).map(([dayId, day], idx) => {
+              const isDayExpanded = expandedDays[dayId];
+              
+              return (
+                <Card key={dayId} hover={false} className="overflow-hidden">
+                  {/* Day Header - Clickable */}
+                  <button
+                    onClick={() => toggleDayExpanded(dayId)}
+                    className="w-full p-4 flex items-center justify-between text-left"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-100">{day.name}</h3>
+                        <span className="text-xs bg-gray-700 px-2 py-0.5 rounded-full text-gray-400">
+                          {day.estTime}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">{day.desc}</p>
+                      {!isDayExpanded && (
+                        <p className="text-xs text-gray-600 mt-1">
+                          {day.exercises.length} exercises
+                        </p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
+                    {isDayExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-500" />
+                    )}
+                  </button>
+
+                  {/* Expanded Day Content */}
+                  {isDayExpanded && (
+                    <div className="px-4 pb-4 space-y-2">
+                      {day.dayTip && (
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 mb-3">
+                          <p className="text-xs text-purple-300">💡 {day.dayTip}</p>
+                        </div>
+                      )}
+                      
+                      {day.exercises.map((ex, exIdx) => {
+                        const exerciseKey = `${dayId}-${exIdx}`;
+                        const isExerciseExpanded = expandedExercises[exerciseKey];
+                        const isLoadingAlt = loadingAlternative === exerciseKey;
+                        
+                        return (
+                          <div 
+                            key={exIdx} 
+                            className="bg-gray-800/50 rounded-xl overflow-hidden"
+                          >
+                            {/* Exercise Row - Clickable */}
+                            <button
+                              onClick={() => toggleExerciseExpanded(exerciseKey)}
+                              className="w-full p-3 flex items-center justify-between text-left"
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-200 font-medium text-sm">{ex.name}</span>
+                                  {ex.replacedFrom && (
+                                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">
+                                      swapped
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-gray-500">{ex.sets} × {ex.range}</span>
+                                  {ex.muscleGroup && (
+                                    <>
+                                      <span className="text-gray-700">•</span>
+                                      <span className="text-xs text-gray-600">{ex.muscleGroup}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              {isExerciseExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-gray-600" />
+                              ) : (
+                                <Info className="w-4 h-4 text-gray-600" />
+                              )}
+                            </button>
+
+                            {/* Expanded Exercise Details */}
+                            {isExerciseExpanded && (
+                              <div className="px-3 pb-3 space-y-2">
+                                {/* Form Tip */}
+                                {(ex.tip || ex.tips?.form) && (
+                                  <div className="bg-gray-900/50 rounded-lg p-2">
+                                    <p className="text-xs font-medium text-gray-400 mb-1">Form</p>
+                                    <p className="text-xs text-gray-300">{ex.tips?.form || ex.tip}</p>
+                                  </div>
+                                )}
+
+                                {/* Cues */}
+                                {ex.tips?.cues?.length > 0 && (
+                                  <div className="bg-gray-900/50 rounded-lg p-2">
+                                    <p className="text-xs font-medium text-gray-400 mb-1">Cues</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {ex.tips.cues.map((cue, i) => (
+                                        <span key={i} className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded">
+                                          {cue}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Common Mistakes */}
+                                {ex.tips?.mistakes?.length > 0 && (
+                                  <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-2">
+                                    <p className="text-xs font-medium text-red-400 mb-1">Avoid</p>
+                                    <ul className="text-xs text-gray-400 space-y-0.5">
+                                      {ex.tips.mistakes.map((m, i) => (
+                                        <li key={i}>• {m}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Goal */}
+                                {ex.tips?.goal && (
+                                  <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-2">
+                                    <p className="text-xs font-medium text-emerald-400 mb-1">Goal</p>
+                                    <p className="text-xs text-gray-300">{ex.tips.goal}</p>
+                                  </div>
+                                )}
+
+                                {/* Replaced From Info */}
+                                {ex.replacedFrom && ex.reason && (
+                                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2">
+                                    <p className="text-xs text-purple-300">
+                                      Replaced {ex.replacedFrom}: {ex.reason}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Find Alternative Button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    findAlternativeExercise(dayId, exIdx, ex);
+                                  }}
+                                  disabled={isLoadingAlt}
+                                  className="w-full mt-2 py-2 px-3 bg-gray-700/50 hover:bg-gray-700 rounded-lg flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+                                >
+                                  {isLoadingAlt ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Finding alternative...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RefreshCw className="w-3 h-3" />
+                                      Find Alternative Exercise
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
 
           <div className="space-y-3">
