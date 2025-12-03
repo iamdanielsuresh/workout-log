@@ -438,7 +438,7 @@ Guidelines:
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-100 mb-2">Create Your Routine</h2>
+          <h2 className="text-3xl font-display font-bold text-gray-100 mb-2 tracking-tight">Create Your Routine</h2>
           <p className="text-gray-500 text-sm">Choose how to set up your workout plan</p>
         </div>
 
@@ -453,7 +453,7 @@ Guidelines:
                 <ListChecks className="w-6 h-6 text-emerald-400" />
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-gray-100 group-hover:text-emerald-400 transition-colors">
+                <h3 className="font-display font-bold text-lg text-gray-100 group-hover:text-emerald-400 transition-colors tracking-tight">
                   Choose a Template
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
@@ -474,7 +474,7 @@ Guidelines:
                 <Sparkles className="w-6 h-6 text-purple-400" />
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-gray-100 group-hover:text-purple-400 transition-colors">
+                <h3 className="font-display font-bold text-lg text-gray-100 group-hover:text-purple-400 transition-colors tracking-tight">
                   AI Generate Plan
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">

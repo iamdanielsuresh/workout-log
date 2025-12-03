@@ -70,7 +70,7 @@ export function ExperienceLevel({ onComplete, initialValue }) {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-100 mb-2">What's Your Experience?</h2>
+        <h2 className="text-3xl font-display font-bold text-gray-100 mb-2 tracking-tight">What's Your Experience?</h2>
         <p className="text-gray-500 text-sm">This helps us personalize your workouts</p>
       </div>
 
@@ -95,7 +95,7 @@ export function ExperienceLevel({ onComplete, initialValue }) {
                 </div>
                 <div className="flex-1 text-left">
                   <div className="flex items-center justify-between">
-                    <h3 className={`font-bold ${isSelected ? 'text-gray-100' : 'text-gray-300'} transition-colors`}>
+                    <h3 className={`font-display font-bold text-lg ${isSelected ? 'text-gray-100' : 'text-gray-300'} transition-colors tracking-tight`}>
                       {level.label}
                     </h3>
                     {isSelected && (

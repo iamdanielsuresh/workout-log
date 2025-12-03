@@ -369,22 +369,22 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
         <div className="grid grid-cols-4 gap-2">
           <div className="text-center p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-xl border border-amber-500/20">
             <Flame className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-gray-100">{workoutStats.currentStreak}</p>
+            <p className="text-xl font-display font-bold text-gray-100">{workoutStats.currentStreak}</p>
             <p className="text-[10px] text-gray-500">Streak</p>
           </div>
           <div className="text-center p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-xl border border-emerald-500/20">
             <Dumbbell className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-gray-100">{workoutStats.totalWorkouts}</p>
+            <p className="text-xl font-display font-bold text-gray-100">{workoutStats.totalWorkouts}</p>
             <p className="text-[10px] text-gray-500">Total</p>
           </div>
           <div className="text-center p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-xl border border-blue-500/20">
             <Calendar className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-gray-100">{workoutStats.workoutsThisWeek}</p>
+            <p className="text-xl font-display font-bold text-gray-100">{workoutStats.workoutsThisWeek}</p>
             <p className="text-[10px] text-gray-500">This Week</p>
           </div>
           <div className="text-center p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-xl border border-purple-500/20">
             <Clock className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-gray-100">
+            <p className="text-xl font-display font-bold text-gray-100">
               {workoutStats.averageDuration > 0 ? workoutStats.averageDuration : '--'}
             </p>
             <p className="text-[10px] text-gray-500">Avg Min</p>
@@ -401,7 +401,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
               <Zap className="w-6 h-6 text-emerald-400" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-100 mb-2">Daily Motivation</h3>
+              <h3 className="font-display font-bold text-lg text-gray-100 mb-2 tracking-tight">Daily Motivation</h3>
               {motivation ? (
                 <div>
                   <p className="text-gray-300 text-sm leading-relaxed animate-in fade-in">{motivation}</p>
@@ -444,7 +444,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
         {/* Insights Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Your Insights</h3>
+            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider">Your Insights</h3>
             <button 
               onClick={generateInsights}
               disabled={loading.insights}
@@ -516,7 +516,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
         {/* Tips Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Pro Tips</h3>
+            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider">Pro Tips</h3>
             <button 
               onClick={generateTips}
               disabled={loading.tips}
@@ -575,7 +575,7 @@ Give a helpful, concise response (under 60 words). Be encouraging, practical, an
 
         {/* Chat Section */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Ask Your Buddy</h3>
+          <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider mb-3">Ask Your Buddy</h3>
           <Card hover={false} className="overflow-hidden">
             {/* Chat Messages */}
             <div className="h-48 overflow-y-auto p-4 space-y-3 scrollbar-hide">

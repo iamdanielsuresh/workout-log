@@ -74,7 +74,7 @@ export function ExerciseLogger({
           )}
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-100">{exercise.name}</h3>
+              <h3 className="font-display font-bold text-lg text-gray-100 tracking-tight">{exercise.name}</h3>
               {exercise.muscleGroup && (
                 <span className="text-2xs bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded">
                   {exercise.muscleGroup}

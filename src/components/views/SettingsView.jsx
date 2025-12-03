@@ -135,7 +135,7 @@ export function SettingsView({
                 </div>
               )}
               <div className="flex-1">
-                <p className="font-semibold text-gray-200 text-lg">{profile.display_name}</p>
+                <p className="font-display font-bold text-gray-200 text-xl tracking-tight">{profile.display_name}</p>
                 <p className="text-sm text-gray-500">
                   {profile.experience_level ? `${profile.experience_level.charAt(0).toUpperCase() + profile.experience_level.slice(1)} lifter` : ''}
                   {profile.age ? ` • ${profile.age} years old` : ''}
@@ -154,97 +154,86 @@ export function SettingsView({
 
         {/* AI Section */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider px-1">AI Features</h3>
+          <h3 className="text-xs font-display font-bold text-gray-600 uppercase tracking-wider px-1">AI Features</h3>
           
-          <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-emerald-500/20 rounded-xl">
-                <Sparkles className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-200">AI Workout Buddy</p>
-                <p className="text-xs text-gray-500">Get personalized tips</p>
-              </div>
-            </div>
-            <button
-              role="switch"
-              aria-checked={aiEnabled}
-              onClick={() => setAiEnabled(!aiEnabled)}
-              className={`relative w-12 h-6 rounded-full transition-all ${aiEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
-            >
-              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
-            </button>
-          </div>
-
-          {aiEnabled && (
-            <div className="space-y-3 p-4 bg-gray-900/50 rounded-xl border border-gray-800 animate-in fade-in slide-in-from-top-2">
-              <label className="block text-sm font-semibold text-gray-300">
-                Google AI Studio API Key
-              </label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    type="password"
-                    value={apiKey}
-                    onChange={handleApiKeyChange}
-                    placeholder="AIza..."
-                    icon={Key}
-                  />
+          <div className="bg-gray-900/50 rounded-xl border border-white/10 shadow-lg shadow-black/20 overflow-hidden">
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-500/20 rounded-xl">
+                  <Sparkles className="w-5 h-5 text-emerald-400" />
                 </div>
-                <Button
-                  onClick={handleVerifyKey}
-                  disabled={!apiKey || verifying || isVerified}
-                  loading={verifying}
-                  variant={isVerified ? 'primary' : 'secondary'}
-                  className={`px-4 ${isVerified ? 'bg-emerald-600' : ''}`}
-                >
-                  {isVerified ? <Check className="w-4 h-4" /> : 'Verify'}
-                </Button>
+                <div>
+                  <p className="font-semibold text-gray-200">AI Workout Buddy</p>
+                  <p className="text-xs text-gray-500">Get personalized tips</p>
+                </div>
               </div>
-              
-              {/* Status messages */}
-              {error && (
-                <p className="text-sm text-red-400 flex items-center gap-1">
-                  <X className="w-4 h-4" /> {error}
-                </p>
-              )}
-              {successMessage && !error && (
-                <p className="text-sm text-emerald-400 flex items-center gap-1">
-                  <Check className="w-4 h-4" /> {successMessage}
-                </p>
-              )}
-              {isVerified && !successMessage && !error && (
-                <p className="text-xs text-emerald-400/70 flex items-center gap-1">
-                  <Check className="w-3 h-3" /> API key verified
-                </p>
-              )}
-              
-              <a
-                href="https://aistudio.google.com/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+              <button
+                role="switch"
+                aria-checked={aiEnabled}
+                onClick={() => setAiEnabled(!aiEnabled)}
+                className={`relative w-12 h-6 rounded-full transition-all ${aiEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
               >
-                Get your API key <ExternalLink className="w-3 h-3" />
-              </a>
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
+              </button>
             </div>
-          )}
 
-          <Button
-            onClick={handleSave}
-            disabled={saving || (aiEnabled && (!apiKey || !isVerified))}
-            loading={saving}
-            className="w-full"
-          >
-            Save Settings
-          </Button>
-          
-          {/* Success message for save */}
-          {successMessage && successMessage.includes('saved') && (
-            <p className="text-sm text-emerald-400 text-center flex items-center justify-center gap-1">
-              <Check className="w-4 h-4" /> {successMessage}
-            </p>
-          )}
+            {aiEnabled && (
+              <div className="px-4 pb-4 pt-0 animate-in fade-in slide-in-from-top-2">
+                <div className="h-px bg-gray-800 mb-4" />
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Google AI Studio API Key
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      type="password"
+                      value={apiKey}
+                      onChange={handleApiKeyChange}
+                      placeholder="AIza..."
+                      icon={Key}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleVerifyKey}
+                    disabled={!apiKey || verifying || isVerified}
+                    loading={verifying}
+                    variant={isVerified ? 'primary' : 'secondary'}
+                    className={`px-4 ${isVerified ? 'bg-emerald-600' : ''}`}
+                  >
+                    {isVerified ? <Check className="w-4 h-4" /> : 'Verify'}
+                  </Button>
+                </div>
+                
+                {error && (
+                  <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    {error}
+                  </p>
+                )}
+                
+                {successMessage && (
+                  <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    {successMessage}
+                  </p>
+                )}
+
+                <div className="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    To use AI features, you need a free API key from Google AI Studio.
+                  </p>
+                  <a 
+                    href="https://aistudio.google.com/app/apikey" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mt-1 font-medium"
+                  >
+                    Get API Key <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Account Section */}

@@ -96,7 +96,7 @@ export function GetStarted({ userName, onComplete }) {
 
       {/* Text */}
       <div className={`transition-all duration-500 ${isComplete ? 'scale-105' : ''}`}>
-        <h2 className="text-3xl font-bold text-gray-100 mb-3">
+        <h2 className="text-4xl font-display font-bold text-gray-100 mb-3 tracking-tight">
           {isComplete ? "Let's Go! 🎉" : "You're All Set!"}
         </h2>
         <p className="text-gray-500 text-sm max-w-xs mx-auto">

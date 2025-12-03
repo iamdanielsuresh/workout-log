@@ -47,21 +47,21 @@ export function PlansView({
       <div className="p-6 max-w-lg mx-auto space-y-4">
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-            <p className="text-2xl font-bold text-emerald-400">{plansList.length}</p>
-            <p className="text-xs text-gray-500">Routines</p>
+          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20">
+            <p className="text-3xl font-display font-bold text-emerald-400">{plansList.length}</p>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Routines</p>
           </div>
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-            <p className="text-2xl font-bold text-blue-400">
+          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20">
+            <p className="text-3xl font-display font-bold text-blue-400">
               {uniqueExercises.size}
             </p>
-            <p className="text-xs text-gray-500">Unique Exercises</p>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Exercises</p>
           </div>
-          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-            <p className="text-2xl font-bold text-amber-400">
+          <div className="text-center p-4 bg-gray-900/50 rounded-xl border border-white/5 shadow-lg shadow-black/20">
+            <p className="text-3xl font-display font-bold text-amber-400">
               {aiPlanCount}
             </p>
-            <p className="text-xs text-gray-500">AI Plans</p>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">AI Plans</p>
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export function PlansView({
               <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Dumbbell className="w-8 h-8 text-gray-600" />
               </div>
-              <h3 className="font-semibold text-gray-400 mb-2">No workout plans</h3>
+              <h3 className="font-display font-bold text-xl text-gray-400 mb-2">No workout plans</h3>
               <p className="text-sm text-gray-600 mb-4">
                 Create your first workout routine to get started
               </p>
@@ -110,7 +110,7 @@ export function PlansView({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-100 truncate">
+                          <h3 className="font-display font-bold text-lg text-gray-100 truncate tracking-tight">
                             {plan.name}
                           </h3>
                           {isAiGenerated && (

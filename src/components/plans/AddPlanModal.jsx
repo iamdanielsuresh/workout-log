@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { 
   X, Sparkles, ListChecks, ChevronRight, ChevronLeft, 
   Dumbbell, Key, Loader2, Check, Plus, Trash2, Zap, Clock, Target,
@@ -67,7 +67,7 @@ export function AddPlanModal({
     exercises: [{ name: '', sets: 3, range: '8-12', tip: '' }]
   });
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setMode(null);
     setSelectedTemplate(null);
     setGeneratedPlan(null);
@@ -82,7 +82,7 @@ export function AddPlanModal({
       exercises: [{ name: '', sets: 3, range: '8-12', tip: '' }]
     });
     onClose();
-  };
+  }, [onClose]);
 
   const toggleDayExpanded = (dayId) => {
     setExpandedDays(prev => ({ ...prev, [dayId]: !prev[dayId] }));

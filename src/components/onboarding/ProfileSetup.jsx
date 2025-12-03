@@ -71,7 +71,7 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-100 mb-2">Create Your Profile</h2>
+        <h2 className="text-3xl font-display font-bold text-gray-100 mb-2 tracking-tight">Create Your Profile</h2>
         <p className="text-gray-500 text-sm">Tell us a bit about yourself</p>
       </div>
 

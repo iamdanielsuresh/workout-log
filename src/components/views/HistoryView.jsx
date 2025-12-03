@@ -30,7 +30,7 @@ export function HistoryView({ workouts, onBack, onDelete }) {
             <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <Dumbbell className="w-8 h-8 text-gray-600" />
             </div>
-            <h3 className="font-semibold text-gray-400 mb-2">No workouts yet</h3>
+            <h3 className="font-display font-bold text-xl text-gray-400 mb-2">No workouts yet</h3>
             <p className="text-sm text-gray-600 mb-4">Start your first workout to see your history here</p>
             <Button onClick={onBack} size="sm">Start Workout</Button>
           </Card>
@@ -48,7 +48,7 @@ export function HistoryView({ workouts, onBack, onDelete }) {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold text-gray-200">{session.workoutName}</h3>
+                    <h3 className="font-display font-bold text-lg text-gray-200 tracking-tight">{session.workoutName}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-gray-500">
                         {date?.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}

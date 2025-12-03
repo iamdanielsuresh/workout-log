@@ -22,9 +22,9 @@ export function RestTimer({ onComplete }) {
   }
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+    <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 shadow-lg shadow-black/20">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <span className="text-xs font-display font-bold text-gray-400 uppercase tracking-wider">
           Rest Timer
         </span>
         <div className="flex items-center gap-1">

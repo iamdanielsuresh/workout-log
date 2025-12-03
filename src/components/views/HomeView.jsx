@@ -1,4 +1,4 @@
-import { User, History, Flame, Sparkles, Dumbbell } from 'lucide-react';
+import { User, History, Flame, Sparkles, Dumbbell, Settings } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { WorkoutCard, StreakCard } from '../workout/WorkoutCard';
 
@@ -9,7 +9,7 @@ export function HomeView({
   userName, userPhoto, isAnonymous, streak, workouts, plans,
   suggestedWorkout, nextWorkoutKey, lastWorkout, aiEnabled,
   recommendationLabel, nextActionHint,
-  onSelectWorkout, onViewHistory 
+  onSelectWorkout, onViewHistory, onSettings
 }) {
   const isFirstTime = workouts.length === 0;
 
@@ -48,11 +48,13 @@ export function HomeView({
             </p>
           </div>
         </div>
-        {aiEnabled && (
-          <div className="p-2 bg-emerald-500/10 rounded-full">
-            <Sparkles className="w-5 h-5 text-emerald-400" />
-          </div>
-        )}
+        <button 
+          onClick={onSettings}
+          className="p-2 bg-gray-800/50 hover:bg-gray-800 rounded-full transition-colors border border-gray-700"
+          aria-label="Settings"
+        >
+          <Settings className="w-5 h-5 text-gray-400" />
+        </button>
       </div>
 
       {/* Next Action Hint */}
