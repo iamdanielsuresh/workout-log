@@ -110,14 +110,16 @@ export function buildWorkoutGenerationPrompt({
   duration,
   equipment = 'full',
   specialNotes = '',
-  userContext = null
+  userContext = null,
+  experienceLevel = 'intermediate'
 }) {
   // Base requirements
   const requirements = [
     `Days per week: ${daysPerWeek}`,
     `Focus: ${focus}`,
     `Session duration: ${duration} minutes`,
-    `Equipment: ${equipment === 'full' ? 'Full gym' : equipment === 'minimal' ? 'Minimal (dumbbells, bands)' : 'Bodyweight only'}`
+    `Equipment: ${equipment === 'full' ? 'Full gym' : equipment === 'minimal' ? 'Minimal (dumbbells, bands)' : 'Bodyweight only'}`,
+    `Experience Level: ${experienceLevel}`
   ];
 
   // Add special notes section if provided
@@ -135,7 +137,6 @@ ${specialNotes.trim()}
   if (userContext) {
     // Destructure from the new flat context structure
     const { 
-      experienceLevel, 
       totalWorkouts, 
       avgSessionDuration, 
       avgExercisesPerSession, 
@@ -166,7 +167,6 @@ ${specialNotes.trim()}
     
     userContextSection = `
 USER PROFILE:
-- Experience: ${experienceLevel || 'intermediate'}
 - Training history: ${totalWorkouts || 0} total workouts
 
 RECENT PATTERNS:
@@ -185,58 +185,61 @@ Based on this profile, create a plan that:
 `;
   }
 
-  const prompt = `You are an expert fitness coach. Create a ${daysPerWeek}-day workout program.
+  const prompt = `You are an elite strength and conditioning coach. Create a high-quality, science-based ${daysPerWeek}-day workout program.
 
 REQUIREMENTS:
 ${requirements.map(r => `- ${r}`).join('\n')}
 ${specialNotesSection}${userContextSection}
 
 IMPORTANT INSTRUCTIONS:
-1. Return ONLY valid JSON - no markdown, no comments, no extra text
-2. Each exercise needs detailed tips for proper form
-3. Include rest periods appropriate for the focus (strength: 2-3 min, hypertrophy: 60-90 sec)
-4. Balance muscle groups throughout the week
-5. Start with compound movements, end with isolation
-6. Consider recovery - don't hit same muscles on consecutive days
-7. CRITICAL: If user mentioned injuries, limitations, or exercise preferences in special notes, strictly follow them
+1. Return ONLY valid JSON - no markdown, no comments, no extra text.
+2. **Scientific Principles**: Use RPE (Rate of Perceived Exertion 1-10) and Tempo prescriptions (e.g., 3-0-1-0).
+3. **Dynamic Rest**: Heavy compounds need 2-3min, isolation needs 60-90s.
+4. **Warm-up**: Include a specific dynamic warm-up (3-5 mins) for each day tailored to the movements.
+5. **Progression**: Explain how to progress week to week.
+6. **Balance**: Ensure proper volume distribution and recovery.
+7. CRITICAL: If user mentioned injuries, limitations, or exercise preferences in special notes, strictly follow them.
 
 Return this exact JSON structure:
 {
+  "programName": "Creative Program Name",
+  "programDescription": "Scientific overview of the training block",
+  "programTip": "Key focus for this training block",
   "plans": {
     "day1": {
       "id": "day1",
-      "name": "Descriptive Day Name",
+      "name": "Day Name (e.g. Push A)",
       "next": "day2",
       "estTime": "${duration} min",
-      "desc": "Target muscles and focus",
-      "focus": "${focus}",
-      "dayTip": "Motivational or practical tip for this day",
+      "desc": "Primary focus",
+      "dayTip": "Specific cue for today's session",
+      "warmup": [
+        { "name": "Movement Name", "duration": "Duration/Reps" }
+      ],
       "exercises": [
         {
           "name": "Exercise Name",
           "sets": 3,
           "range": "8-12",
-          "restPeriod": "90 sec",
-          "muscleGroup": "Primary muscle",
+          "rpe": "8",
+          "tempo": "3-0-1-0",
+          "rest": "90s",
+          "muscleGroup": "Target Muscle",
           "tip": "Quick form tip",
           "tips": {
-            "form": "Detailed form instructions",
-            "cues": ["Mental cue 1", "Mental cue 2"],
-            "mistakes": ["Common mistake to avoid"],
-            "goal": "What this exercise targets",
-            "progression": "How to progress over time"
+            "form": "Detailed setup and execution",
+            "cues": ["Cue 1", "Cue 2"],
+            "mistakes": ["Common mistake"],
+            "goal": "Biomechanical focus"
           }
         }
       ]
     }
-  },
-  "programName": "Program Name",
-  "programDescription": "Brief overview of the program",
-  "weeklyVolume": "Total sets per week estimate"
+  }
 }
 
 Create exactly ${daysPerWeek} days. Last day's "next" should point to "day1".
-Include 4-6 exercises per day, appropriate for ${userContext?.profile?.experienceLevel || 'intermediate'} level.`;
+Include 4-7 exercises per day, appropriate for ${experienceLevel} level.`;
 
   return prompt;
 }

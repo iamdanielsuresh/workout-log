@@ -128,9 +128,9 @@ export function OnboardingFlow({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-950">
+    <div className="fixed inset-0 z-[100] bg-gray-950 flex flex-col">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 pointer-events-none" />
       
       {/* Subtle animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -138,35 +138,42 @@ export function OnboardingFlow({
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      {/* Progress indicators */}
-      <div className="absolute top-8 left-0 right-0 flex justify-center gap-2 safe-area-top">
-        {STEPS.map((step, idx) => (
-          <div
-            key={step}
-            className={`h-1 rounded-full transition-all duration-500 ${
-              idx < currentStep 
-                ? 'w-8 bg-emerald-500' 
-                : idx === currentStep 
-                  ? 'w-8 bg-emerald-500/50' 
-                  : 'w-4 bg-gray-700'
-            }`}
-          />
-        ))}
+      {/* Header Section (Progress + Counter) */}
+      <div className="relative z-10 flex-none pt-8 pb-2 safe-area-top">
+        {/* Progress indicators */}
+        <div className="flex justify-center gap-2 mb-2">
+          {STEPS.map((step, idx) => (
+            <div
+              key={step}
+              className={`h-1 rounded-full transition-all duration-500 ${
+                idx < currentStep 
+                  ? 'w-8 bg-emerald-500' 
+                  : idx === currentStep 
+                    ? 'w-8 bg-emerald-500/50' 
+                    : 'w-4 bg-gray-700'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Step counter */}
+        <div className="text-center">
+          <span className="text-xs text-gray-600 font-medium">
+            Step {currentStep + 1} of {STEPS.length}
+          </span>
+        </div>
       </div>
 
-      {/* Step counter */}
-      <div className="absolute top-14 left-0 right-0 text-center safe-area-top">
-        <span className="text-xs text-gray-600 font-medium">
-          Step {currentStep + 1} of {STEPS.length}
-        </span>
-      </div>
-
-      {/* Main content */}
-      <div className="relative w-full max-w-md px-6">
-        <div 
-          className={`transition-all duration-300 ease-out ${getAnimationClass()}`}
-        >
-          {renderStep()}
+      {/* Scrollable Content Area */}
+      <div className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="min-h-full flex flex-col items-center justify-center p-6 pb-10">
+          <div className="w-full max-w-md">
+            <div 
+              className={`transition-all duration-300 ease-out ${getAnimationClass()}`}
+            >
+              {renderStep()}
+            </div>
+          </div>
         </div>
       </div>
     </div>

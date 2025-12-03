@@ -16,6 +16,7 @@ import {
 } from '../../utils/aiWorkoutGenerator';
 import { buildUserContextForAI } from '../../utils/aiContext';
 import { checkAiAvailability } from '../../utils/aiConfig';
+import { AiPreferencesForm } from './AiPreferencesForm';
 
 /**
  * AddPlanModal - Add new workout plan/routine
@@ -401,119 +402,10 @@ Return ONLY valid JSON (no markdown):
             )}
 
             {/* Questions */}
-            <div className="space-y-5">
-              {/* Days per week */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">Days per week</label>
-                <div className="flex gap-2">
-                  {[3, 4, 5, 6].map(d => (
-                    <button
-                      key={d}
-                      onClick={() => setAiQuestions(q => ({ ...q, daysPerWeek: d }))}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        aiQuestions.daysPerWeek === d
-                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
-                      }`}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Focus */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">Focus</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['balanced', 'strength', 'hypertrophy', 'upper body', 'lower body'].map(f => (
-                    <button
-                      key={f}
-                      onClick={() => setAiQuestions(q => ({ ...q, focus: f }))}
-                      className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all capitalize ${
-                        aiQuestions.focus === f
-                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
-                      }`}
-                    >
-                      {f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Session Duration */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">Session Duration</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['30-45', '45-60', '60-75', '75-90'].map(d => (
-                    <button
-                      key={d}
-                      onClick={() => setAiQuestions(q => ({ ...q, duration: d }))}
-                      className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
-                        aiQuestions.duration === d
-                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
-                      }`}
-                    >
-                      {d} min
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Equipment */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">Equipment</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { key: 'full', label: 'Full Gym' },
-                    { key: 'minimal', label: 'Minimal' },
-                    { key: 'bodyweight', label: 'Bodyweight' }
-                  ].map(e => (
-                    <button
-                      key={e.key}
-                      onClick={() => setAiQuestions(q => ({ ...q, equipment: e.key }))}
-                      className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
-                        aiQuestions.equipment === e.key
-                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
-                      }`}
-                    >
-                      {e.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Special Notes / Limitations - Enhanced for mobile keyboard */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
-                  <AlertCircle className="w-4 h-4 inline mr-2 text-gray-500" />
-                  Anything AI should know?
-                </label>
-                <textarea
-                  value={aiQuestions.specialNotes}
-                  onChange={(e) => setAiQuestions(q => ({ ...q, specialNotes: e.target.value }))}
-                  onFocus={(e) => {
-                    // Scroll textarea into view when focused on mobile
-                    setTimeout(() => {
-                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 300);
-                  }}
-                  placeholder="E.g., shoulder injury, don't like bench press, focus on back..."
-                  className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none text-sm transition-all"
-                  rows={3}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck="false"
-                  data-gramm="false"
-                  data-gramm_editor="false"
-                  data-enable-grammarly="false"
-                />
-              </div>
-            </div>
+            <AiPreferencesForm 
+              questions={aiQuestions} 
+              setQuestions={setAiQuestions} 
+            />
 
             {error && (
               <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl flex items-center gap-2">

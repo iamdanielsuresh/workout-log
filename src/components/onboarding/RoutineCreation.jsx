@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { 
   Sparkles, ListChecks, ChevronRight, ChevronLeft, Check, 
   Dumbbell, Key, X, Loader2, Calendar, Target, ArrowRight,
-  ChevronDown, ChevronUp, RefreshCw, AlertCircle, Info
+  ChevronDown, ChevronUp, RefreshCw, AlertCircle, Info,
+  Clock, Activity, Flame
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { buildWorkoutGenerationPrompt } from '../../utils/aiWorkoutGenerator';
+import { AiPreferencesForm } from '../plans/AiPreferencesForm';
 
 // Pre-built workout templates
 export const WORKOUT_TEMPLATES = {
@@ -364,59 +367,14 @@ Return ONLY valid JSON (no markdown):
     setAiStep('generating');
 
     try {
-      // Build special notes section if provided
-      const specialNotesSection = aiQuestions.specialNotes.trim() 
-        ? `\n\nUSER SPECIAL NOTES (IMPORTANT - must accommodate these):
-${aiQuestions.specialNotes.trim()}`
-        : '';
-
-      const prompt = `Create a ${aiQuestions.daysPerWeek}-day workout plan for a ${experienceLevel} lifter.
-
-Requirements:
-- Focus: ${aiQuestions.focus} (balanced/upper body/lower body/strength/hypertrophy)
-- Session duration: ${aiQuestions.duration} minutes
-- Equipment: ${aiQuestions.equipment} (full gym/dumbbells only/bodyweight)${specialNotesSection}
-
-Return ONLY valid JSON (no markdown, no code blocks) with this structure:
-{
-  "plans": {
-    "day1": {
-      "id": "day1",
-      "name": "Day Name",
-      "next": "day2",
-      "estTime": "${aiQuestions.duration} min",
-      "desc": "Brief description of the workout focus",
-      "dayTip": "One motivational or strategic tip for this workout day",
-      "exercises": [
-        {
-          "name": "Exercise Name",
-          "sets": 3,
-          "range": "8-12",
-          "muscleGroup": "Primary muscle targeted",
-          "tip": "Quick form tip (1 sentence)",
-          "tips": {
-            "form": "Detailed form instructions (2-3 sentences)",
-            "cues": ["Quick cue 1", "Quick cue 2"],
-            "mistakes": ["Common mistake 1", "Common mistake 2"],
-            "goal": "What this exercise achieves",
-            "progression": "How to progress when ready"
-          }
-        }
-      ]
-    }
-  },
-  "programTip": "Overall tip for success with this program"
-}
-
-Guidelines:
-- Create exactly ${aiQuestions.daysPerWeek} days (day1, day2, etc). Last day's "next" points to "day1"
-- 4-6 exercises per day appropriate for ${experienceLevel} level
-- Start with compound movements, finish with isolation
-- Make form tips specific and actionable
-- Common mistakes should be what ${experienceLevel}s typically do wrong
-- Goals should explain WHY each exercise is included
-- Progression tips should be appropriate for ${experienceLevel} level
-- IMPORTANT: If user mentioned injuries, limitations, or exercise preferences, strictly follow them`;
+      const prompt = buildWorkoutGenerationPrompt({
+        daysPerWeek: aiQuestions.daysPerWeek,
+        focus: aiQuestions.focus,
+        duration: aiQuestions.duration,
+        equipment: aiQuestions.equipment,
+        specialNotes: aiQuestions.specialNotes,
+        experienceLevel
+      });
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -517,9 +475,17 @@ Guidelines:
           </button>
         </div>
 
-        <Button variant="ghost" onClick={onBack} className="w-full" icon={ChevronLeft}>
-          Back
-        </Button>
+        <div className="space-y-3">
+          <Button variant="ghost" onClick={onBack} className="w-full" icon={ChevronLeft}>
+            Back
+          </Button>
+          <button 
+            onClick={() => onComplete({ type: 'skip', plans: null })}
+            className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Skip for now
+          </button>
+        </div>
       </div>
     );
   }
@@ -638,151 +604,25 @@ Guidelines:
               <Sparkles className="w-8 h-8 text-purple-400" />
             </div>
             <h2 className="text-2xl font-bold text-gray-100 mb-2">Customize Your Plan</h2>
-            <p className="text-gray-500 text-sm">Answer a few questions</p>
+            <p className="text-gray-500 text-sm">Answer a few questions to help AI build your perfect routine</p>
           </div>
 
-          <div className="space-y-4">
-            {/* Days per week */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Days per week
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {[3, 4, 5, 6, 7].map((days) => (
-                  <button
-                    key={days}
-                    onClick={() => setAiQuestions(p => ({ ...p, daysPerWeek: days }))}
-                    className={`py-3 rounded-xl font-bold transition-all ${
-                      aiQuestions.daysPerWeek === days
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-                  >
-                    {days}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Focus */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                <Target className="w-4 h-4 inline mr-2" />
-                Training focus
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'balanced', label: 'Balanced' },
-                  { id: 'upper', label: 'Upper Body' },
-                  { id: 'lower', label: 'Lower Body' },
-                  { id: 'strength', label: 'Strength' },
-                  { id: 'hypertrophy', label: 'Muscle Size' },
-                  { id: 'athletic', label: 'Athletic' }
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setAiQuestions(p => ({ ...p, focus: option.id }))}
-                    className={`py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                      aiQuestions.focus === option.id
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Duration */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                ⏱️ Session duration
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: '30-45', label: '30-45 min' },
-                  { id: '45-60', label: '45-60 min' },
-                  { id: '60-90', label: '60-90 min' }
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setAiQuestions(p => ({ ...p, duration: option.id }))}
-                    className={`py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                      aiQuestions.duration === option.id
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Equipment */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                <Dumbbell className="w-4 h-4 inline mr-2" />
-                Available equipment
-              </label>
-              <div className="grid grid-cols-1 gap-2">
-                {[
-                  { id: 'full', label: 'Full Gym', desc: 'Barbells, machines, cables' },
-                  { id: 'dumbbells', label: 'Dumbbells Only', desc: 'Home gym basics' },
-                  { id: 'bodyweight', label: 'Bodyweight', desc: 'No equipment' }
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setAiQuestions(p => ({ ...p, equipment: option.id }))}
-                    className={`py-3 px-4 rounded-xl text-left transition-all ${
-                      aiQuestions.equipment === option.id
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-                  >
-                    <span className="font-medium">{option.label}</span>
-                    <span className="text-xs opacity-70 ml-2">{option.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Special Notes / Limitations */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                <AlertCircle className="w-4 h-4 inline mr-2" />
-                Anything AI should know?
-              </label>
-              <textarea
-                value={aiQuestions.specialNotes}
-                onChange={(e) => setAiQuestions(p => ({ ...p, specialNotes: e.target.value }))}
-                onTouchStart={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                placeholder="E.g., shoulder injury (avoid overhead pressing), don't like bench press, focus on back development, bad knees..."
-                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none text-sm"
-                rows={3}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck="false"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Injuries, exercise preferences, or specific goals
-              </p>
-            </div>
-          </div>
+          <AiPreferencesForm 
+            questions={aiQuestions} 
+            setQuestions={setAiQuestions} 
+          />
 
           {error && (
-            <p className="text-sm text-red-400 flex items-center gap-1">
+            <p className="text-sm text-red-400 flex items-center gap-1 bg-red-500/10 p-3 rounded-xl">
               <X className="w-4 h-4" /> {error}
             </p>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-3 pt-4">
             <Button 
               onClick={handleGeneratePlan}
               className="w-full bg-purple-500 hover:bg-purple-600"
+              size="lg"
               icon={Sparkles}
             >
               Generate My Plan
@@ -904,6 +744,24 @@ Guidelines:
                           <p className="text-xs text-purple-300">💡 {day.dayTip}</p>
                         </div>
                       )}
+
+                      {/* Warmup Section */}
+                      {day.warmup && day.warmup.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <Flame className="w-3 h-3 text-orange-500" />
+                            Warm Up
+                          </h4>
+                          <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl overflow-hidden">
+                            {day.warmup.map((w, i) => (
+                              <div key={i} className="flex items-center justify-between p-2 border-b border-orange-500/10 last:border-0">
+                                <span className="text-xs text-gray-300">{w.name}</span>
+                                <span className="text-xs font-mono text-orange-400/80">{w.duration}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       
                       {day.exercises.map((ex, exIdx) => {
                         const exerciseKey = `${dayId}-${exIdx}`;
@@ -931,6 +789,12 @@ Guidelines:
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
                                   <span className="text-xs text-gray-500">{ex.sets} × {ex.range}</span>
+                                  {ex.rpe && (
+                                    <>
+                                      <span className="text-gray-700">•</span>
+                                      <span className="text-xs text-amber-500/80">RPE {ex.rpe}</span>
+                                    </>
+                                  )}
                                   {ex.muscleGroup && (
                                     <>
                                       <span className="text-gray-700">•</span>
@@ -949,6 +813,37 @@ Guidelines:
                             {/* Expanded Exercise Details */}
                             {isExerciseExpanded && (
                               <div className="px-3 pb-3 space-y-2">
+                                {/* Stats Grid */}
+                                <div className="grid grid-cols-3 gap-2 mb-2">
+                                  {ex.tempo && (
+                                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                                      <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                                        <Activity className="w-3 h-3" />
+                                        <span className="text-[10px] uppercase">Tempo</span>
+                                      </div>
+                                      <span className="text-xs font-mono text-gray-300">{ex.tempo}</span>
+                                    </div>
+                                  )}
+                                  {ex.rest && (
+                                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                                      <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                                        <Clock className="w-3 h-3" />
+                                        <span className="text-[10px] uppercase">Rest</span>
+                                      </div>
+                                      <span className="text-xs font-mono text-gray-300">{ex.rest}</span>
+                                    </div>
+                                  )}
+                                  {ex.rpe && (
+                                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                                      <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                                        <Flame className="w-3 h-3" />
+                                        <span className="text-[10px] uppercase">RPE</span>
+                                      </div>
+                                      <span className="text-xs font-mono text-amber-500">{ex.rpe}</span>
+                                    </div>
+                                  )}
+                                </div>
+
                                 {/* Form Tip */}
                                 {(ex.tip || ex.tips?.form) && (
                                   <div className="bg-gray-900/50 rounded-lg p-2">
