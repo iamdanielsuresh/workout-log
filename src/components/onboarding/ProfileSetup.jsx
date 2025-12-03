@@ -49,12 +49,12 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const handleSubmit = () => {
+    if (validate()) {
       onComplete({
         display_name: profile.displayName.trim(),
         gender: profile.gender,
-        date_of_birth: profile.dateOfBirth,
-        age,
-        height: profile.height ? parseFloat(profile.height) : null,
         date_of_birth: profile.dateOfBirth,
         age,
         height: profile.height ? parseFloat(profile.height) : null,
