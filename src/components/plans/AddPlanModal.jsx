@@ -781,105 +781,131 @@ Return ONLY valid JSON (no markdown):
 
         {/* Custom Plan Builder */}
         {mode === 'custom' && (
-          <div className="space-y-5">
-            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm" className="mb-2">
-              Back
-            </Button>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">Plan Name *</label>
-              <Input
-                value={customPlan.name}
-                onChange={(e) => setCustomPlan(p => ({ ...p, name: e.target.value }))}
-                placeholder="e.g., Push Day, Upper Body A"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="words"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">Description</label>
-              <Input
-                value={customPlan.desc}
-                onChange={(e) => setCustomPlan(p => ({ ...p, desc: e.target.value }))}
-                placeholder="Brief description of this workout"
-                autoComplete="off"
-                autoCorrect="off"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">Exercises</label>
-              <div className="space-y-3">
-                {customPlan.exercises.map((ex, i) => (
-                  <div key={i} className="p-3 bg-gray-800/50 border border-gray-700 rounded-xl space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={ex.name}
-                        onChange={(e) => updateExercise(i, 'name', e.target.value)}
-                        placeholder="Exercise name"
-                        className="flex-1"
-                        autoComplete="off"
-                        autoCorrect="off"
-                      />
-                      <button
-                        onClick={() => removeExercise(i)}
-                        className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Input
-                          type="number"
-                          value={ex.sets}
-                          onChange={(e) => updateExercise(i, 'sets', parseInt(e.target.value) || 3)}
-                          placeholder="Sets"
-                        />
-                        <span className="text-xs text-gray-500 mt-1 block">Sets</span>
-                      </div>
-                      <div className="flex-1">
-                        <Input
-                          value={ex.range}
-                          onChange={(e) => updateExercise(i, 'range', e.target.value)}
-                          placeholder="8-12"
-                          autoComplete="off"
-                        />
-                        <span className="text-xs text-gray-500 mt-1 block">Rep Range</span>
-                      </div>
-                    </div>
-                    <Input
-                      value={ex.tip}
-                      onChange={(e) => updateExercise(i, 'tip', e.target.value)}
-                      placeholder="Form tip (optional)"
-                      autoComplete="off"
-                      autoCorrect="off"
-                    />
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="secondary"
-                onClick={addExercise}
-                className="w-full mt-3"
-                icon={Plus}
-              >
-                Add Exercise
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="flex items-center gap-3 mb-2">
+              <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm">
+                Back
               </Button>
+              <h3 className="font-display font-bold text-xl text-gray-100">Create Routine</h3>
+            </div>
+
+            <div className="space-y-4">
+              <Card hover={false} className="p-4 space-y-4 bg-gray-800/30">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Routine Name</label>
+                  <Input
+                    value={customPlan.name}
+                    onChange={(e) => setCustomPlan(p => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g., Push Day, Upper Body A"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="words"
+                    className="font-display font-bold text-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
+                  <Input
+                    value={customPlan.desc}
+                    onChange={(e) => setCustomPlan(p => ({ ...p, desc: e.target.value }))}
+                    placeholder="Brief description of this workout"
+                    autoComplete="off"
+                    autoCorrect="off"
+                  />
+                </div>
+              </Card>
+
+              <div>
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Exercises</label>
+                  <span className="text-xs text-gray-500">{customPlan.exercises.length} exercises</span>
+                </div>
+                
+                <div className="space-y-3">
+                  {customPlan.exercises.map((ex, i) => (
+                    <div key={i} className="group relative p-4 bg-gray-800/40 border border-gray-700/50 rounded-2xl space-y-3 hover:border-gray-600 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-3 w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400 shrink-0">
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 space-y-3">
+                          <Input
+                            value={ex.name}
+                            onChange={(e) => updateExercise(i, 'name', e.target.value)}
+                            placeholder="Exercise name"
+                            className="font-display font-bold text-lg bg-gray-900/50 border-transparent focus:bg-gray-900"
+                            autoComplete="off"
+                            autoCorrect="off"
+                          />
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1 block">Sets</label>
+                              <Input
+                                type="number"
+                                value={ex.sets}
+                                onChange={(e) => updateExercise(i, 'sets', parseInt(e.target.value) || 3)}
+                                placeholder="3"
+                                className="bg-gray-900/50 border-transparent focus:bg-gray-900"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1 block">Rep Range</label>
+                              <Input
+                                value={ex.range}
+                                onChange={(e) => updateExercise(i, 'range', e.target.value)}
+                                placeholder="8-12"
+                                autoComplete="off"
+                                className="bg-gray-900/50 border-transparent focus:bg-gray-900"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Input
+                            value={ex.tip}
+                            onChange={(e) => updateExercise(i, 'tip', e.target.value)}
+                            placeholder="Add a form tip (optional)"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            icon={Info}
+                            className="text-sm bg-gray-900/50 border-transparent focus:bg-gray-900"
+                          />
+                        </div>
+                        
+                        <button
+                          onClick={() => removeExercise(i)}
+                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Remove exercise"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button
+                  variant="secondary"
+                  onClick={addExercise}
+                  className="w-full mt-4 border-dashed border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+                  icon={Plus}
+                >
+                  Add Exercise
+                </Button>
+              </div>
             </div>
 
             {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                {error}
-              </p>
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
             )}
 
-            <div className="pt-2">
-              <Button onClick={handleSaveCustomPlan} className="w-full" size="lg">
-                Save Plan
+            <div className="pt-4 sticky bottom-0 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent pb-2">
+              <Button onClick={handleSaveCustomPlan} className="w-full shadow-lg shadow-emerald-500/20" size="lg">
+                Save Routine
               </Button>
             </div>
           </div>

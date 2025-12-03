@@ -116,14 +116,27 @@ export function useWorkouts(userId) {
   const deleteWorkout = useCallback(async (workoutId) => {
     if (!userId) throw new Error('No user ID');
 
+    // Optimistic update
+    setWorkouts(prev => prev.filter(w => w.id !== workoutId));
+    setHistory(prev => {
+      const newHistory = { ...prev };
+      // This is a simplification; ideally we'd find the next most recent log for affected exercises
+      // But for deletion, just removing from the list is the most visible change needed
+      return newHistory;
+    });
+
     const { error } = await supabase
       .from('workout_logs')
       .delete()
       .eq('id', workoutId)
       .eq('user_id', userId);
 
-    if (error) throw error;
-  }, [userId]);
+    if (error) {
+      // Revert on error
+      fetchWorkouts();
+      throw error;
+    }
+  }, [userId, fetchWorkouts]);
 
   return {
     workouts,
