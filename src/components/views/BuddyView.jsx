@@ -464,7 +464,7 @@ Give a helpful, concise response (under 60 words).`;
               <h3 className="font-display font-bold text-lg text-gray-100 mb-2 tracking-tight">Daily Motivation</h3>
               {motivation ? (
                 <div>
-                  <p className="text-gray-300 text-sm leading-relaxed animate-in fade-in">{motivation}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed animate-in fade-in font-sans whitespace-pre-line">{motivation}</p>
                   {errors.motivation && (
                     <ErrorMessage error={errors.motivation} onRetry={generateMotivation} />
                   )}
@@ -528,7 +528,7 @@ Give a helpful, concise response (under 60 words).`;
                 <div className="flex items-start gap-3">
                   <TrendingUp className="w-5 h-5 text-emerald-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-200">{insights.summary}</p>
+                    <p className="text-sm font-medium text-gray-200 font-sans">{insights.summary}</p>
                   </div>
                 </div>
               </Card>
@@ -537,12 +537,12 @@ Give a helpful, concise response (under 60 words).`;
                 <Card hover={false} className="p-4">
                   <Award className="w-5 h-5 text-amber-400 mb-2" />
                   <p className="text-xs text-gray-500 mb-1">Strength</p>
-                  <p className="text-sm text-gray-300">{insights.strength}</p>
+                  <p className="text-sm text-gray-300 font-sans">{insights.strength}</p>
                 </Card>
                 <Card hover={false} className="p-4">
                   <Target className="w-5 h-5 text-blue-400 mb-2" />
                   <p className="text-xs text-gray-500 mb-1">Focus Area</p>
-                  <p className="text-sm text-gray-300">{insights.improvement}</p>
+                  <p className="text-sm text-gray-300 font-sans">{insights.improvement}</p>
                 </Card>
               </div>
               
@@ -553,7 +553,7 @@ Give a helpful, concise response (under 60 words).`;
                   </div>
                   <div>
                     <p className="text-xs text-emerald-400 font-medium">Next Goal</p>
-                    <p className="text-sm text-gray-200">{insights.nextGoal}</p>
+                    <p className="text-sm text-gray-200 font-sans">{insights.nextGoal}</p>
                   </div>
                 </div>
               </Card>
@@ -743,7 +743,7 @@ Give a helpful, concise response (under 60 words).`;
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleChat()}
                   placeholder={`Ask ${PERSONAS[coachPersona].name}...`}
-                  className="flex-1 bg-gray-800 border-transparent focus:border-emerald-500/50 focus:ring-0 rounded-xl text-sm text-gray-100 placeholder-gray-500"
+                  className="flex-1 bg-gray-800 border-transparent focus:border-emerald-500/50 focus:ring-0 rounded-xl text-sm text-gray-100 placeholder-gray-500 px-4 py-3"
                   disabled={chatLoading}
                 />
                 <Button 
