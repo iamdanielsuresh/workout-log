@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Dumbbell, Trophy, Target, ChevronRight, Check } from 'lucide-react';
-import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
 const EXPERIENCE_LEVELS = [

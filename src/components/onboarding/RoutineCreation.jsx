@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Sparkles, ListChecks, ChevronRight, ChevronLeft, Check, 
   Dumbbell, Key, X, Loader2, Calendar, Target, ArrowRight,
@@ -244,6 +244,34 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
+
+  const LOADING_STAGES = [
+    { text: 'Curating your info...', duration: 2000 },
+    { text: 'Analyzing your patterns...', duration: 2500 },
+    { text: 'Structuring your routine...', duration: 2000 },
+    { text: 'Finalizing details...', duration: 1500 }
+  ];
+
+  useEffect(() => {
+    if (aiStep !== 'generating') return;
+    
+    setLoadingStage(0);
+    let timeoutId;
+    
+    const runStage = (index) => {
+      if (index >= LOADING_STAGES.length - 1) return;
+      
+      timeoutId = setTimeout(() => {
+        setLoadingStage(index + 1);
+        runStage(index + 1);
+      }, LOADING_STAGES[index].duration);
+    };
+
+    runStage(0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [aiStep]);
 
   const toggleDayExpanded = (dayId) => {
     setExpandedDays(prev => ({ ...prev, [dayId]: !prev[dayId] }));
@@ -768,24 +796,51 @@ Guidelines:
     }
 
     // Generating
+    // Generating
     if (aiStep === 'generating') {
       return (
-        <div className="space-y-6 text-center py-12">
-          <div className="w-20 h-20 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
-            <Sparkles className="w-10 h-10 text-purple-400 animate-spin" />
+        <div className="flex flex-col items-center justify-center py-12 space-y-8">
+          {/* Animated Icon */}
+          <div className="relative w-24 h-24">
+            <div className="absolute inset-0 bg-purple-500/20 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+            <div className="relative w-full h-full bg-gray-900 rounded-full border-2 border-purple-500/30 flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-transparent animate-spin" style={{ animationDuration: '3s' }} />
+              <Sparkles className="w-10 h-10 text-purple-400 relative z-10 animate-pulse" />
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-100 mb-2">Creating Your Plan</h2>
-            <p className="text-gray-500 text-sm">AI is designing the perfect routine for you...</p>
-          </div>
-          <div className="flex justify-center gap-1">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 150}ms` }}
+
+          {/* Progress Bar & Text */}
+          <div className="w-full max-w-xs space-y-4">
+            <div className="text-center space-y-1">
+              <h3 className="text-xl font-bold text-gray-100">
+                {LOADING_STAGES[loadingStage]?.text || 'Processing...'}
+              </h3>
+              <p className="text-sm text-gray-500">
+                This usually takes about 10 seconds
+              </p>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-purple-500 transition-all duration-500 ease-out"
+                style={{ 
+                  width: `${((loadingStage + 1) / LOADING_STAGES.length) * 100}%` 
+                }}
               />
-            ))}
+            </div>
+
+            {/* Steps Indicators */}
+            <div className="flex justify-between px-1">
+              {LOADING_STAGES.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                    idx <= loadingStage ? 'bg-purple-500' : 'bg-gray-800'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       );

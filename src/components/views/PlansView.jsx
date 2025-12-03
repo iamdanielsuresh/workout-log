@@ -457,10 +457,10 @@ export function PlansView({
   const foldersList = Object.values(folders || {});
 
   // Group plans by folder
-  const uncategorizedPlans = plansList.filter(p => !p.folder_id);
+  const uncategorizedPlans = plansList.filter(p => !p.folderId);
   const plansByFolder = {};
   foldersList.forEach(folder => {
-    plansByFolder[folder.id] = plansList.filter(p => p.folder_id === folder.id);
+    plansByFolder[folder.id] = plansList.filter(p => p.folderId === folder.id);
   });
 
   // Selection Handlers

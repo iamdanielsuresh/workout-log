@@ -3,7 +3,6 @@ import { ProfileSetup } from './ProfileSetup';
 import { ExperienceLevel } from './ExperienceLevel';
 import { RoutineCreation } from './RoutineCreation';
 import { GetStarted } from './GetStarted';
-import { Card } from '../ui/Card';
 
 const STEPS = ['profile', 'experience', 'routine', 'start'];
 
@@ -163,13 +162,13 @@ export function OnboardingFlow({
       </div>
 
       {/* Main content */}
-      <Card hover={false} className="relative max-w-md w-full p-6 max-h-[85vh] overflow-y-auto scrollbar-hide">
+      <div className="relative w-full max-w-md px-6">
         <div 
           className={`transition-all duration-300 ease-out ${getAnimationClass()}`}
         >
           {renderStep()}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
