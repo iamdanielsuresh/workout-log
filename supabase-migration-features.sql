@@ -102,5 +102,8 @@ CREATE TABLE IF NOT EXISTS exercise_tips_cache (
 CREATE INDEX IF NOT EXISTS exercise_tips_cache_name_idx ON exercise_tips_cache(exercise_name);
 
 -- Enable Realtime for new tables
+-- IMPORTANT: RLS policies are already defined above for ai_notes and notification_settings
+-- These ensure users can only see their own data via realtime subscriptions
+-- The RLS policies filter data at the database level, preventing cross-user data leakage
 ALTER PUBLICATION supabase_realtime ADD TABLE ai_notes;
 ALTER PUBLICATION supabase_realtime ADD TABLE notification_settings;

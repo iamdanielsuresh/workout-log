@@ -119,11 +119,17 @@ export function ExportModal({
   const exportPDF = async () => {
     const filtered = getFilteredWorkouts();
     
-    // Dynamically import jsPDF
-    const { jsPDF } = await import('jspdf');
-    await import('jspdf-autotable');
-    
-    const doc = new jsPDF();
+    // Dynamically import jsPDF with error handling
+    let jsPDF, doc;
+    try {
+      const jspdfModule = await import('jspdf');
+      jsPDF = jspdfModule.jsPDF;
+      await import('jspdf-autotable');
+      doc = new jsPDF();
+    } catch (err) {
+      console.error('Failed to load PDF library:', err);
+      throw new Error('PDF export is not available. Please try again later.');
+    }
     
     // Title
     doc.setFontSize(20);
@@ -219,14 +225,26 @@ export function ExportModal({
   };
 
   const downloadBlob = (blob, filename) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    try {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // Some browsers require the link to be in the DOM
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL object
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // Fallback for browsers that don't support programmatic downloads
+      console.error('Download failed:', err);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
   };
 
   const getDateRangeLabel = () => {

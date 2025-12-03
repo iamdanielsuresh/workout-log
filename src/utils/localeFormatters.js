@@ -105,14 +105,49 @@ export function formatDateTime(date, { timezone, country, format = 'short' } = {
  * @returns {string} Relative date string
  */
 export function formatRelativeDate(date, timezone) {
-  const now = timezone ? new Date(new Date().toLocaleString('en-US', { timeZone: timezone })) : new Date();
-  const target = timezone ? new Date(date.toLocaleString('en-US', { timeZone: timezone })) : date;
+  // Use Intl.DateTimeFormat for more reliable timezone handling
+  let nowInTz, targetInTz;
   
-  // Normalize to start of day for comparison
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  try {
+    if (timezone) {
+      // Get current date parts in the target timezone
+      const nowFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+      });
+      const nowParts = nowFormatter.formatToParts(new Date());
+      const nowDate = new Date(
+        parseInt(nowParts.find(p => p.type === 'year')?.value || new Date().getFullYear()),
+        parseInt(nowParts.find(p => p.type === 'month')?.value || 1) - 1,
+        parseInt(nowParts.find(p => p.type === 'day')?.value || 1)
+      );
+      
+      const targetParts = nowFormatter.formatToParts(date);
+      const targetDate = new Date(
+        parseInt(targetParts.find(p => p.type === 'year')?.value || date.getFullYear()),
+        parseInt(targetParts.find(p => p.type === 'month')?.value || 1) - 1,
+        parseInt(targetParts.find(p => p.type === 'day')?.value || 1)
+      );
+      
+      nowInTz = nowDate;
+      targetInTz = targetDate;
+    } else {
+      nowInTz = new Date();
+      nowInTz.setHours(0, 0, 0, 0);
+      targetInTz = new Date(date);
+      targetInTz.setHours(0, 0, 0, 0);
+    }
+  } catch {
+    // Fallback if timezone is invalid
+    nowInTz = new Date();
+    nowInTz.setHours(0, 0, 0, 0);
+    targetInTz = new Date(date);
+    targetInTz.setHours(0, 0, 0, 0);
+  }
   
-  const diffDays = Math.floor((today - targetDay) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor((nowInTz - targetInTz) / (1000 * 60 * 60 * 24));
   
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
