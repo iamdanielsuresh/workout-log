@@ -23,12 +23,21 @@ export function BottomNavigation({
   if (workoutActive) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-[100]"
+      style={{ 
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: '100%'
+      }}
+    >
       {/* Gradient fade for content underneath */}
       <div className="absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-gray-950 to-transparent pointer-events-none" />
       
       {/* Navigation bar */}
-      <div className="bg-gray-950/95 backdrop-blur-xl border-t border-gray-800">
+      <div className="bg-gray-950/95 backdrop-blur-xl border-t border-gray-800 safe-area-bottom">
         <div className="max-w-lg mx-auto px-2">
           <div className="flex items-center justify-around">
             {navItems.map(({ id, icon: Icon, label }) => {

@@ -51,7 +51,12 @@ body {
 
 /* Bottom navigation height offset - ensures content isn't hidden behind nav */
 .pb-nav {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Ensure fixed navigation stays fixed regardless of parent transforms */
+#root {
+  isolation: isolate;
 }
 
 /* Background with subtle gradient */
