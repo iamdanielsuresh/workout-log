@@ -390,117 +390,98 @@ export function BuddyView({
   }
 
   return (
-    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen bg-gray-950 pb-24">
       <ViewHeader 
-        title="AI Buddy" 
-        subtitle="Your personal coach"
+        title="AI Coach" 
+        subtitle="Your personal fitness companion"
+        onBack={() => onNavigate('home')}
         rightAction={
           <div className="p-2 bg-emerald-500/10 rounded-full">
-            <Sparkles className="w-5 h-5 text-emerald-400" />
+            {(() => {
+              const Icon = PERSONA_ICONS[coachPersona] || Sparkles;
+              return <Icon className="w-5 h-5 text-emerald-400" />;
+            })()}
           </div>
         }
       />
 
-      <div className="p-6 space-y-6">
-        {/* Quick Stats - using centralized stats utility */}
+      <div className="p-4 space-y-6 max-w-lg mx-auto">
+        {/* Persona Selector */}
         <div className="grid grid-cols-4 gap-2">
-          <div className="text-center p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-xl border border-amber-500/20">
-            <Flame className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-            <p className="text-xl font-display font-bold text-gray-100">{workoutStats.currentStreak}</p>
-            <p className="text-[10px] text-gray-500">Streak</p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-xl border border-emerald-500/20">
-            <Dumbbell className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-            <p className="text-xl font-display font-bold text-gray-100">{workoutStats.totalWorkouts}</p>
-            <p className="text-[10px] text-gray-500">Total</p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-xl border border-blue-500/20">
-            <Calendar className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-            <p className="text-xl font-display font-bold text-gray-100">{workoutStats.workoutsThisWeek}</p>
-            <p className="text-[10px] text-gray-500">This Week</p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-xl border border-purple-500/20">
-            <Clock className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-            <p className="text-xl font-display font-bold text-gray-100">
-              {workoutStats.averageDuration > 0 ? workoutStats.averageDuration : '--'}
-            </p>
-            <p className="text-[10px] text-gray-500">Avg Min</p>
-          </div>
+          {Object.entries(PERSONA_DEFINITIONS).map(([key, def]) => {
+            const Icon = PERSONA_ICONS[key] || Sparkles;
+            const isActive = coachPersona === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setCoachPersona(key)}
+                className={`
+                  relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all duration-300
+                  ${isActive 
+                    ? 'bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/10' 
+                    : 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-800'
+                  }
+                `}
+              >
+                <div className={`
+                  p-2.5 rounded-xl transition-all duration-300
+                  ${isActive ? 'bg-emerald-500 text-gray-950' : 'bg-gray-800 text-gray-500'}
+                `}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span className={`text-xs font-medium transition-colors ${isActive ? 'text-emerald-400' : 'text-gray-500'}`}>
+                  {def.name}
+                </span>
+                {isActive && (
+                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500" />
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Strength Trends */}
-        {userContext.strengthTrends && Object.keys(userContext.strengthTrends).length > 0 && (
-          <div>
-            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider mb-3">Strength Trends</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(userContext.strengthTrends)
-                .sort((a, b) => b[1].improvement - a[1].improvement)
-                .slice(0, 4)
-                .map(([exercise, trend]) => (
-                  <Card key={exercise} hover={false} className="p-3 border-gray-800">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm font-bold text-gray-200 truncate capitalize">{exercise}</p>
-                      <span className={`text-xs font-bold ${trend.improvement > 0 ? 'text-emerald-400' : 'text-gray-500'}`}>
-                        {trend.improvement > 0 ? '+' : ''}{trend.improvement}%
-                      </span>
-                    </div>
-                    <div className="flex items-end gap-1">
-                      <p className="text-lg font-display font-bold text-white">{trend.current1RM}</p>
-                      <p className="text-xs text-gray-500 mb-1">kg (1RM)</p>
-                    </div>
-                  </Card>
-                ))}
-            </div>
+        {/* Daily Motivation Section */}
+        <Card hover={false} className="p-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-3 opacity-10">
+            <Sparkles className="w-24 h-24" />
           </div>
-        )}
-
-        {/* Motivation Card */}
-        <Card 
-          hover={false} 
-          className="p-5 bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-500/20"
-        >
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-emerald-500/20 rounded-xl flex-shrink-0">
-              <Zap className="w-6 h-6 text-emerald-400" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+                <Zap className="w-4 h-4 text-emerald-400" />
+              </div>
+              <h3 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider">Daily Motivation</h3>
             </div>
-            <div className="flex-1">
-              <h3 className="font-display font-bold text-lg text-gray-100 mb-2 tracking-tight">Daily Motivation</h3>
-              {motivation ? (
-                <div>
-                  <p className="text-gray-300 text-sm leading-relaxed animate-in fade-in font-sans whitespace-pre-line">{motivation}</p>
-                  {errors.motivation && (
-                    <ErrorMessage error={errors.motivation} onRetry={generateMotivation} />
-                  )}
+            
+            <div className="min-h-[60px] flex items-center">
+              {loading.motivation ? (
+                <div className="flex items-center gap-2 text-gray-500 text-sm animate-pulse">
+                  <Sparkles className="w-4 h-4" />
+                  <span>{PERSONA_DEFINITIONS[coachPersona].name} is thinking...</span>
+                </div>
+              ) : motivation ? (
+                <div className="animate-in fade-in slide-in-from-bottom-2">
+                  <p className="text-lg font-medium text-gray-100 leading-relaxed">"{motivation}"</p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button 
+                      onClick={() => handleSaveNote(motivation, 'daily-motivation', 'motivation')}
+                      className="text-xs text-gray-500 hover:text-emerald-400 flex items-center gap-1 transition-colors"
+                    >
+                      <Bookmark className="w-3 h-3" /> Save
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button 
                   onClick={generateMotivation}
-                  disabled={loading.motivation}
-                  className="text-emerald-400 text-sm flex items-center gap-1 hover:text-emerald-300 transition-colors"
+                  className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors text-sm"
                 >
-                  {loading.motivation ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Get today's motivation
-                    </>
-                  )}
+                  <Sparkles className="w-4 h-4" />
+                  Get motivation from {PERSONA_DEFINITIONS[coachPersona].name}
                 </button>
               )}
             </div>
-            {motivation && (
-              <button 
-                onClick={generateMotivation}
-                disabled={loading.motivation}
-                className="p-2 text-gray-500 hover:text-emerald-400 transition-colors"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading.motivation ? 'animate-spin' : ''}`} />
-              </button>
-            )}
           </div>
         </Card>
 
