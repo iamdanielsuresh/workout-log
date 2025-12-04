@@ -87,13 +87,13 @@ export function useWorkoutPlans(userId) {
   }, [userId]);
 
   // Create a new folder
-  const createFolder = useCallback(async (name) => {
+  const createFolder = useCallback(async (name, color = 'emerald') => {
     if (!userId) return;
     
     try {
       const { data, error } = await supabase
         .from('workout_folders')
-        .insert({ user_id: userId, name })
+        .insert({ user_id: userId, name, color })
         .select()
         .single();
 
@@ -217,7 +217,8 @@ export function useWorkoutPlans(userId) {
       source,
       template_id: templateId,
       sort_order: index,
-      is_active: true
+      is_active: true,
+      folder_id: plan.folderId || plan.folder_id || null
     }));
 
     // Delete existing plans first

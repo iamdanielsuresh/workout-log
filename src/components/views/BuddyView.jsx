@@ -52,7 +52,8 @@ export function BuddyView({
   onNavigate,
   initialPrompt,
   onSavePlan,
-  onStartWorkout
+  onStartWorkout,
+  isOnline = true
 }) {
   // Handle initial prompt from Quick Actions
   useEffect(() => {
@@ -808,6 +809,7 @@ export function BuddyView({
           PersonaIcon={PERSONA_ICONS[coachPersona]}
           onSavePlan={handleSavePlan}
           onStartPlan={onStartWorkout}
+          isOnline={isOnline}
         />
 
         {/* Floating Chat Button */}

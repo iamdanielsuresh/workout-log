@@ -30,9 +30,9 @@ Enable users to instantly generate and save a workout routine based on their cur
     - It should have chips like "⏱️ 15 Min", "🤕 Recovery", "💪 Full Body".
     - Clicking a chip sends a hidden prompt to the AI and opens the Chat Overlay with the result.
 
-### Phase 3: Folder Organization
-- [ ] **Auto-Categorization**: When saving a plan from AI, allow it to be tagged (e.g., "Recovery", "HIIT").
-- [ ] **"AI Generated" Folder**: Automatically group these plans in a specific folder in the Plans view.
+### Phase 3: Folder Organization (Completed)
+- [x] **Auto-Categorization**: When saving a plan from AI, allow it to be tagged (e.g., "Recovery", "HIIT").
+- [x] **"AI Generated" Folder**: Automatically group these plans in a specific folder in the Plans view.
 
 ## User Flow Example
 1.  User opens app, sees "Quick Actions" on Home.

@@ -250,14 +250,28 @@ export default function App() {
   // Handle saving AI plan
   const handleAiSavePlan = async (newPlan) => {
     try {
+      // 1. Find or create AI folder
+      let aiFolder = folders.find(f => f.name === 'AI Workouts');
+      if (!aiFolder) {
+        try {
+          aiFolder = await createFolder('AI Workouts', 'purple');
+        } catch (err) {
+          log.error('Failed to create AI folder', err);
+        }
+      }
+
       const existingPlans = plans || {};
       const planId = newPlan.id || `ai-${Date.now()}`;
       const mergedPlans = {
         ...existingPlans,
-        [planId]: { ...newPlan, id: planId }
+        [planId]: { 
+          ...newPlan, 
+          id: planId,
+          folderId: aiFolder?.id || null
+        }
       };
       await savePlans(mergedPlans, 'ai-generated');
-      setToast({ message: 'Plan saved successfully!', type: 'success' });
+      setToast({ message: 'Plan saved to "AI Workouts"!', type: 'success' });
       return planId;
     } catch (error) {
       log.error('Error saving AI plan:', error);
@@ -775,6 +789,7 @@ export default function App() {
                 initialPrompt={initialAiPrompt}
                 onSavePlan={handleAiSavePlan}
                 onStartWorkout={handleAiStartWorkout}
+                isOnline={isOnline}
               />
             )}
 

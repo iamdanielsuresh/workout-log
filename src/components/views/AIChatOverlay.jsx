@@ -17,7 +17,8 @@ export function AIChatOverlay({
   savedMessageIds,
   PersonaIcon,
   onSavePlan,
-  onStartPlan
+  onStartPlan,
+  isOnline = true
 }) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -100,8 +101,8 @@ export function AIChatOverlay({
           <div>
             <h2 className="text-lg font-bold text-white">{persona.name}</h2>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs text-gray-400">Online</span>
+              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+              <span className="text-xs text-gray-400">{isOnline ? 'Online' : 'Offline'}</span>
             </div>
           </div>
         </div>
@@ -192,8 +193,8 @@ export function AIChatOverlay({
               <button
                 key={i}
                 onClick={() => onSendMessage(prompt)}
-                disabled={loading}
-                className={`flex-shrink-0 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-xs text-gray-300 transition-colors whitespace-nowrap active:scale-95`}
+                disabled={loading || !isOnline}
+                className={`flex-shrink-0 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-xs text-gray-300 transition-colors whitespace-nowrap active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {prompt}
               </button>
@@ -207,17 +208,17 @@ export function AIChatOverlay({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Message ${persona.name}...`}
-              className="w-full bg-transparent border-none focus:ring-0 text-gray-100 placeholder-gray-500 px-4 py-3 max-h-32 resize-none text-sm"
+              placeholder={isOnline ? `Message ${persona.name}...` : "You are offline"}
+              className="w-full bg-transparent border-none focus:ring-0 text-gray-100 placeholder-gray-500 px-4 py-3 max-h-32 resize-none text-sm disabled:opacity-50"
               rows={1}
-              disabled={loading}
+              disabled={loading || !isOnline}
             />
           </div>
           <Button 
             size="icon" 
             onClick={handleSend} 
-            disabled={!inputValue.trim() || loading}
-            className={`rounded-full w-11 h-11 flex-shrink-0 ${theme.bg} hover:opacity-90 shadow-lg shadow-emerald-900/20`}
+            disabled={!inputValue.trim() || loading || !isOnline}
+            className={`rounded-full w-11 h-11 flex-shrink-0 ${theme.bg} hover:opacity-90 shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <Send className="w-5 h-5 text-gray-950" />
           </Button>
