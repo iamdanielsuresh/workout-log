@@ -249,7 +249,7 @@ export function SettingsView({
 
         {/* Notifications Section (Task 7) */}
         <div className="space-y-3 pt-4">
-          <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider px-1">Notifications</h3>
+          <h3 className="text-xs font-display font-bold text-gray-600 uppercase tracking-wider px-1">Notifications</h3>
           
           <Button
             onClick={onNotificationSettings}
@@ -263,7 +263,7 @@ export function SettingsView({
 
         {/* Account Section */}
         <div className="space-y-3 pt-4">
-          <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider px-1">Account</h3>
+          <h3 className="text-xs font-display font-bold text-gray-600 uppercase tracking-wider px-1">Account</h3>
           
           <Button
             onClick={handleLogout}

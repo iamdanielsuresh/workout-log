@@ -285,7 +285,7 @@ export function ExportModal({
         <div>
           <label className="block text-sm font-medium text-gray-400 mb-2">Export Format</label>
           <div className="grid grid-cols-2 gap-3">
-            <button
+                        <button
               onClick={() => setExportFormat('csv')}
               className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
                 exportFormat === 'csv'
@@ -294,7 +294,7 @@ export function ExportModal({
               }`}
             >
               <FileSpreadsheet className="w-8 h-8" />
-              <span className="font-medium">CSV</span>
+              <span className="font-display font-medium">CSV</span>
               <span className="text-xs opacity-70">Raw data, Excel compatible</span>
             </button>
             <button
@@ -306,9 +306,16 @@ export function ExportModal({
               }`}
             >
               <FileText className="w-8 h-8" />
-              <span className="font-medium">PDF</span>
+              <span className="font-display font-medium">PDF</span>
               <span className="text-xs opacity-70">Formatted report</span>
             </button>
+          </div>
+        </div>
+
+        {/* Date Range Selection */}
+        <div>
+          <label className="block text-sm font-display font-medium text-gray-400 mb-2">Date Range</label>
+          <div className="grid grid-cols-2 gap-2 mb-3">
           </div>
         </div>
 

@@ -71,7 +71,7 @@ export function WorkoutView({
 
         {/* Notes */}
         <Card hover={false} className="p-4">
-          <div className="flex items-center gap-2 mb-3 text-gray-300 font-semibold">
+          <div className="flex items-center gap-2 mb-3 text-gray-300 font-display font-semibold">
             <StickyNote className="w-4 h-4" />
             <h3>Session Notes</h3>
           </div>

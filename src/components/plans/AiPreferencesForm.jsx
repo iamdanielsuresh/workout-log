@@ -41,14 +41,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
+      // ...existing code...
       {/* Days Per Week */}
       <section className="space-y-3">
-        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+        <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
           <div className="p-1.5 bg-emerald-500/10 rounded-lg">
             <Calendar className="w-4 h-4 text-emerald-400" />
           </div>
           <h3>Days per week</h3>
         </div>
+// ...existing code...
         <div className="grid grid-cols-5 gap-2">
           {[3, 4, 5, 6, 7].map((days) => (
             <button
@@ -72,14 +74,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
         </div>
       </section>
 
+      // ...existing code...
       {/* Training Goal */}
       <section className="space-y-3">
-        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+        <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
           <div className="p-1.5 bg-blue-500/10 rounded-lg">
             <Target className="w-4 h-4 text-blue-400" />
           </div>
           <h3>Primary Goal</h3>
         </div>
+// ...existing code...
         <div className="grid grid-cols-2 gap-3">
           {GOAL_OPTIONS.map((option) => {
             const Icon = option.icon;
@@ -119,14 +123,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
         </div>
       </section>
 
+      // ...existing code...
       {/* Target Split */}
       <section className="space-y-3">
-        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+        <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
           <div className="p-1.5 bg-purple-500/10 rounded-lg">
             <Activity className="w-4 h-4 text-purple-400" />
           </div>
           <h3>Target Split</h3>
         </div>
+// ...existing code...
         <div className="grid grid-cols-2 gap-3">
           {TARGET_OPTIONS.map((option) => {
             const Icon = option.icon;
@@ -164,14 +170,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
             );
           })}
         </div>
-      </section>      {/* Optional: Exercises to Include/Exclude */}
+      </section>      // ...existing code...
+      {/* Optional: Exercises to Include/Exclude */}
       <section className="space-y-3">
-        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+        <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
           <div className="p-1.5 bg-emerald-500/10 rounded-lg">
             <Plus className="w-4 h-4 text-emerald-400" />
           </div>
           <h3>Preferences (Optional)</h3>
         </div>
+// ...existing code...
         
         <div className="space-y-3">
           <div>
@@ -197,14 +205,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
 
       {/* Duration & Equipment Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        // ...existing code...
         {/* Duration */}
         <section className="space-y-3">
-          <div className="flex items-center gap-2 text-gray-200 font-semibold">
+          <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
             <div className="p-1.5 bg-orange-500/10 rounded-lg">
               <Clock className="w-4 h-4 text-orange-400" />
             </div>
             <h3>Duration</h3>
           </div>
+// ...existing code...
           <div className="space-y-2">
             {DURATION_OPTIONS.map((option) => (
               <button
@@ -226,14 +236,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
           </div>
         </section>
 
+        // ...existing code...
         {/* Equipment */}
         <section className="space-y-3">
-          <div className="flex items-center gap-2 text-gray-200 font-semibold">
+          <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
             <div className="p-1.5 bg-purple-500/10 rounded-lg">
               <Dumbbell className="w-4 h-4 text-purple-400" />
             </div>
             <h3>Equipment</h3>
           </div>
+// ...existing code...
           <div className="space-y-2">
             {EQUIPMENT_OPTIONS.map((option) => {
               const Icon = option.icon;
@@ -262,14 +274,16 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
         </section>
       </div>
 
+      // ...existing code...
       {/* Special Notes */}
       <section className="space-y-3">
-        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+        <div className="flex items-center gap-2 text-gray-200 font-display font-bold tracking-tight">
           <div className="p-1.5 bg-red-500/10 rounded-lg">
             <AlertCircle className="w-4 h-4 text-red-400" />
           </div>
           <h3>Additional Notes</h3>
         </div>
+// ...existing code...
         <div className="relative">
           <textarea
             value={questions.specialNotes}

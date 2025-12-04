@@ -474,7 +474,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-100 mb-2">Choose a Template</h2>
+          <h2 className="text-2xl font-display font-bold text-gray-100 mb-2 tracking-tight">Choose a Template</h2>
           <p className="text-gray-500 text-sm">Select a workout split that fits your schedule</p>
         </div>
 
@@ -493,7 +493,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
                 <div className="text-3xl">{template.icon}</div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-gray-100">{template.name}</h3>
+                    <h3 className="font-display font-bold text-gray-100 tracking-tight">{template.name}</h3>
                     <span className="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-400">
                       {template.frequency}
                     </span>
@@ -528,7 +528,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
             <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Key className="w-8 h-8 text-purple-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-100 mb-2">Enter API Key</h2>
+            <h2 className="text-2xl font-display font-bold text-gray-100 mb-2 tracking-tight">Enter API Key</h2>
             <p className="text-gray-500 text-sm">Required for AI-powered features</p>
           </div>
 
@@ -583,7 +583,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
             <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-8 h-8 text-purple-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-100 mb-2">Customize Your Plan</h2>
+            <h2 className="text-2xl font-display font-bold text-gray-100 mb-2 tracking-tight">Customize Your Plan</h2>
             <p className="text-gray-500 text-sm">Answer a few questions to help AI build your perfect routine</p>
           </div>
 
@@ -616,7 +616,6 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
     }
 
     // Generating
-    // Generating
     if (aiStep === 'generating') {
       return (
         <div className="flex flex-col items-center justify-center py-12 space-y-8">
@@ -632,7 +631,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
           {/* Progress Bar & Text */}
           <div className="w-full max-w-xs space-y-4">
             <div className="text-center space-y-1">
-              <h3 className="text-xl font-bold text-gray-100">
+              <h3 className="text-xl font-display font-bold text-gray-100 tracking-tight">
                 {LOADING_STAGES[loadingStage]?.text || 'Processing...'}
               </h3>
               <p className="text-sm text-gray-500">
@@ -674,7 +673,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
             <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-emerald-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-100 mb-2">Your Plan is Ready!</h2>
+            <h2 className="text-2xl font-display font-bold text-gray-100 mb-2 tracking-tight">Your Plan is Ready!</h2>
             <p className="text-gray-500 text-sm">Tap each day to expand • Tap exercises for details</p>
           </div>
 
@@ -697,7 +696,7 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-100">{day.name}</h3>
+                        <h3 className="font-display font-bold text-gray-100 tracking-tight">{day.name}</h3>
                         <span className="text-xs bg-gray-700 px-2 py-0.5 rounded-full text-gray-400">
                           {day.estTime}
                         </span>

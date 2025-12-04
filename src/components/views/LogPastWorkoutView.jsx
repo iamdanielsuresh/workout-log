@@ -203,14 +203,14 @@ export function LogPastWorkoutView({
         }
       />
 
-      <div className="p-4 space-y-6 pb-32">
+      <div className="p-4 space-y-6 pb-24">
         {/* Section: Date & Time */}
         <Card className="p-4 space-y-4">
-          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+          <h4 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <Calendar className="w-4 h-4" /> When was it?
           </h4>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Date <span className="text-red-400">*</span></label>
               <Input
@@ -238,7 +238,7 @@ export function LogPastWorkoutView({
 
         {/* Section: Workout Details */}
         <Card className="p-4 space-y-4">
-          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+          <h4 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <Dumbbell className="w-4 h-4" /> Workout Details
           </h4>
 
@@ -286,7 +286,7 @@ export function LogPastWorkoutView({
         {/* Section: Exercises */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <h4 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
               <LayoutList className="w-4 h-4" /> Exercises
             </h4>
             <button
@@ -415,19 +415,15 @@ export function LogPastWorkoutView({
         </Card>
 
         {/* Save Button */}
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur p-4 border-t border-white/5 z-10">
-          <div className="max-w-lg mx-auto">
-            <Button
-              onClick={handleSave}
-              loading={saving}
-              disabled={saving}
-              className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
-              icon={Save}
-            >
-              Save Workout
-            </Button>
-          </div>
-        </div>
+        <Button
+          onClick={handleSave}
+          loading={saving}
+          disabled={saving}
+          className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
+          icon={Save}
+        >
+          Save Workout
+        </Button>
       </div>
     </div>
   );

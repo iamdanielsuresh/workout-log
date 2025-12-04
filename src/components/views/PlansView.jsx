@@ -63,7 +63,7 @@ function FolderCard({
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-200 truncate">{folder.name}</h3>
+            <h3 className="font-display font-medium text-gray-200 truncate">{folder.name}</h3>
             <p className="text-xs text-gray-500">
               {planCount} routine{planCount !== 1 ? 's' : ''}
               {selectionMode && selectedCount > 0 && (

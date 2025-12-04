@@ -185,7 +185,7 @@ export function EditProfileView({
 
         {/* Section: Basic Info */}
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+          <h4 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <User className="w-4 h-4" /> Basic Info
           </h4>
           
@@ -240,7 +240,7 @@ export function EditProfileView({
 
         {/* Section: Body Metrics */}
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+          <h4 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-4 h-4" /> Body Metrics
           </h4>
           
@@ -280,7 +280,7 @@ export function EditProfileView({
 
         {/* Section: Fitness Profile */}
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+          <h4 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <Dumbbell className="w-4 h-4" /> Fitness Profile
           </h4>
 

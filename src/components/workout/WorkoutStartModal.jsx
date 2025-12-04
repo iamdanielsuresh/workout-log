@@ -160,7 +160,7 @@ export function WorkoutStartModal({
 
           {/* Workout details */}
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-100 mb-2">
+            <h2 className="text-2xl font-display font-bold text-gray-100 mb-2">
               {isStarting ? 'Starting...' : workout.name}
             </h2>
             {!isStarting && workout.desc && (
@@ -191,12 +191,12 @@ export function WorkoutStartModal({
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="text-center p-3 bg-gray-800/50 rounded-xl">
                 <Target className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                <p className="text-lg font-bold text-gray-100">{workout.exercises?.length || 0}</p>
+                <p className="text-lg font-display font-bold text-gray-100">{workout.exercises?.length || 0}</p>
                 <p className="text-xs text-gray-500">Exercises</p>
               </div>
               <div className="text-center p-3 bg-gray-800/50 rounded-xl">
                 <Clock className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                <p className="text-lg font-bold text-gray-100">{workout.estTime || '~45 min'}</p>
+                <p className="text-lg font-display font-bold text-gray-100">{workout.estTime || '~45 min'}</p>
                 <p className="text-xs text-gray-500">Est. Time</p>
               </div>
               <div className="text-center p-3 bg-gray-800/50 rounded-xl">
@@ -206,7 +206,7 @@ export function WorkoutStartModal({
                   intensity.level === 'High' ? 'text-amber-400' :
                   'text-red-400'
                 }`} />
-                <p className="text-lg font-bold text-gray-100">{intensity.level}</p>
+                <p className="text-lg font-display font-bold text-gray-100">{intensity.level}</p>
                 <p className="text-xs text-gray-500">Intensity</p>
               </div>
             </div>
@@ -254,7 +254,7 @@ export function WorkoutStartModal({
 
               {/* Text */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className={`text-sm font-semibold transition-opacity ${
+                <span className={`text-sm font-display font-semibold transition-opacity ${
                   slideProgress > 0.3 ? 'opacity-0' : 'text-gray-400'
                 }`}>
                   Slide to Start Workout →

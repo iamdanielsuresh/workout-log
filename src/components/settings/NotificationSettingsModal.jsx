@@ -150,7 +150,7 @@ export function NotificationSettingsModal({
       <div className="space-y-5">
         {/* Permission Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
+          <label className="block text-sm font-display font-medium text-gray-400 mb-2">
             Permission Status
           </label>
           {renderPermissionStatus()}
@@ -158,7 +158,7 @@ export function NotificationSettingsModal({
 
         {/* Notification Types */}
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-3">
+          <label className="block text-sm font-display font-medium text-gray-400 mb-3">
             Notification Types
           </label>
           <div className="space-y-3">
@@ -186,7 +186,7 @@ export function NotificationSettingsModal({
                     }`} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-200">Workout Reminders</p>
+                    <p className="font-display font-medium text-gray-200">Workout Reminders</p>
                     <p className="text-xs text-gray-500">Daily reminder to workout</p>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export function NotificationSettingsModal({
                     }`} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-200">Streak Alerts</p>
+                    <p className="font-display font-medium text-gray-200">Streak Alerts</p>
                     <p className="text-xs text-gray-500">Don't lose your streak!</p>
                   </div>
                 </div>
@@ -262,7 +262,7 @@ export function NotificationSettingsModal({
                     }`} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-200">Motivation</p>
+                    <p className="font-display font-medium text-gray-200">Motivation</p>
                     <p className="text-xs text-gray-500">Occasional tips & insights</p>
                   </div>
                 </div>

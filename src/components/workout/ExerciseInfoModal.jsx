@@ -60,7 +60,7 @@ export function ExerciseInfoModal({
               <Dumbbell className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-100">{exercise.name}</h2>
+              <h2 className="text-xl font-display font-bold text-gray-100">{exercise.name}</h2>
               <div className="flex items-center gap-3 mt-1">
                 <span className="text-sm text-gray-500">
                   {exercise.sets} sets × {exercise.range}
@@ -236,7 +236,7 @@ function CollapsibleSection({
       >
         <div className="flex items-center gap-2">
           <Icon className={`w-4 h-4 ${iconColor}`} />
-          <span className="text-sm font-medium text-gray-200">{title}</span>
+          <span className="text-sm font-display font-medium text-gray-200">{title}</span>
         </div>
         {isExpanded ? (
           <ChevronUp className="w-4 h-4 text-gray-500" />

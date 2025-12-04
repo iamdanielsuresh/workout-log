@@ -89,7 +89,7 @@ export function HomeView({
       {/* 2. Weekly Consistency Tracker */}
       <div className="bg-gray-900/50 rounded-2xl p-4 border border-gray-800">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">This Week</h3>
+          <h3 className="text-xs font-display font-bold text-gray-500 uppercase tracking-wider">This Week</h3>
           <span className="text-xs text-gray-600">{today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
         </div>
         <div className="flex justify-between">
@@ -140,7 +140,7 @@ export function HomeView({
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">{suggestedWorkout.name}</h2>
+                  <h2 className="text-2xl font-display font-bold text-white mb-1">{suggestedWorkout.name}</h2>
                   <p className="text-gray-400 text-sm line-clamp-1">{suggestedWorkout.description || 'Ready to crush it?'}</p>
                 </div>
                 <div className="p-3 bg-emerald-500/10 rounded-xl">
@@ -170,7 +170,7 @@ export function HomeView({
             <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
               <Plus className="w-6 h-6 text-gray-500" />
             </div>
-            <h3 className="font-semibold text-gray-300 mb-1">No active plan</h3>
+            <h3 className="font-display font-semibold text-gray-300 mb-1">No active plan</h3>
             <p className="text-sm text-gray-500 mb-4">Create a routine to get started</p>
             <Button onClick={() => onSelectWorkout('create')} size="sm" variant="secondary">
               Create Routine
@@ -188,7 +188,7 @@ export function HomeView({
           <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <Plus className="w-5 h-5 text-blue-400" />
           </div>
-          <h4 className="font-bold text-gray-200">Quick Log</h4>
+          <h4 className="font-display font-bold text-gray-200">Quick Log</h4>
           <p className="text-xs text-gray-500 mt-0.5">Log single exercise</p>
         </button>
 
@@ -199,7 +199,7 @@ export function HomeView({
           <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <History className="w-5 h-5 text-purple-400" />
           </div>
-          <h4 className="font-bold text-gray-200">History</h4>
+          <h4 className="font-display font-bold text-gray-200">History</h4>
           <p className="text-xs text-gray-500 mt-0.5">View past sessions</p>
         </button>
 
@@ -210,7 +210,7 @@ export function HomeView({
           <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <Sparkles className="w-5 h-5 text-emerald-400" />
           </div>
-          <h4 className="font-bold text-gray-200">AI Coach</h4>
+          <h4 className="font-display font-bold text-gray-200">AI Coach</h4>
           <p className="text-xs text-gray-500 mt-0.5">Ask for tips</p>
         </button>
 
@@ -220,7 +220,7 @@ export function HomeView({
           <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
             <BarChart3 className="w-5 h-5 text-orange-400" />
           </div>
-          <h4 className="font-bold text-gray-200">Stats</h4>
+          <h4 className="font-display font-bold text-gray-200">Stats</h4>
           <p className="text-xs text-gray-500 mt-0.5">Coming soon</p>
         </button>
       </div>
@@ -246,7 +246,7 @@ export function HomeView({
       {/* Other Routines List */}
       {Object.values(plans).filter(plan => plan.id !== nextWorkoutKey).length > 0 && (
         <div>
-          <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-3 px-1">
+          <h3 className="text-xs font-display font-bold text-gray-600 uppercase tracking-wider mb-3 px-1">
             Your Routines
           </h3>
           <div className="space-y-3">

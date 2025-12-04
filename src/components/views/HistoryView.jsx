@@ -377,7 +377,7 @@ function SwipeableExerciseCard({
         `}
       >
         <div>
-          <div className="font-medium text-gray-200">{exercise.name}</div>
+          <div className="font-display font-medium text-gray-200">{exercise.name}</div>
           <div className="text-xs text-gray-500 capitalize">{exercise.muscle_group} • {exercise.equipment}</div>
         </div>
         
