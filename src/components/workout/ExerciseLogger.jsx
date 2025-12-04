@@ -11,6 +11,7 @@ export function ExerciseLogger({
   exercise, 
   lastLog, 
   onUpdate,
+  onSave,
   aiTip,
   onRequestTip,
   onShowInfo,
@@ -26,6 +27,7 @@ export function ExerciseLogger({
   });
   const [showTips, setShowTips] = useState(false);
   const [suggestingWeight, setSuggestingWeight] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const handleChange = (idx, field, value) => {
     // Sanitize input based on field type
@@ -108,6 +110,14 @@ export function ExerciseLogger({
     onUpdate?.(newSets);
   };
 
+  const handleSave = () => {
+    if (!onSave) return;
+    setIsExiting(true);
+    setTimeout(() => {
+      onSave(sets);
+    }, 500);
+  };
+
   // Check if exercise has detailed tips (from AI-generated plans)
   const hasDetailedTips = exercise.tips && typeof exercise.tips === 'object';
   const quickTip = exercise.tip || exercise.tips?.form?.split('.')[0] || '';
@@ -116,7 +126,7 @@ export function ExerciseLogger({
     <Card 
       variant={isCompleted ? 'accent' : 'default'} 
       hover={false}
-      className={isCompleted ? 'ring-1 ring-emerald-500/30' : ''}
+      className={`${isCompleted ? 'ring-1 ring-emerald-500/30' : ''} ${isExiting ? 'opacity-0 translate-x-full transition-all duration-500 ease-in-out' : ''}`}
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-800/50 flex justify-between items-start select-none">
@@ -330,14 +340,26 @@ export function ExerciseLogger({
           </div>
         ))}
 
-        {/* Add Set Button */}
-        <button
-          onClick={handleAddSet}
-          className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:text-emerald-400 hover:bg-gray-800/50 rounded-xl border border-dashed border-gray-700 hover:border-emerald-500/30 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          Add Set
-        </button>
+        {/* Actions */}
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={handleAddSet}
+            className="flex-1 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-gray-400 bg-gray-800/30 hover:bg-gray-800/50 hover:text-gray-200 rounded-xl border border-dashed border-gray-700 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Add Set
+          </button>
+          
+          {onSave && (
+            <button
+              onClick={handleSave}
+              className="flex-1 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-100 bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
+            >
+              <Check className="w-4 h-4" />
+              Save
+            </button>
+          )}
+        </div>
       </div>
     </Card>
   );

@@ -109,6 +109,7 @@ export default function App() {
   const [activeWorkoutId, setActiveWorkoutId] = useState(null);
   const [tempPlan, setTempPlan] = useState(null); // For quick workouts
   const [activeLog, setActiveLog] = useState({});
+  const [savedExercises, setSavedExercises] = useState(new Set());
   const [workoutNote, setWorkoutNote] = useState('');
   const [workoutStartTime, setWorkoutStartTime] = useState(null);
   
@@ -296,6 +297,7 @@ export default function App() {
     setShowStartModal(false);
     setActiveWorkoutId(selectedWorkoutId);
     setActiveLog({});
+    setSavedExercises(new Set());
     setWorkoutNote('');
     setAiTips({});
     setWorkoutStartTime(Date.now());
@@ -321,6 +323,7 @@ export default function App() {
     setWorkoutStartTime(Date.now());
     resetTimer();
     setActiveLog({});
+    setSavedExercises(new Set());
     setWorkoutNote('');
     setView('workout');
   };
@@ -344,6 +347,13 @@ export default function App() {
   const handleFinishWorkout = async () => {
     const exercisesList = Object.values(activeLog);
     if (exercisesList.length === 0) {
+      // If exercises were saved individually, allow finishing
+      if (savedExercises.size > 0) {
+        setToast({ message: 'Workout completed!', type: 'success' });
+        setActiveWorkoutId(null);
+        handleNavigate('home');
+        return;
+      }
       setToast({ message: 'Log at least one exercise!', type: 'error' });
       return;
     }
@@ -414,6 +424,54 @@ export default function App() {
       log.error('Error getting AI tip:', error);
     } finally {
       setAiTipLoading(prev => ({ ...prev, [exerciseName]: false }));
+    }
+  };
+
+  // New function to handle saving a single exercise
+  const handleSaveSingleExercise = async (exerciseName, sets) => {
+    setIsSaving(true);
+    try {
+      const isQuickWorkout = activeWorkoutId === 'quick-log';
+      const workoutName = isQuickWorkout ? tempPlan?.name : plans[activeWorkoutId]?.name || activeWorkoutId;
+      
+      // Filter for completed sets
+      const completedSets = sets.filter(s => s.weight && s.reps);
+
+      if (completedSets.length === 0) {
+        setToast({ message: 'Log at least one set!', type: 'error' });
+        return;
+      }
+
+      // Create a single-exercise workout log
+      const singleExerciseLog = {
+        name: exerciseName,
+        sets: completedSets
+      };
+
+      await saveWorkout({
+        workoutType: activeWorkoutId,
+        workoutName: workoutName,
+        exercises: [singleExerciseLog],
+        note: `Single exercise save: ${exerciseName}`,
+        duration: 0 // Partial save
+      });
+
+      // Mark as saved to hide it
+      setSavedExercises(prev => new Set([...prev, exerciseName]));
+      
+      // Remove from activeLog so it's not saved again on finish
+      setActiveLog(prev => {
+        const newLog = { ...prev };
+        delete newLog[exerciseName];
+        return newLog;
+      });
+
+      setToast({ message: `Saved ${exerciseName}!`, type: 'success' });
+    } catch (error) {
+      log.error('Error saving exercise:', error);
+      setToast({ message: 'Failed to save exercise', type: 'error' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -635,6 +693,8 @@ export default function App() {
                   const userContext = buildUserContextForAI({ profile, workouts, streak, plans });
                   return await suggestWeight(exerciseName, history[exerciseName]?.sets || [], targetReps, userContext);
                 }}
+                savedExercises={savedExercises}
+                onSaveExercise={handleSaveSingleExercise}
               />
             )}
 

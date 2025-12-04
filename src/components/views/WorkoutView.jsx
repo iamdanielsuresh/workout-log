@@ -12,12 +12,15 @@ import { ExerciseLogger } from '../workout/ExerciseLogger';
 export function WorkoutView({
   plan, activeLog, history, workoutNote, formatTime,
   aiEnabled, aiTips, aiTipLoading, isSaving,
-  onBack, onFinish, onUpdateLog, onUpdateNote, onRequestTip, onSuggestWeight
+  onBack, onFinish, onUpdateLog, onUpdateNote, onRequestTip, onSuggestWeight,
+  savedExercises, onSaveExercise
 }) {
   const completedCount = Object.keys(activeLog).filter(name => {
     const log = activeLog[name];
     return log?.sets?.some(s => s.weight && s.reps);
-  }).length;
+  }).length + (savedExercises?.size || 0);
+
+  const visibleExercises = plan.exercises.filter(ex => !savedExercises?.has(ex.name));
 
   return (
     <div className="pb-40 max-w-lg mx-auto min-h-screen safe-area-top animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -55,12 +58,13 @@ export function WorkoutView({
       <div className="p-6 space-y-6">
         <RestTimer />
 
-        {plan.exercises.map((ex, idx) => (
+        {visibleExercises.map((ex, idx) => (
           <ExerciseLogger
-            key={idx}
+            key={ex.name} // Changed from idx to name for stable keys when filtering
             exercise={ex}
             lastLog={history[ex.name]}
             onUpdate={(sets) => onUpdateLog(ex.name, sets)}
+            onSave={(sets) => onSaveExercise(ex.name, sets)}
             aiTip={aiTips[ex.name]}
             onRequestTip={aiEnabled ? () => onRequestTip(ex.name) : null}
             onSuggestWeight={aiEnabled ? (targetReps) => onSuggestWeight(ex.name, targetReps) : null}
