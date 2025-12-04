@@ -11,7 +11,7 @@ import { Select } from '../ui/Select';
 import { Modal, ConfirmDialog } from '../ui/Modal';
 import { ViewHeader } from '../layout/Navigation';
 import { Calendar } from '../ui/Calendar';
-import { getExercises, createExercise } from '../../services/supabase';
+import { getExercises, createExercise, deleteExercise } from '../../services/supabase';
 import { formatDuration } from '../../utils/localeFormatters';
 
 // Default exercise duration estimate (15 minutes in milliseconds)
@@ -259,6 +259,142 @@ function SwipeableHistoryCard({
   );
 }
 
+function SwipeableExerciseCard({ 
+  exercise, 
+  index,
+  deleteConfirm,
+  setDeleteConfirm,
+  selectionMode,
+  isSelected,
+  onToggleSelection,
+  onLongPress,
+  onClick
+}) {
+  const [offset, setOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const longPressTimer = useRef(null);
+  const threshold = -100;
+
+  const handleTouchStart = (e) => {
+    if (selectionMode) return;
+    
+    longPressTimer.current = setTimeout(() => {
+      if (onLongPress) {
+        onLongPress(exercise.id);
+        setIsDragging(false);
+      }
+    }, 500);
+
+    if (deleteConfirm === exercise.id) return;
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (longPressTimer.current) {
+      const moveX = Math.abs(e.touches[0].clientX - startX.current);
+      const moveY = Math.abs(e.touches[0].clientY - startY.current);
+      if (moveX > 10 || moveY > 10) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
+
+    if (!isDragging || deleteConfirm === exercise.id || selectionMode) return;
+    const x = e.touches[0].clientX;
+    const y = e.touches[0].clientY;
+    const diffX = x - startX.current;
+    const diffY = y - startY.current;
+    
+    if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+    // Only allow swipe left (delete) if it's a custom exercise
+    if (diffX < 0 && exercise.is_custom) {
+      const resistance = 1 + Math.abs(diffX) / 600;
+      setOffset(diffX / resistance);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    if (offset < threshold) {
+      setDeleteConfirm(exercise.id);
+      setOffset(0);
+    } else {
+      setOffset(0);
+    }
+  };
+
+  const handleClick = (e) => {
+    if (selectionMode) {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleSelection(exercise.id);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
+  return (
+    <div 
+      className="relative mb-2 select-none touch-pan-y animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards"
+      style={{ animationDelay: `${index * 30}ms` }}
+    >
+      {/* Delete Background Layer */}
+      <div className={`absolute inset-0 bg-red-500/20 rounded-xl flex items-center justify-end px-6 transition-opacity duration-200 ${
+        offset < 0 ? 'opacity-100' : 'opacity-0'
+      }`}>
+        <div className={`flex items-center gap-2 text-red-400 font-bold transition-transform duration-200 ${
+          offset < threshold ? 'scale-110' : 'scale-100'
+        }`}>
+          <span>Delete</span>
+          <Trash2 className="w-5 h-5" />
+        </div>
+      </div>
+
+      {/* Card Layer */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
+        style={{ transform: `translateX(${offset}px)` }}
+        className={`
+          relative bg-gray-900 rounded-xl border transition-all duration-200 overflow-hidden p-3 flex justify-between items-center cursor-pointer
+          ${isSelected 
+            ? 'border-emerald-500/50 bg-emerald-500/5' 
+            : 'border-gray-800 hover:border-gray-700 active:scale-[0.99]'}
+        `}
+      >
+        <div>
+          <div className="font-medium text-gray-200">{exercise.name}</div>
+          <div className="text-xs text-gray-500 capitalize">{exercise.muscle_group} • {exercise.equipment}</div>
+        </div>
+        
+        {selectionMode ? (
+          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+            isSelected ? 'bg-emerald-500 border-emerald-500' : 'border-gray-600'
+          }`}>
+            {isSelected && <Check className="w-4 h-4 text-white" />}
+          </div>
+        ) : (
+          <Plus className="w-5 h-5 text-emerald-500" />
+        )}
+      </div>
+    </div>
+  );
+}
+
 /**
  * HistoryView - Workout history and Exercise Library
  * Task 3: Shows time details
@@ -275,7 +411,8 @@ export function HistoryView({
   onAddPastWorkout,
   onSaveWorkout,
   plans,
-  initialTab = 'history' 
+  initialTab = 'history',
+  onToast
 }) {
   const [activeTab, setActiveTab] = useState(initialTab); // 'history' | 'calendar' | 'exercises'
   const [expandedId, setExpandedId] = useState(null);
@@ -293,6 +430,10 @@ export function HistoryView({
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: '', muscle_group: '', equipment: '' });
   const [creatingExercise, setCreatingExercise] = useState(false);
+  
+  // Exercise Selection State
+  const [exercisesSelectionMode, setExercisesSelectionMode] = useState(false);
+  const [selectedExerciseIds, setSelectedExerciseIds] = useState(new Set());
 
   // Get all dates that have workouts for calendar marking
   const workoutDates = useMemo(() => {
@@ -339,6 +480,52 @@ export function HistoryView({
     } finally {
       setCreatingExercise(false);
     }
+  };
+
+  const handleExerciseLongPress = (id) => {
+    if (!exercisesSelectionMode) {
+      setExercisesSelectionMode(true);
+      setSelectedExerciseIds(new Set([id]));
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+  };
+
+  const toggleExerciseSelection = (id) => {
+    const newSelected = new Set(selectedExerciseIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedExerciseIds(newSelected);
+    
+    if (newSelected.size === 0) {
+      setExercisesSelectionMode(false);
+    }
+  };
+
+  const confirmDeleteExercise = async () => {
+    if (!deleteConfirm) return;
+    
+    try {
+      if (deleteConfirm.ids) {
+        // Bulk delete
+        await Promise.all(deleteConfirm.ids.map(id => deleteExercise(id)));
+        if (onToast) onToast({ message: `${deleteConfirm.ids.length} exercises deleted`, type: 'success' });
+        setExercisesSelectionMode(false);
+        setSelectedExerciseIds(new Set());
+      } else {
+        // Single delete
+        await deleteExercise(deleteConfirm);
+        if (onToast) onToast({ message: 'Exercise deleted', type: 'success' });
+      }
+      // Refresh exercises
+      fetchExercises();
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
+      if (onToast) onToast({ message: 'Failed to delete exercise', type: 'error' });
+    }
+    setDeleteConfirm(null);
   };
 
   const filteredExercises = exercises.filter(ex => 
@@ -409,26 +596,42 @@ export function HistoryView({
   return (
     <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Selection Header */}
-      {selectionMode ? (
+      {(selectionMode || exercisesSelectionMode) ? (
         <div className="sticky top-0 z-20 bg-gray-950/95 backdrop-blur-md border-b border-gray-800 px-6 py-4 flex items-center justify-between animate-in slide-in-from-top-2">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => {
-                setSelectionMode(false);
-                setSelectedIds(new Set());
+                if (selectionMode) {
+                  setSelectionMode(false);
+                  setSelectedIds(new Set());
+                } else {
+                  setExercisesSelectionMode(false);
+                  setSelectedExerciseIds(new Set());
+                }
               }}
               className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
-            <span className="font-bold text-white">{selectedIds.size} selected</span>
+            <span className="font-bold text-white">
+              {selectionMode ? selectedIds.size : selectedExerciseIds.size} selected
+            </span>
           </div>
           <Button
             variant="danger"
             size="sm"
             icon={Trash2}
-            onClick={handleBulkDelete}
-            disabled={selectedIds.size === 0}
+            onClick={() => {
+              if (selectionMode) {
+                handleBulkDelete();
+              } else {
+                setDeleteConfirm({
+                  ids: Array.from(selectedExerciseIds),
+                  count: selectedExerciseIds.size
+                });
+              }
+            }}
+            disabled={selectionMode ? selectedIds.size === 0 : selectedExerciseIds.size === 0}
           >
             Delete
           </Button>
@@ -461,7 +664,7 @@ export function HistoryView({
       )}
 
       {/* Tabs */}
-      {!selectionMode && (
+      {!selectionMode && !exercisesSelectionMode && (
         <div className="px-6 mb-6 mt-4">
           <div className="flex p-1 bg-gray-900/80 backdrop-blur-sm rounded-xl border border-white/5">
             <button
@@ -502,7 +705,7 @@ export function HistoryView({
       )}
 
       {/* Log Past Workout Button */}
-      {!selectionMode && onAddPastWorkout && (
+      {!selectionMode && !exercisesSelectionMode && onAddPastWorkout && (
         <div className="px-6 mb-6">
           <Button
             variant="secondary"
@@ -657,29 +860,22 @@ export function HistoryView({
           ) : (
             <div className="space-y-2">
               {filteredExercises.map((ex, index) => (
-                <Card 
-                  key={ex.id} 
-                  hover={false} 
-                  className="p-3 flex justify-between items-center animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards"
-                  style={{ animationDelay: `${index * 30}ms` }}
-                >
-                  <div>
-                    <div className="font-medium text-gray-200">{ex.name}</div>
-                    <div className="text-xs text-gray-500 capitalize">{ex.muscle_group} • {ex.equipment}</div>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="secondary" 
-                    icon={Plus}
-                    onClick={() => {
-                      if (onAddPastWorkout) {
-                        onAddPastWorkout(ex);
-                      }
-                    }}
-                  >
-                    Log
-                  </Button>
-                </Card>
+                <SwipeableExerciseCard
+                  key={ex.id}
+                  exercise={ex}
+                  index={index}
+                  deleteConfirm={deleteConfirm}
+                  setDeleteConfirm={setDeleteConfirm}
+                  selectionMode={exercisesSelectionMode}
+                  isSelected={selectedExerciseIds.has(ex.id)}
+                  onToggleSelection={toggleExerciseSelection}
+                  onLongPress={handleExerciseLongPress}
+                  onClick={() => {
+                    if (onAddPastWorkout) {
+                      onAddPastWorkout(ex);
+                    }
+                  }}
+                />
               ))}
               {filteredExercises.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
@@ -694,13 +890,13 @@ export function HistoryView({
       {/* Delete Confirmation Modal */}
       <ConfirmDialog
         isOpen={!!deleteConfirm}
-        title={deleteConfirm?.ids ? `Delete ${deleteConfirm.count} Workouts?` : "Delete Workout?"}
+        title={deleteConfirm?.ids ? `Delete ${deleteConfirm.count} Items?` : "Delete Item?"}
         message={deleteConfirm?.ids 
-          ? "Are you sure you want to delete these workouts? This action cannot be undone."
-          : "Are you sure you want to delete this workout? This action cannot be undone."
+          ? "Are you sure you want to delete these items? This action cannot be undone."
+          : "Are you sure you want to delete this item? This action cannot be undone."
         }
         confirmLabel="Delete"
-        onConfirm={confirmDelete}
+        onConfirm={activeTab === 'exercises' ? confirmDeleteExercise : confirmDelete}
         onCancel={() => setDeleteConfirm(null)}
         isDestructive
       />

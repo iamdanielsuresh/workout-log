@@ -56,3 +56,17 @@ export const createExercise = async (exercise) => {
   
   return data;
 };
+
+export const deleteExercise = async (id) => {
+  const { error } = await supabase
+    .from('exercises')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+
+  // Update cache
+  if (exercisesCache) {
+    exercisesCache = exercisesCache.filter(ex => ex.id !== id);
+  }
+};

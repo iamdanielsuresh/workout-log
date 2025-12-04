@@ -119,6 +119,7 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState(null);
+  const [logPastInitialExercise, setLogPastInitialExercise] = useState(null);
   
   // New modal states (Tasks 5, 7, 8, 10)
   const [showQuickPlanGenerator, setShowQuickPlanGenerator] = useState(false);
@@ -611,6 +612,7 @@ export default function App() {
                   setLogPastInitialExercise(exercise || null);
                   handleNavigate('log-past');
                 }}
+                onToast={setToast}
               />
             )}
 

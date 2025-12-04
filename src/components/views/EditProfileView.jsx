@@ -150,7 +150,7 @@ export function EditProfileView({
           <Button 
             size="sm" 
             icon={Save} 
-            onClick={handleSave}
+            onClick={handleSubmit}
             disabled={saving}
           >
             {saving ? 'Saving...' : 'Save'}
