@@ -7,6 +7,7 @@ import {
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 import { Modal, ConfirmDialog } from '../ui/Modal';
 import { ViewHeader } from '../layout/Navigation';
 import { Calendar } from '../ui/Calendar';
@@ -701,39 +702,39 @@ export function HistoryView({
           
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">Muscle Group</label>
-            <select
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            <Select
               value={newExercise.muscle_group}
               onChange={(e) => setNewExercise(prev => ({ ...prev, muscle_group: e.target.value }))}
-            >
-              <option value="">Select Muscle Group</option>
-              <option value="chest">Chest</option>
-              <option value="back">Back</option>
-              <option value="legs">Legs</option>
-              <option value="shoulders">Shoulders</option>
-              <option value="arms">Arms</option>
-              <option value="core">Core</option>
-              <option value="cardio">Cardio</option>
-              <option value="full_body">Full Body</option>
-            </select>
+              placeholder="Select Muscle Group"
+              options={[
+                { value: 'chest', label: 'Chest' },
+                { value: 'back', label: 'Back' },
+                { value: 'legs', label: 'Legs' },
+                { value: 'shoulders', label: 'Shoulders' },
+                { value: 'arms', label: 'Arms' },
+                { value: 'core', label: 'Core' },
+                { value: 'cardio', label: 'Cardio' },
+                { value: 'full_body', label: 'Full Body' }
+              ]}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">Equipment</label>
-            <select
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            <Select
               value={newExercise.equipment}
               onChange={(e) => setNewExercise(prev => ({ ...prev, equipment: e.target.value }))}
-            >
-              <option value="">Select Equipment</option>
-              <option value="barbell">Barbell</option>
-              <option value="dumbbell">Dumbbell</option>
-              <option value="machine">Machine</option>
-              <option value="cable">Cable</option>
-              <option value="bodyweight">Bodyweight</option>
-              <option value="kettlebell">Kettlebell</option>
-              <option value="other">Other</option>
-            </select>
+              placeholder="Select Equipment"
+              options={[
+                { value: 'barbell', label: 'Barbell' },
+                { value: 'dumbbell', label: 'Dumbbell' },
+                { value: 'machine', label: 'Machine' },
+                { value: 'cable', label: 'Cable' },
+                { value: 'bodyweight', label: 'Bodyweight' },
+                { value: 'kettlebell', label: 'Kettlebell' },
+                { value: 'other', label: 'Other' }
+              ]}
+            />
           </div>
 
           <div className="flex gap-3 pt-4">

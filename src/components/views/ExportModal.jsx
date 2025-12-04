@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Download, FileText, FileSpreadsheet, Calendar, Check } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 import { formatDuration } from '../../utils/localeFormatters';
 
@@ -342,20 +343,20 @@ export function ExportModal({
             <div className="grid grid-cols-2 gap-3 mt-3">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Start Date</label>
-                <input
+                <Input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
+                  className="py-2 text-sm"
                 />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">End Date</label>
-                <input
+                <Input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
+                  className="py-2 text-sm"
                 />
               </div>
             </div>
