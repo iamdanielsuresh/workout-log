@@ -46,7 +46,7 @@ const AddPlanModal = lazy(() => import('./components/plans/AddPlanModal'));
 const EditPlanModal = lazy(() => import('./components/plans/EditPlanModal'));
 const QuickPlanGenerator = lazy(() => import('./components/plans/QuickPlanGenerator'));
 const ExportModal = lazy(() => import('./components/views/ExportModal'));
-const AddPastWorkoutModal = lazy(() => import('./components/workout/AddPastWorkoutModal'));
+const LogPastWorkoutModal = lazy(() => import('./components/workout/LogPastWorkoutModal'));
 const NotificationSettingsModal = lazy(() => import('./components/settings/NotificationSettingsModal'));
 
 // Constants & Services
@@ -805,8 +805,8 @@ export default function App() {
             onToast={setToast}
           />
 
-          {/* Add Past Workout Modal (Task 10) */}
-          <AddPastWorkoutModal
+          {/* Log Past Workout Modal (Task 10) */}
+          <LogPastWorkoutModal
             isOpen={showAddPastWorkout}
             onClose={() => setShowAddPastWorkout(false)}
             plans={plans}

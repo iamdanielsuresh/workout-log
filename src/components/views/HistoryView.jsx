@@ -452,15 +452,6 @@ export function HistoryView({
                     <Download className="w-5 h-5" />
                   </button>
                 )}
-                {onAddPastWorkout && (
-                  <button
-                    onClick={onAddPastWorkout}
-                    className="p-2 text-emerald-400 hover:text-emerald-300 transition-colors"
-                    title="Add past workout"
-                  >
-                    <PlusCircle className="w-5 h-5" />
-                  </button>
-                )}
               </div>
             )
           }
@@ -501,10 +492,24 @@ export function HistoryView({
                   : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'
               }`}
             >
-              <List className="w-4 h-4" />
+              <Dumbbell className="w-4 h-4" />
               Exercises
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Log Past Workout Button */}
+      {!selectionMode && onAddPastWorkout && (
+        <div className="px-6 mb-6">
+          <Button
+            variant="secondary"
+            className="w-full py-3 border-dashed border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400"
+            icon={PlusCircle}
+            onClick={onAddPastWorkout}
+          >
+            Log Past Workout
+          </Button>
         </div>
       )}
 

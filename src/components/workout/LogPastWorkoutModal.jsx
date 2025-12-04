@@ -10,11 +10,10 @@ import { Select } from '../ui/Select';
 import { Modal } from '../ui/Modal';
 
 /**
- * Add Past Workout Modal
- * Task 10: Allow users to log past workouts by selecting a date
- * Revamped for premium aesthetic and better mobile experience
+ * Log Past Workout Modal
+ * Allows users to log past workouts by selecting a date
  */
-export function AddPastWorkoutModal({ 
+export function LogPastWorkoutModal({ 
   isOpen, 
   onClose, 
   onSave,
@@ -153,7 +152,7 @@ export function AddPastWorkoutModal({
         })),
         note: note.trim(),
         duration: parseInt(duration) * 60 || 0,
-        // Task 10: Include date and time for past workouts
+        // Include date and time for past workouts
         workoutDate: workoutDate,
         startTime: workoutTime 
           ? new Date(`${workoutDate}T${workoutTime}`).toISOString()
@@ -404,4 +403,4 @@ export function AddPastWorkoutModal({
   );
 }
 
-export default AddPastWorkoutModal;
+export default LogPastWorkoutModal;

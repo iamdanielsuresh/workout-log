@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { User, Calendar, Ruler, Scale, Percent, ChevronRight, Camera } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Calendar, Ruler, Scale, Percent, ChevronRight, Camera, Globe, Clock, Activity } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { COUNTRIES, TIMEZONES, getDefaultTimezone, detectUserTimezone } from '../../constants/countries';
 
 /**
  * Profile Setup Component - First step after signup
- * Collects mandatory (name, DOB) and optional (height, weight, body fat) info
+ * Collects mandatory (name, DOB) and optional (height, weight, body fat, country) info
  */
 export function ProfileSetup({ userPhoto, userName, onComplete }) {
   const [profile, setProfile] = useState({
@@ -15,6 +17,9 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
     height: '',
     weight: '',
     bodyFat: '',
+    country: '',
+    timezone: detectUserTimezone(),
+    experienceLevel: 'intermediate'
   });
   const [errors, setErrors] = useState({});
 
@@ -60,6 +65,9 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
         weight: profile.weight ? parseFloat(profile.weight) : null,
         body_fat: profile.bodyFat ? parseFloat(profile.bodyFat) : null,
         photo_url: userPhoto || null,
+        country: profile.country || null,
+        timezone: profile.timezone || null,
+        experience_level: profile.experienceLevel || 'intermediate'
       });
     }
   };
@@ -68,6 +76,14 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
     setProfile(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  // Auto-set timezone when country changes
+  const handleCountryChange = (countryCode) => {
+    updateProfile('country', countryCode);
+    if (countryCode && !profile.timezone) {
+      updateProfile('timezone', getDefaultTimezone(countryCode));
     }
   };
 
@@ -115,48 +131,51 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
           />
         </div>
 
-        {/* Gender - Required */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-2">
-            Gender <span className="text-red-400">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            {['male', 'female'].map((g) => (
-              <button
-                key={g}
-                onClick={() => updateProfile('gender', g)}
-                className={`p-3 rounded-xl border transition-all ${
-                  profile.gender === g
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                    : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:bg-gray-800'
-                }`}
-              >
-                <span className="capitalize font-medium">{g}</span>
-              </button>
-            ))}
+        {/* Gender & DOB Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Gender - Required */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              Gender <span className="text-red-400">*</span>
+            </label>
+            <div className="flex gap-2">
+              {['male', 'female'].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => updateProfile('gender', g)}
+                  className={`flex-1 py-3 rounded-xl border transition-all ${
+                    profile.gender === g
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:bg-gray-800'
+                  }`}
+                >
+                  <span className="capitalize font-medium">{g}</span>
+                </button>
+              ))}
+            </div>
+            {errors.gender && <p className="text-xs text-red-400 mt-1">{errors.gender}</p>}
           </div>
-          {errors.gender && <p className="text-xs text-red-400 mt-1">{errors.gender}</p>}
-        </div>
 
-        {/* Date of Birth - Required */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-2">
-            Date of Birth <span className="text-red-400">*</span>
-          </label>
-          <Input
-            type="date"
-            value={profile.dateOfBirth}
-            onChange={(e) => updateProfile('dateOfBirth', e.target.value)}
-            icon={Calendar}
-            error={errors.dateOfBirth}
-            max={new Date().toISOString().split('T')[0]}
-          />
-          {errors.dateOfBirth && (
-            <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>
-          )}
-          {age && !errors.dateOfBirth && (
-            <p className="mt-1 text-sm text-emerald-400">{age} years old</p>
-          )}
+          {/* Date of Birth - Required */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              Date of Birth <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="date"
+              value={profile.dateOfBirth}
+              onChange={(e) => updateProfile('dateOfBirth', e.target.value)}
+              icon={Calendar}
+              error={errors.dateOfBirth}
+              max={new Date().toISOString().split('T')[0]}
+            />
+            {errors.dateOfBirth && (
+              <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>
+            )}
+            {age && !errors.dateOfBirth && (
+              <p className="mt-1 text-sm text-emerald-400">{age} years old</p>
+            )}
+          </div>
         </div>
 
         {/* Optional Fields Divider */}
@@ -168,6 +187,34 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
             <span className="px-3 bg-gray-900 text-xs text-gray-600 uppercase tracking-wider">
               Optional Info
             </span>
+          </div>
+        </div>
+
+        {/* Country & Timezone */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              Country
+            </label>
+            <Select
+              value={profile.country}
+              onChange={(e) => handleCountryChange(e.target.value)}
+              icon={Globe}
+              placeholder="Select Country"
+              options={COUNTRIES.map(c => ({ value: c.code, label: c.name }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              Timezone
+            </label>
+            <Select
+              value={profile.timezone}
+              onChange={(e) => updateProfile('timezone', e.target.value)}
+              icon={Clock}
+              placeholder="Select Timezone"
+              options={TIMEZONES}
+            />
           </div>
         </div>
 

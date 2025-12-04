@@ -190,7 +190,7 @@ export function EditProfileModal({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5">Gender</label>
                 <div className="flex gap-2">
@@ -198,10 +198,10 @@ export function EditProfileModal({
                     <button
                       key={g}
                       onClick={() => updateField('gender', g)}
-                      className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all capitalize border ${
+                      className={`flex-1 py-3 text-sm font-medium rounded-xl transition-all capitalize border ${
                         formData.gender === g
                           ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                          : 'bg-gray-900/50 border-white/10 text-gray-500 hover:bg-gray-800 hover:text-gray-300'
+                          : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:bg-gray-800'
                       }`}
                     >
                       {g}
@@ -231,7 +231,7 @@ export function EditProfileModal({
             <Activity className="w-4 h-4" /> Body Metrics
           </h4>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Height (cm)</label>
               <Input
