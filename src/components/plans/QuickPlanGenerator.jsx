@@ -7,6 +7,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input, Textarea } from '../ui/Input';
 import { Modal } from '../ui/Modal';
+import { generateSingleDayPlan } from '../../services/ai';
 
 /**
  * Quick Plan Generator - Single-Day AI Workout Plan
@@ -42,66 +43,8 @@ export function QuickPlanGenerator({
     setError(null);
     setGeneratedPlan(null);
 
-    const systemPrompt = `You are an expert fitness coach. Generate a single-day workout plan based on the user's request.
-
-User Request: "${prompt}"
-${profile?.experience_level ? `Experience Level: ${profile.experience_level}` : ''}
-${profile?.injuries ? `Injuries/Limitations: ${profile.injuries}` : ''}
-
-Return ONLY valid JSON with this exact structure:
-{
-  "name": "Workout Name",
-  "description": "Brief description of the workout",
-  "estimatedTime": "25 min",
-  "difficulty": "intermediate",
-  "exercises": [
-    {
-      "name": "Exercise Name",
-      "sets": 3,
-      "reps": "8-12",
-      "rest": "60s",
-      "muscleGroup": "Primary Muscle",
-      "notes": "Quick form tip"
-    }
-  ],
-  "warmup": "Brief warmup suggestion",
-  "cooldown": "Brief cooldown suggestion"
-}
-
-Guidelines:
-- Include 4-6 exercises appropriate for the request
-- Provide realistic time estimates
-- Include rest periods between sets
-- Make exercises progressively harder
-- Match difficulty to user's experience level if provided`;
-
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: systemPrompt }] }]
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to generate workout plan');
-      }
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!text) {
-        throw new Error('No response from AI');
-      }
-
-      // Clean and parse JSON
-      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
-      const plan = JSON.parse(cleanedText);
-      
+      const plan = await generateSingleDayPlan(apiKey, prompt, profile);
       setGeneratedPlan(plan);
     } catch (err) {
       console.error('Error generating plan:', err);

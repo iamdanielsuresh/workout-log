@@ -22,6 +22,7 @@ import {
   getAiClientConfig,
   getAiStatusMessage 
 } from '../../utils/aiConfig';
+import { makeAIRequest } from '../../services/ai';
 import {
   getWorkoutSummary,
   getWorkoutsThisWeek,
@@ -129,28 +130,6 @@ export function BuddyView({
     }
   }, [aiAvailability.available, workouts.length]);
 
-  const makeAIRequest = async (prompt) => {
-    if (!aiAvailability.available) {
-      throw new Error(aiAvailability.reason || 'AI not available');
-    }
-    
-    const response = await fetch(
-      `${aiConfig.apiUrl}?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(aiConfig.getRequestBody(prompt))
-      }
-    );
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `AI request failed (${response.status})`);
-    }
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  };
-
   const clearError = (key) => {
     setErrors(prev => ({ ...prev, [key]: null }));
   };
@@ -162,7 +141,7 @@ export function BuddyView({
     
     try {
       const prompt = buildInsightsPrompt(userContext);
-      const response = await makeAIRequest(prompt);
+      const response = await makeAIRequest(apiKey, prompt);
       const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
       setInsights(JSON.parse(cleaned));
     } catch (error) {
@@ -193,7 +172,7 @@ export function BuddyView({
     
     try {
       const prompt = buildMotivationPrompt(userContext);
-      const response = await makeAIRequest(prompt);
+      const response = await makeAIRequest(apiKey, prompt);
       setMotivation(response);
     } catch (error) {
       console.error('Error generating motivation:', error);
@@ -218,7 +197,7 @@ export function BuddyView({
     
     try {
       const prompt = buildTipsPrompt(userContext);
-      const response = await makeAIRequest(prompt);
+      const response = await makeAIRequest(apiKey, prompt);
       const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
       setTips(JSON.parse(cleaned));
     } catch (error) {
@@ -267,7 +246,7 @@ User asks: "${messageToSend}"
 
 Give a helpful, concise response (under 60 words).`;
       
-      const response = await makeAIRequest(prompt);
+      const response = await makeAIRequest(apiKey, prompt);
       setChatMessages(prev => [...prev, { role: 'assistant', content: response, id: `msg-${Date.now()}` }]);
     } catch (error) {
       setChatMessages(prev => [...prev, { 

@@ -161,14 +161,16 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               Date of Birth <span className="text-red-400">*</span>
             </label>
-            <Input
-              type="date"
-              value={profile.dateOfBirth}
-              onChange={(e) => updateProfile('dateOfBirth', e.target.value)}
-              icon={Calendar}
-              error={errors.dateOfBirth}
-              max={new Date().toISOString().split('T')[0]}
-            />
+            <div className="max-w-[200px]">
+              <Input
+                type="date"
+                value={profile.dateOfBirth}
+                onChange={(e) => updateProfile('dateOfBirth', e.target.value)}
+                icon={Calendar}
+                error={errors.dateOfBirth}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
             {errors.dateOfBirth && (
               <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>
             )}

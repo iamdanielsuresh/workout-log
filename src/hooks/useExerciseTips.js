@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createLogger } from '../utils/logger';
+import { makeAIRequest } from '../services/ai';
 
 const log = createLogger('useExerciseTips');
 
@@ -106,23 +107,7 @@ Return ONLY valid JSON with this structure:
 
 Be specific, actionable, and appropriate for ${experienceLevel} level.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to generate tips');
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = await makeAIRequest(apiKey, prompt);
     
     if (!text) {
       throw new Error('No response from AI');

@@ -7,18 +7,18 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input, Textarea } from '../ui/Input';
 import { Select } from '../ui/Select';
-import { Modal } from '../ui/Modal';
+import { ViewHeader } from '../layout/Navigation';
 
 /**
- * Log Past Workout Modal
- * Allows users to log past workouts by selecting a date
+ * Log Past Workout View
+ * Full-screen view to log past workouts
  */
-export function LogPastWorkoutModal({ 
-  isOpen, 
-  onClose, 
+export function LogPastWorkoutView({ 
+  onBack, 
   onSave,
   plans,
-  onToast
+  onToast,
+  initialExercise
 }) {
   const [workoutDate, setWorkoutDate] = useState('');
   const [workoutTime, setWorkoutTime] = useState('');
@@ -32,18 +32,26 @@ export function LogPastWorkoutModal({
 
   // Set default date to today
   useEffect(() => {
-    if (isOpen) {
-      const today = new Date();
-      setWorkoutDate(today.toISOString().split('T')[0]);
-      setWorkoutTime('');
-      setSelectedPlan(null);
+    const today = new Date();
+    setWorkoutDate(today.toISOString().split('T')[0]);
+    setWorkoutTime('');
+    setSelectedPlan(null);
+    
+    if (initialExercise) {
+      setWorkoutName(`${initialExercise.name} Workout`);
+      setExercises([{
+        name: initialExercise.name,
+        sets: [{ weight: '', reps: '' }]
+      }]);
+    } else {
       setWorkoutName('');
       setExercises([]);
-      setNote('');
-      setDuration('30');
-      setErrors({});
     }
-  }, [isOpen]);
+    
+    setNote('');
+    setDuration('30');
+    setErrors({});
+  }, [initialExercise]);
 
   // Load exercises from selected plan
   useEffect(() => {
@@ -161,7 +169,7 @@ export function LogPastWorkoutModal({
 
       await onSave(workoutData);
       onToast?.({ message: 'Past workout logged!', type: 'success' });
-      onClose();
+      onBack();
     } catch (error) {
       console.error('Error saving workout:', error);
       onToast?.({ message: 'Failed to save workout', type: 'error' });
@@ -179,8 +187,13 @@ export function LogPastWorkoutModal({
   const maxDate = new Date().toISOString().split('T')[0];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Log Past Workout">
-      <div className="space-y-8 pb-4">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gray-950">
+      <ViewHeader 
+        title="Log Past Workout" 
+        onBack={onBack}
+      />
+
+      <div className="p-6 space-y-8 pb-32">
         {/* Section: Date & Time */}
         <div className="space-y-4">
           <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
@@ -387,20 +400,22 @@ export function LogPastWorkoutModal({
         </div>
 
         {/* Save Button */}
-        <div className="pt-4 sticky bottom-0 bg-gray-900/95 backdrop-blur pb-2 -mx-4 px-4 border-t border-white/5 mt-8">
-          <Button
-            onClick={handleSave}
-            loading={saving}
-            disabled={saving}
-            className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
-            icon={Save}
-          >
-            Log Past Workout
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur p-4 border-t border-white/5 z-10">
+          <div className="max-w-lg mx-auto">
+            <Button
+              onClick={handleSave}
+              loading={saving}
+              disabled={saving}
+              className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
+              icon={Save}
+            >
+              Save Workout
+            </Button>
+          </div>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 
-export default LogPastWorkoutModal;
+export default LogPastWorkoutView;

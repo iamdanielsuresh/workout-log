@@ -39,14 +39,14 @@ const HistoryView = lazy(() => import('./components/views/HistoryView'));
 const SettingsView = lazy(() => import('./components/views/SettingsView'));
 const PlansView = lazy(() => import('./components/views/PlansView'));
 const BuddyView = lazy(() => import('./components/views/BuddyView'));
+const EditProfileView = lazy(() => import('./components/views/EditProfileView'));
+const AddPlanView = lazy(() => import('./components/views/AddPlanView'));
+const EditPlanView = lazy(() => import('./components/views/EditPlanView'));
 
 // Lazy loaded modals (not needed on initial render)
-const EditProfileModal = lazy(() => import('./components/profile/EditProfileModal'));
-const AddPlanModal = lazy(() => import('./components/plans/AddPlanModal'));
-const EditPlanModal = lazy(() => import('./components/plans/EditPlanModal'));
 const QuickPlanGenerator = lazy(() => import('./components/plans/QuickPlanGenerator'));
 const ExportModal = lazy(() => import('./components/views/ExportModal'));
-const LogPastWorkoutModal = lazy(() => import('./components/workout/LogPastWorkoutModal'));
+const LogPastWorkoutView = lazy(() => import('./components/views/LogPastWorkoutView'));
 const NotificationSettingsModal = lazy(() => import('./components/settings/NotificationSettingsModal'));
 
 // Constants & Services
@@ -118,14 +118,11 @@ export default function App() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showAddPlan, setShowAddPlan] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState(null);
   
   // New modal states (Tasks 5, 7, 8, 10)
   const [showQuickPlanGenerator, setShowQuickPlanGenerator] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [showAddPastWorkout, setShowAddPastWorkout] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   
   // AI tips state
@@ -587,6 +584,7 @@ export default function App() {
             {view === 'history' && (
               <HistoryView
                 workouts={workouts}
+                plans={plans}
                 initialTab={historyTab}
                 onBack={() => handleNavigate('home')}
                 onStartQuickWorkout={handleStartQuickWorkout}
@@ -594,10 +592,45 @@ export default function App() {
                   await deleteWorkout(id);
                   setToast({ message: 'Session deleted', type: 'success' });
                 }}
+                onSaveWorkout={async (workoutData) => {
+                  try {
+                    await saveWorkout(workoutData);
+                    setToast({ message: 'Past workout logged!', type: 'success' });
+                  } catch (error) {
+                    log.error('Error saving past workout:', error);
+                    setToast({ message: 'Failed to log workout', type: 'error' });
+                  }
+                }}
                 activeTab={historyTab}
                 onTabChange={setHistoryTab}
                 onExport={() => setShowExportModal(true)}
-                onAddPastWorkout={() => setShowAddPastWorkout(true)}
+                onAddPastWorkout={(exercise) => {
+                  setLogPastInitialExercise(exercise || null);
+                  handleNavigate('log-past');
+                }}
+              />
+            )}
+
+            {/* Log Past Workout View */}
+            {view === 'log-past' && (
+              <LogPastWorkoutView
+                onBack={() => {
+                  setLogPastInitialExercise(null);
+                  handleNavigate('history');
+                }}
+                plans={plans}
+                initialExercise={logPastInitialExercise}
+                onSave={async (workoutData) => {
+                  try {
+                    await saveWorkout(workoutData);
+                    setToast({ message: 'Past workout logged!', type: 'success' });
+                    setLogPastInitialExercise(null);
+                  } catch (error) {
+                    log.error('Error saving past workout:', error);
+                    setToast({ message: 'Failed to log workout', type: 'error' });
+                  }
+                }}
+                onToast={setToast}
               />
             )}
 
@@ -613,6 +646,7 @@ export default function App() {
                 onSelectPlan={handleSelectWorkout}
                 onEditPlan={(id) => {
                   setEditingPlanId(id);
+                  handleNavigate('edit-plan');
                 }}
                 onDeletePlan={async (id) => {
                   setConfirmModal({
@@ -633,7 +667,7 @@ export default function App() {
                     }
                   });
                 }}
-                onCreatePlan={() => setShowAddPlan(true)}
+                onCreatePlan={() => handleNavigate('add-plan')}
               />
             )}
 
@@ -647,7 +681,7 @@ export default function App() {
                   await saveSettings(newSettings);
                   setToast({ message: 'Settings saved!', type: 'success' });
                 }}
-                onEditProfile={() => setShowEditProfile(true)}
+                onEditProfile={() => handleNavigate('edit-profile')}
                 onNotificationSettings={() => setShowNotificationSettings(true)}
                 onSignOut={signOut}
                 onDeleteAccount={async () => {
@@ -659,6 +693,24 @@ export default function App() {
                   }
                 }}
                 onBack={() => handleNavigate('home')}
+              />
+            )}
+
+            {/* Edit Profile View */}
+            {view === 'edit-profile' && (
+              <EditProfileView
+                profile={profile}
+                userPhoto={userPhoto}
+                onBack={() => handleNavigate('settings')}
+                onSave={async (updatedProfile) => {
+                  try {
+                    await saveProfile(updatedProfile);
+                    setToast({ message: 'Profile updated!', type: 'success' });
+                  } catch (error) {
+                    log.error('Error saving profile:', error);
+                    setToast({ message: 'Failed to update profile', type: 'error' });
+                  }
+                }}
               />
             )}
 
@@ -677,96 +729,91 @@ export default function App() {
                 onNavigate={handleNavigate}
               />
             )}
+
+            {/* Add Plan View */}
+            {view === 'add-plan' && (
+              <AddPlanView
+                onBack={() => handleNavigate('plans')}
+                apiKey={apiKey}
+                experienceLevel={profile?.experience_level || 'intermediate'}
+                profile={profile}
+                workouts={workouts}
+                plans={plans}
+                streak={streak}
+                onSave={async (data) => {
+                  try {
+                    // Merge new plans with existing plans (handle null/undefined plans)
+                    const existingPlans = plans || {};
+                    const mergedPlans = {
+                      ...existingPlans,
+                      ...data.plans
+                    };
+                    
+                    log.log('Saving plans:', { existing: Object.keys(existingPlans).length, new: Object.keys(data.plans).length, merged: Object.keys(mergedPlans).length });
+                    
+                    const source = data.type === 'ai-generated' ? 'ai-generated' : data.type === 'template' ? 'template' : 'custom';
+                    await savePlans(mergedPlans, source);
+                    handleNavigate('plans');
+                    setToast({ message: 'New workout plan added!', type: 'success' });
+                  } catch (error) {
+                    log.error('Error adding plan:', error);
+                    setToast({ message: `Failed to add plan: ${error.message || 'Unknown error'}`, type: 'error' });
+                  }
+                }}
+              />
+            )}
           </Suspense>
 
           {/* Lazy loaded modals */}
           <Suspense fallback={null}>
-            {/* Edit Profile Modal */}
-            <EditProfileModal
-            isOpen={showEditProfile}
-            onClose={() => setShowEditProfile(false)}
-            profile={profile}
-            onSave={async (updatedProfile) => {
-              try {
-                await saveProfile(updatedProfile);
-                setShowEditProfile(false);
-                setToast({ message: 'Profile updated!', type: 'success' });
-              } catch (error) {
-                log.error('Error saving profile:', error);
-                setToast({ message: 'Failed to update profile', type: 'error' });
-              }
-            }}
-          />
-
-          {/* Add Plan Modal */}
-          <AddPlanModal
-            isOpen={showAddPlan}
-            onClose={() => setShowAddPlan(false)}
-            apiKey={apiKey}
-            experienceLevel={profile?.experience_level || 'intermediate'}
-            profile={profile}
-            workouts={workouts}
-            plans={plans}
-            streak={streak}
-            onSave={async (data) => {
-              try {
-                // Merge new plans with existing plans (handle null/undefined plans)
-                const existingPlans = plans || {};
-                const mergedPlans = {
-                  ...existingPlans,
-                  ...data.plans
-                };
-                
-                log.log('Saving plans:', { existing: Object.keys(existingPlans).length, new: Object.keys(data.plans).length, merged: Object.keys(mergedPlans).length });
-                
-                const source = data.type === 'ai-generated' ? 'ai-generated' : data.type === 'template' ? 'template' : 'custom';
-                await savePlans(mergedPlans, source);
-                setShowAddPlan(false);
-                setToast({ message: 'New workout plan added!', type: 'success' });
-              } catch (error) {
-                log.error('Error adding plan:', error);
-                setToast({ message: `Failed to add plan: ${error.message || 'Unknown error'}`, type: 'error' });
-              }
-            }}
-          />
-
-          {/* Edit Plan Modal */}
-          <EditPlanModal
-            isOpen={editingPlanId !== null}
-            onClose={() => setEditingPlanId(null)}
-            plan={editingPlanId !== null ? { id: editingPlanId, ...plans[editingPlanId] } : null}
-            onSave={async (updatedPlan) => {
-              try {
-                // Use editingPlanId directly since updatedPlan might not contain the ID
-                await updatePlan(editingPlanId, updatedPlan);
-                setEditingPlanId(null);
-                setToast({ message: 'Plan updated successfully!', type: 'success' });
-              } catch (error) {
-                log.error('Error updating plan:', error);
-                setToast({ message: 'Failed to update plan', type: 'error' });
-              }
-            }}
-            onDelete={async (planId) => {
-              setConfirmModal({
-                isOpen: true,
-                title: 'Delete Workout Plan',
-                message: `Are you sure you want to delete "${plans[planId]?.name}"? This action cannot be undone.`,
-                confirmText: 'Delete',
-                confirmVariant: 'danger',
-                onConfirm: async () => {
+            {/* Edit Plan View */}
+            {view === 'edit-plan' && editingPlanId && (
+              <EditPlanView
+                plan={plans[editingPlanId] ? { id: editingPlanId, ...plans[editingPlanId] } : null}
+                onBack={() => {
+                  setEditingPlanId(null);
+                  handleNavigate('plans');
+                }}
+                onSave={async (updatedPlan) => {
                   try {
-                    await deletePlan(planId);
+                    // Use editingPlanId directly since updatedPlan might not contain the ID
+                    await updatePlan(editingPlanId, updatedPlan);
                     setEditingPlanId(null);
-                    setToast({ message: 'Plan deleted successfully', type: 'success' });
+                    handleNavigate('plans');
+                    setToast({ message: 'Plan updated successfully!', type: 'success' });
                   } catch (error) {
-                    log.error('Error deleting plan:', error);
-                    setToast({ message: 'Failed to delete plan', type: 'error' });
+                    log.error('Error updating plan:', error);
+                    setToast({ message: 'Failed to update plan', type: 'error' });
                   }
-                  setConfirmModal({ isOpen: false });
-                }
-              });
-            }}
-          />
+                }}
+                onDelete={async (planId) => {
+                  setConfirmModal({
+                    isOpen: true,
+                    title: 'Delete Workout Plan',
+                    message: `Are you sure you want to delete "${plans[planId]?.name}"? This action cannot be undone.`,
+                    confirmText: 'Delete',
+                    confirmVariant: 'danger',
+                    onConfirm: async () => {
+                      try {
+                        await deletePlan(planId);
+                        setEditingPlanId(null);
+                        handleNavigate('plans');
+                        setToast({ message: 'Plan deleted successfully', type: 'success' });
+                      } catch (error) {
+                        log.error('Error deleting plan:', error);
+                        setToast({ message: 'Failed to delete plan', type: 'error' });
+                      }
+                      setConfirmModal({ isOpen: false });
+                    }
+                  });
+                }}
+              />
+            )}
+          </Suspense>
+
+          {/* Lazy loaded modals */}
+          <Suspense fallback={null}>
+            {/* Quick Plan Generator Modal (Task 5) */}
 
           {/* Quick Plan Generator Modal (Task 5) */}
           <QuickPlanGenerator
@@ -802,23 +849,6 @@ export default function App() {
             isOpen={showExportModal}
             onClose={() => setShowExportModal(false)}
             workouts={workouts}
-            onToast={setToast}
-          />
-
-          {/* Log Past Workout Modal (Task 10) */}
-          <LogPastWorkoutModal
-            isOpen={showAddPastWorkout}
-            onClose={() => setShowAddPastWorkout(false)}
-            plans={plans}
-            onSave={async (workoutData) => {
-              try {
-                await saveWorkout(workoutData);
-                setToast({ message: 'Past workout logged!', type: 'success' });
-              } catch (error) {
-                log.error('Error saving past workout:', error);
-                setToast({ message: 'Failed to log workout', type: 'error' });
-              }
-            }}
             onToast={setToast}
           />
 

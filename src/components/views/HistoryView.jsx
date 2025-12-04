@@ -273,6 +273,8 @@ export function HistoryView({
   onStartQuickWorkout, 
   onExport,
   onAddPastWorkout,
+  onSaveWorkout,
+  plans,
   initialTab = 'history' 
 }) {
   const [activeTab, setActiveTab] = useState(initialTab); // 'history' | 'calendar' | 'exercises'
@@ -665,6 +667,18 @@ export function HistoryView({
                     <div className="font-medium text-gray-200">{ex.name}</div>
                     <div className="text-xs text-gray-500 capitalize">{ex.muscle_group} • {ex.equipment}</div>
                   </div>
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    icon={Plus}
+                    onClick={() => {
+                      if (onAddPastWorkout) {
+                        onAddPastWorkout(ex);
+                      }
+                    }}
+                  >
+                    Log
+                  </Button>
                 </Card>
               ))}
               {filteredExercises.length === 0 && (

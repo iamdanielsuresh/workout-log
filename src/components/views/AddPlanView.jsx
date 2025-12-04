@@ -4,27 +4,27 @@ import {
   Dumbbell, Key, Loader2, Check, Plus, Trash2, Zap, Clock, Target,
   AlertCircle, RefreshCw, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
-import { Modal } from '../ui/Modal';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { ViewHeader } from '../layout/Navigation';
 import { WORKOUT_TEMPLATES } from '../onboarding/RoutineCreation';
 import { 
   generateWorkoutPlan, 
   calculatePlanIntensity,
   getFocusRecommendations 
 } from '../../utils/aiWorkoutGenerator';
+import { findAlternativeExercise } from '../../services/ai';
 import { buildUserContextForAI } from '../../utils/aiContext';
 import { checkAiAvailability } from '../../utils/aiConfig';
-import { AiPreferencesForm } from './AiPreferencesForm';
+import { AiPreferencesForm } from '../plans/AiPreferencesForm';
 
 /**
- * AddPlanModal - Add new workout plan/routine
+ * AddPlanView - Add new workout plan/routine (Full Page)
  * Can choose from templates, AI generate, or create custom
  */
-export function AddPlanModal({ 
-  isOpen, 
-  onClose, 
+export function AddPlanView({ 
+  onBack, 
   onSave,
   apiKey,
   experienceLevel = 'intermediate',
@@ -35,7 +35,6 @@ export function AddPlanModal({
 }) {
   const [mode, setMode] = useState(null); // 'templates' | 'ai' | 'custom'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [localApiKey, setLocalApiKey] = useState(apiKey || '');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -68,23 +67,6 @@ export function AddPlanModal({
     exercises: [{ name: '', sets: 3, range: '8-12', tip: '' }]
   });
 
-  const handleClose = useCallback(() => {
-    setMode(null);
-    setSelectedTemplate(null);
-    setGeneratedPlan(null);
-    setExpandedDays({});
-    setExpandedExercises({});
-    setLoadingAlternative(null);
-    setError('');
-    setCustomPlan({
-      name: '',
-      desc: '',
-      estTime: '45 min',
-      exercises: [{ name: '', sets: 3, range: '8-12', tip: '' }]
-    });
-    onClose();
-  }, [onClose]);
-
   const toggleDayExpanded = (dayId) => {
     setExpandedDays(prev => ({ ...prev, [dayId]: !prev[dayId] }));
   };
@@ -93,51 +75,19 @@ export function AddPlanModal({
     setExpandedExercises(prev => ({ ...prev, [exerciseKey]: !prev[exerciseKey] }));
   };
 
-  const findAlternativeExercise = async (dayId, exerciseIndex, exercise) => {
+  const handleFindAlternative = async (dayId, exerciseIndex, exercise) => {
     const loadingKey = `${dayId}-${exerciseIndex}`;
     setLoadingAlternative(loadingKey);
     const key = effectiveApiKey;
 
     try {
-      const prompt = `Suggest ONE alternative exercise to replace "${exercise.name}" that targets the same muscle group (${exercise.muscleGroup || 'similar muscles'}).
-
-Requirements:
-- Equipment: ${aiQuestions.equipment === 'full' ? 'Full gym' : aiQuestions.equipment === 'minimal' ? 'Minimal equipment' : 'Bodyweight'}
-- Experience level: ${experienceLevel}
-${aiQuestions.specialNotes ? `- User notes: ${aiQuestions.specialNotes}` : ''}
-
-Return ONLY valid JSON (no markdown):
-{
-  "name": "Alternative Exercise Name",
-  "sets": ${exercise.sets},
-  "range": "${exercise.range}",
-  "muscleGroup": "${exercise.muscleGroup || 'Primary muscle'}",
-  "tip": "Quick form tip",
-  "tips": {
-    "form": "Detailed form instructions",
-    "cues": ["Cue 1", "Cue 2"],
-    "mistakes": ["Common mistake"],
-    "goal": "What this achieves",
-    "progression": "How to progress"
-  },
-  "reason": "Brief reason why this is a good alternative"
-}`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to get alternative');
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const alternative = JSON.parse(cleanedText);
+      const alternative = await findAlternativeExercise(
+        key, 
+        exercise, 
+        experienceLevel, 
+        aiQuestions.equipment, 
+        aiQuestions.specialNotes
+      );
 
       // Update the generated plan with the alternative
       setGeneratedPlan(prev => {
@@ -163,7 +113,6 @@ Return ONLY valid JSON (no markdown):
       templateId,
       plans: template.plans
     });
-    handleClose();
   };
 
   const handleGeneratePlan = async () => {
@@ -223,7 +172,6 @@ Return ONLY valid JSON (no markdown):
       plans: generatedPlan.plans,
       apiKey: localApiKey || apiKey
     });
-    handleClose();
   };
 
   const handleSaveCustomPlan = () => {
@@ -250,7 +198,6 @@ Return ONLY valid JSON (no markdown):
         }
       }
     });
-    handleClose();
   };
 
   const addExercise = () => {
@@ -277,19 +224,18 @@ Return ONLY valid JSON (no markdown):
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg">
-      <div className="flex flex-col min-h-0">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-100">Add New Routine</h2>
-          <button 
-            onClick={handleClose} 
-            className="p-2 hover:bg-gray-800 rounded-xl transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-950 pb-24 animate-in fade-in duration-300">
+      <ViewHeader 
+        title={
+          mode === 'templates' ? 'Choose Template' :
+          mode === 'ai' ? 'AI Generator' :
+          mode === 'custom' ? 'Create Routine' :
+          'Add New Routine'
+        }
+        onBack={mode ? () => setMode(null) : onBack}
+      />
 
+      <div className="p-4 max-w-2xl mx-auto space-y-6">
         {/* Mode Selection */}
         {!mode && (
           <div className="space-y-3">
@@ -348,38 +294,29 @@ Return ONLY valid JSON (no markdown):
 
         {/* Templates Selection */}
         {mode === 'templates' && (
-          <div className="space-y-4">
-            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm" className="mb-2">
-              Back
-            </Button>
-            <div className="space-y-3">
-              {Object.values(WORKOUT_TEMPLATES).map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => handleSelectTemplate(template.id)}
-                  className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl">{template.icon}</span>
-                    <div className="flex-1">
-                      <h3 className="font-display font-bold text-lg text-gray-100">{template.name}</h3>
-                      <p className="text-sm text-gray-500">{template.description}</p>
-                      <span className="text-xs text-emerald-400 font-medium">{template.frequency}</span>
-                    </div>
+          <div className="space-y-3">
+            {Object.values(WORKOUT_TEMPLATES).map((template) => (
+              <button
+                key={template.id}
+                onClick={() => handleSelectTemplate(template.id)}
+                className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl">{template.icon}</span>
+                  <div className="flex-1">
+                    <h3 className="font-display font-bold text-lg text-gray-100">{template.name}</h3>
+                    <p className="text-sm text-gray-500">{template.description}</p>
+                    <span className="text-xs text-emerald-400 font-medium">{template.frequency}</span>
                   </div>
-                </button>
-              ))}
-            </div>
+                </div>
+              </button>
+            ))}
           </div>
         )}
 
         {/* AI Generation */}
         {mode === 'ai' && !generatedPlan && (
           <div className="space-y-5">
-            <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm" className="mb-2">
-              Back
-            </Button>
-
             {/* API Key */}
             {!apiKey && (
               <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
@@ -414,7 +351,7 @@ Return ONLY valid JSON (no markdown):
               </p>
             )}
 
-            {/* Generate Button - Sticky on mobile */}
+            {/* Generate Button */}
             <div className="pt-2">
               <Button
                 onClick={handleGeneratePlan}
@@ -464,7 +401,7 @@ Return ONLY valid JSON (no markdown):
               </div>
             )}
 
-            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+            <div className="space-y-2">
               {Object.entries(generatedPlan.plans).map(([dayId, plan]) => {
                 const isDayExpanded = expandedDays[dayId];
                 
@@ -619,7 +556,7 @@ Return ONLY valid JSON (no markdown):
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      findAlternativeExercise(dayId, exIdx, ex);
+                                      handleFindAlternative(dayId, exIdx, ex);
                                     }}
                                     disabled={isLoadingAlt}
                                     className="w-full mt-1 py-2 px-3 bg-gray-700/50 hover:bg-gray-700 rounded flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
@@ -655,7 +592,7 @@ Return ONLY valid JSON (no markdown):
               </p>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-4">
               <Button 
                 variant="secondary" 
                 onClick={() => setGeneratedPlan(null)} 
@@ -674,13 +611,6 @@ Return ONLY valid JSON (no markdown):
         {/* Custom Plan Builder */}
         {mode === 'custom' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="flex items-center gap-3 mb-2">
-              <Button variant="ghost" onClick={() => setMode(null)} icon={ChevronLeft} size="sm">
-                Back
-              </Button>
-              <h3 className="font-display font-bold text-xl text-gray-100">Create Routine</h3>
-            </div>
-
             <div className="space-y-4">
               <Card hover={false} className="p-4 space-y-4 bg-gray-800/30">
                 <div>
@@ -803,8 +733,8 @@ Return ONLY valid JSON (no markdown):
           </div>
         )}
       </div>
-    </Modal>
+    </div>
   );
 }
 
-export default AddPlanModal;
+export default AddPlanView;

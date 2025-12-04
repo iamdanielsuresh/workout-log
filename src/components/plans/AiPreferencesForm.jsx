@@ -2,22 +2,28 @@ import React from 'react';
 import { 
   Calendar, Target, Clock, Dumbbell, AlertCircle, 
   Scale, ArrowUp, ArrowDown, Zap, Activity,
-  Building2, User
+  Building2, User, Plus, Minus
 } from 'lucide-react';
 import { Card } from '../ui/Card';
+import { Input } from '../ui/Input';
 
 export function AiPreferencesForm({ questions, setQuestions, disabled = false }) {
   const updateQuestion = (key, value) => {
     setQuestions(prev => ({ ...prev, [key]: value }));
   };
 
-  const FOCUS_OPTIONS = [
-    { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'Mix of strength & size' },
-    { id: 'upper', label: 'Upper Body', icon: ArrowUp, desc: 'Chest, back, arms, shoulders' },
-    { id: 'lower', label: 'Lower Body', icon: ArrowDown, desc: 'Legs, glutes, core' },
+  const GOAL_OPTIONS = [
     { id: 'strength', label: 'Strength', icon: Dumbbell, desc: 'Low reps, heavy weight' },
     { id: 'hypertrophy', label: 'Muscle Size', icon: Zap, desc: 'Moderate reps, volume' },
+    { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'Mix of strength & size' },
     { id: 'athletic', label: 'Athletic', icon: Activity, desc: 'Performance & conditioning' }
+  ];
+
+  const TARGET_OPTIONS = [
+    { id: 'full_body', label: 'Full Body', icon: User, desc: 'Hit everything each session' },
+    { id: 'upper_lower', label: 'Upper/Lower', icon: ArrowUp, desc: 'Split by body part' },
+    { id: 'ppl', label: 'Push/Pull/Legs', icon: Activity, desc: 'Classic 3-day split' },
+    { id: 'bro_split', label: 'Body Part Split', icon: Target, desc: 'Focus on 1-2 parts/day' }
   ];
 
   const DURATION_OPTIONS = [
@@ -66,22 +72,22 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
         </div>
       </section>
 
-      {/* Training Focus */}
+      {/* Training Goal */}
       <section className="space-y-3">
         <div className="flex items-center gap-2 text-gray-200 font-semibold">
           <div className="p-1.5 bg-blue-500/10 rounded-lg">
             <Target className="w-4 h-4 text-blue-400" />
           </div>
-          <h3>Training Focus</h3>
+          <h3>Primary Goal</h3>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {FOCUS_OPTIONS.map((option) => {
+          {GOAL_OPTIONS.map((option) => {
             const Icon = option.icon;
-            const isSelected = questions.focus === option.id;
+            const isSelected = questions.goal === option.id;
             return (
               <button
                 key={option.id}
-                onClick={() => updateQuestion('focus', option.id)}
+                onClick={() => updateQuestion('goal', option.id)}
                 disabled={disabled}
                 className={`
                   relative p-3 rounded-xl border text-left transition-all duration-300
@@ -99,7 +105,7 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className={`font-medium text-sm ${isSelected ? 'text-blue-400' : 'text-gray-200'}`}>
+                    <div className={`font-bold text-sm ${isSelected ? 'text-blue-400' : 'text-gray-300'}`}>
                       {option.label}
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5 leading-tight">
@@ -110,6 +116,82 @@ export function AiPreferencesForm({ questions, setQuestions, disabled = false })
               </button>
             );
           })}
+        </div>
+      </section>
+
+      {/* Target Split */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+          <div className="p-1.5 bg-purple-500/10 rounded-lg">
+            <Activity className="w-4 h-4 text-purple-400" />
+          </div>
+          <h3>Target Split</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {TARGET_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const isSelected = questions.target === option.id;
+            return (
+              <button
+                key={option.id}
+                onClick={() => updateQuestion('target', option.id)}
+                disabled={disabled}
+                className={`
+                  relative p-3 rounded-xl border text-left transition-all duration-300
+                  ${isSelected 
+                    ? 'bg-purple-500/10 border-purple-500/50 shadow-lg shadow-purple-500/10' 
+                    : 'bg-gray-800/50 border-gray-700 hover:border-gray-600 hover:bg-gray-800'
+                  }
+                `}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`
+                    p-2 rounded-lg transition-colors
+                    ${isSelected ? 'bg-purple-500 text-white' : 'bg-gray-700/50 text-gray-400'}
+                  `}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className={`font-bold text-sm ${isSelected ? 'text-purple-400' : 'text-gray-300'}`}>
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5 leading-tight">
+                      {option.desc}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>      {/* Optional: Exercises to Include/Exclude */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-gray-200 font-semibold">
+          <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+            <Plus className="w-4 h-4 text-emerald-400" />
+          </div>
+          <h3>Preferences (Optional)</h3>
+        </div>
+        
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Exercises to Include</label>
+            <Input
+              value={questions.includeExercises || ''}
+              onChange={(e) => updateQuestion('includeExercises', e.target.value)}
+              placeholder="e.g., Squats, Bench Press"
+              icon={Plus}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Exercises to Exclude</label>
+            <Input
+              value={questions.excludeExercises || ''}
+              onChange={(e) => updateQuestion('excludeExercises', e.target.value)}
+              placeholder="e.g., Burpees, Box Jumps"
+              icon={Minus}
+            />
+          </div>
         </div>
       </section>
 

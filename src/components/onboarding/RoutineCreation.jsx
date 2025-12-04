@@ -8,7 +8,7 @@ import {
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { verifyApiKey } from '../../services/ai';
+import { verifyApiKey, findAlternativeExercise, makeAIRequest } from '../../services/ai';
 import { buildWorkoutGenerationPrompt } from '../../utils/aiWorkoutGenerator';
 import { AiPreferencesForm } from '../plans/AiPreferencesForm';
 
@@ -232,7 +232,7 @@ export const WORKOUT_TEMPLATES = {
 export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: existingApiKey }) {
   const [mode, setMode] = useState(null); // 'templates' | 'ai'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(true);
   const [apiKey, setApiKey] = useState(existingApiKey || '');
   const [aiStep, setAiStep] = useState('questions'); // 'questions' | 'generating' | 'preview'
   const [aiQuestions, setAiQuestions] = useState({
@@ -252,10 +252,10 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
   const [loadingStage, setLoadingStage] = useState(0);
 
   const LOADING_STAGES = [
-    { text: 'Curating your info...', duration: 2000 },
-    { text: 'Analyzing your patterns...', duration: 2500 },
-    { text: 'Structuring your routine...', duration: 2000 },
-    { text: 'Finalizing details...', duration: 1500 }
+    { text: 'Analyzing your profile & goals...', duration: 3000 },
+    { text: 'Designing your optimal split...', duration: 3500 },
+    { text: 'Selecting the best exercises...', duration: 3000 },
+    { text: 'Finalizing sets, reps & tips...', duration: 2500 }
   ];
 
   useEffect(() => {
@@ -286,50 +286,18 @@ export function RoutineCreation({ onComplete, onBack, experienceLevel, apiKey: e
     setExpandedExercises(prev => ({ ...prev, [exerciseKey]: !prev[exerciseKey] }));
   };
 
-  const findAlternativeExercise = async (dayId, exerciseIndex, exercise) => {
+  const handleFindAlternative = async (dayId, exerciseIndex, exercise) => {
     const loadingKey = `${dayId}-${exerciseIndex}`;
     setLoadingAlternative(loadingKey);
 
     try {
-      const prompt = `Suggest ONE alternative exercise to replace "${exercise.name}" that targets the same muscle group (${exercise.muscleGroup || 'similar muscles'}).
-
-Requirements:
-- Equipment: ${aiQuestions.equipment === 'full' ? 'Full gym' : aiQuestions.equipment === 'dumbbells' ? 'Dumbbells only' : 'Bodyweight'}
-- Experience level: ${experienceLevel}
-${aiQuestions.specialNotes ? `- User notes: ${aiQuestions.specialNotes}` : ''}
-
-Return ONLY valid JSON (no markdown):
-{
-  "name": "Alternative Exercise Name",
-  "sets": ${exercise.sets},
-  "range": "${exercise.range}",
-  "muscleGroup": "${exercise.muscleGroup || 'Primary muscle'}",
-  "tip": "Quick form tip",
-  "tips": {
-    "form": "Detailed form instructions",
-    "cues": ["Cue 1", "Cue 2"],
-    "mistakes": ["Common mistake"],
-    "goal": "What this achieves",
-    "progression": "How to progress"
-  },
-  "reason": "Brief reason why this is a good alternative"
-}`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to get alternative');
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const alternative = JSON.parse(cleanedText);
+      const alternative = await findAlternativeExercise(
+        apiKey,
+        exercise,
+        experienceLevel,
+        aiQuestions.equipment,
+        aiQuestions.specialNotes
+      );
 
       // Update the generated plan with the alternative
       setGeneratedPlan(prev => {
@@ -372,30 +340,16 @@ Return ONLY valid JSON (no markdown):
       const prompt = buildWorkoutGenerationPrompt({
         daysPerWeek: aiQuestions.daysPerWeek,
         focus: aiQuestions.focus,
+        targetSplit: aiQuestions.targetSplit,
+        includeExercises: aiQuestions.includeExercises,
+        excludeExercises: aiQuestions.excludeExercises,
         duration: aiQuestions.duration,
         equipment: aiQuestions.equipment,
         specialNotes: aiQuestions.specialNotes,
         experienceLevel
       });
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate plan');
-      }
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const text = await makeAIRequest(apiKey, prompt);
       
       // Clean up the response - remove markdown code blocks if present
       const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -682,7 +636,7 @@ Return ONLY valid JSON (no markdown):
                 {LOADING_STAGES[loadingStage]?.text || 'Processing...'}
               </h3>
               <p className="text-sm text-gray-500">
-                This usually takes about 10 seconds
+                This usually takes about 15 seconds
               </p>
             </div>
 
@@ -925,7 +879,7 @@ Return ONLY valid JSON (no markdown):
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    findAlternativeExercise(dayId, exIdx, ex);
+                                    handleFindAlternative(dayId, exIdx, ex);
                                   }}
                                   disabled={isLoadingAlt}
                                   className="w-full mt-2 py-2 px-3 bg-gray-700/50 hover:bg-gray-700 rounded-lg flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"

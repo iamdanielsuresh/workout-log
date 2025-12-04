@@ -7,16 +7,14 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
-import { Modal } from '../ui/Modal';
+import { ViewHeader } from '../layout/Navigation';
 import { COUNTRIES, TIMEZONES, getDefaultTimezone, detectUserTimezone } from '../../constants/countries';
 
 /**
- * Edit Profile Modal - Allows editing profile after onboarding
- * Revamped for premium aesthetic and better mobile experience
+ * Edit Profile View - Full screen profile editor
  */
-export function EditProfileModal({ 
-  isOpen, 
-  onClose, 
+export function EditProfileView({ 
+  onBack, 
   profile, 
   userPhoto,
   onSave 
@@ -41,7 +39,7 @@ export function EditProfileModal({
 
   // Initialize form with profile data
   useEffect(() => {
-    if (profile && isOpen) {
+    if (profile) {
       setFormData({
         displayName: profile.display_name || '',
         gender: profile.gender || '',
@@ -59,7 +57,7 @@ export function EditProfileModal({
       });
       setErrors({});
     }
-  }, [profile, isOpen]);
+  }, [profile]);
 
   // Auto-set timezone when country changes
   const handleCountryChange = (countryCode) => {
@@ -122,7 +120,7 @@ export function EditProfileModal({
         injuries: formData.injuries || null,
         activity_level: formData.activityLevel || null
       });
-      onClose();
+      onBack();
     } catch (error) {
       setErrors({ general: 'Failed to save profile. Please try again.' });
     } finally {
@@ -143,11 +141,14 @@ export function EditProfileModal({
     { value: 'professional', label: 'Professional', desc: '3+ years' }
   ];
 
-  if (!isOpen) return null;
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile">
-      <div className="space-y-8 pb-4">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gray-950">
+      <ViewHeader 
+        title="Edit Profile" 
+        onBack={onBack}
+      />
+
+      <div className="p-6 space-y-8 pb-32">
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center justify-center">
           <div className="relative">
@@ -381,20 +382,22 @@ export function EditProfileModal({
         </div>
 
         {/* Save Button */}
-        <div className="pt-4 sticky bottom-0 bg-gray-900/95 backdrop-blur pb-2 -mx-4 px-4 border-t border-white/5 mt-8">
-          <Button
-            onClick={handleSubmit}
-            loading={saving}
-            disabled={saving}
-            className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
-            icon={Save}
-          >
-            Save Profile
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur p-4 border-t border-white/5 z-10">
+          <div className="max-w-lg mx-auto">
+            <Button
+              onClick={handleSubmit}
+              loading={saving}
+              disabled={saving}
+              className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
+              icon={Save}
+            >
+              Save Profile
+            </Button>
+          </div>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 
-export default EditProfileModal;
+export default EditProfileView;

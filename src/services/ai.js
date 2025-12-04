@@ -3,7 +3,9 @@
  * Provides personalized coaching at every level of the workout experience
  */
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+import { getApiUrl, getAiClientConfig } from '../utils/aiConfig';
+
+const GEMINI_API_URL = getApiUrl();
 
 /**
  * Verify API key is valid by making a simple test request
@@ -56,7 +58,7 @@ export async function verifyApiKey(apiKey) {
 /**
  * Core AI request handler
  */
-async function makeAIRequest(apiKey, prompt) {
+export async function makeAIRequest(apiKey, prompt) {
   if (!apiKey) {
     throw new Error('No API key provided');
   }
@@ -65,7 +67,11 @@ async function makeAIRequest(apiKey, prompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }]
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { 
+        temperature: 0.7,
+        maxOutputTokens: 8192
+      }
     })
   });
 
@@ -75,6 +81,91 @@ async function makeAIRequest(apiKey, prompt) {
 
   const data = await response.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+}
+
+/**
+ * Find an alternative exercise
+ */
+export async function findAlternativeExercise(apiKey, exercise, experienceLevel, equipment, specialNotes) {
+  const prompt = `Suggest ONE alternative exercise to replace "${exercise.name}" that targets the same muscle group (${exercise.muscleGroup || 'similar muscles'}).
+
+Requirements:
+- Equipment: ${equipment === 'full' ? 'Full gym' : equipment === 'minimal' ? 'Minimal equipment' : 'Bodyweight'}
+- Experience level: ${experienceLevel}
+${specialNotes ? `- User notes: ${specialNotes}` : ''}
+
+Return ONLY valid JSON (no markdown):
+{
+  "name": "Alternative Exercise Name",
+  "sets": ${exercise.sets},
+  "range": "${exercise.range}",
+  "muscleGroup": "${exercise.muscleGroup || 'Primary muscle'}",
+  "tip": "Quick form tip",
+  "tips": {
+    "form": "Detailed form instructions",
+    "cues": ["Cue 1", "Cue 2"],
+    "mistakes": ["Common mistake"],
+    "goal": "What this achieves",
+    "progression": "How to progress"
+  },
+  "reason": "Brief reason why this is a good alternative"
+}`;
+
+  try {
+    const response = await makeAIRequest(apiKey, prompt);
+    const cleanedText = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.error('Error finding alternative:', error);
+    throw error;
+  }
+}
+
+/**
+ * Generate a single day workout plan from a prompt
+ */
+export async function generateSingleDayPlan(apiKey, userPrompt, profile) {
+  const systemPrompt = `You are an expert fitness coach. Generate a single-day workout plan based on the user's request.
+
+User Request: "${userPrompt}"
+${profile?.experience_level ? `Experience Level: ${profile.experience_level}` : ''}
+${profile?.injuries ? `Injuries/Limitations: ${profile.injuries}` : ''}
+
+Return ONLY valid JSON with this exact structure:
+{
+  "name": "Workout Name",
+  "description": "Brief description of the workout",
+  "estimatedTime": "25 min",
+  "difficulty": "intermediate",
+  "exercises": [
+    {
+      "name": "Exercise Name",
+      "sets": 3,
+      "reps": "8-12",
+      "rest": "60s",
+      "muscleGroup": "Primary Muscle",
+      "notes": "Quick form tip"
+    }
+  ],
+  "warmup": "Brief warmup suggestion",
+  "cooldown": "Brief cooldown suggestion"
+}
+
+Guidelines:
+- Include 4-6 exercises appropriate for the request
+- Provide realistic time estimates
+- Include rest periods between sets
+- Make exercises progressively harder
+- Match difficulty to user's experience level if provided`;
+
+  try {
+    const response = await makeAIRequest(apiKey, systemPrompt);
+    const cleanedText = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.error('Error generating single day plan:', error);
+    throw error;
+  }
 }
 
 /**

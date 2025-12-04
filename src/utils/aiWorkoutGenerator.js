@@ -6,6 +6,7 @@
  */
 
 import { buildUserContextForAI } from './aiContext';
+import { makeAIRequest } from '../services/ai';
 
 /**
  * Calculate intensity score from a workout plan
@@ -107,6 +108,9 @@ function parseReps(range) {
 export function buildWorkoutGenerationPrompt({
   daysPerWeek,
   focus,
+  targetSplit,
+  includeExercises,
+  excludeExercises,
   duration,
   equipment = 'full',
   specialNotes = '',
@@ -116,11 +120,22 @@ export function buildWorkoutGenerationPrompt({
   // Base requirements
   const requirements = [
     `Days per week: ${daysPerWeek}`,
-    `Focus: ${focus}`,
+    `Primary Goal: ${focus}`,
+    targetSplit ? `Target Split: ${targetSplit}` : null,
     `Session duration: ${duration} minutes`,
     `Equipment: ${equipment === 'full' ? 'Full gym' : equipment === 'minimal' ? 'Minimal (dumbbells, bands)' : 'Bodyweight only'}`,
     `Experience Level: ${experienceLevel}`
-  ];
+  ].filter(Boolean);
+
+  // Add preferences section
+  let preferencesSection = '';
+  if (includeExercises || excludeExercises) {
+    preferencesSection = `
+EXERCISE PREFERENCES:
+${includeExercises ? `- MUST INCLUDE: ${includeExercises}` : ''}
+${excludeExercises ? `- MUST EXCLUDE: ${excludeExercises}` : ''}
+`;
+  }
 
   // Add special notes section if provided
   let specialNotesSection = '';
@@ -189,7 +204,7 @@ Based on this profile, create a plan that:
 
 REQUIREMENTS:
 ${requirements.map(r => `- ${r}`).join('\n')}
-${specialNotesSection}${userContextSection}
+${preferencesSection}${specialNotesSection}${userContextSection}
 
 IMPORTANT INSTRUCTIONS:
 1. Return ONLY valid JSON - no markdown, no comments, no extra text.
@@ -383,28 +398,7 @@ export async function generateWorkoutPlan(apiKey, options) {
   const prompt = buildWorkoutGenerationPrompt(options);
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { 
-            temperature: 0.7, 
-            maxOutputTokens: 8192 
-          }
-        })
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = await makeAIRequest(apiKey, prompt);
 
     if (!text) {
       throw new Error('Empty response from AI');
