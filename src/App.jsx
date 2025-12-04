@@ -210,6 +210,9 @@ export default function App() {
 
   // Navigation handler
   const handleNavigate = (newView) => {
+    // Scroll to top on navigation
+    window.scrollTo(0, 0);
+
     // If in workout, confirm before leaving
     if (view === 'workout' && Object.keys(activeLog).length > 0) {
       setConfirmModal({

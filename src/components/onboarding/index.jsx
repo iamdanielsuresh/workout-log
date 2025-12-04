@@ -165,9 +165,9 @@ export function OnboardingFlow({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
-        <div className="min-h-full flex flex-col items-center justify-center p-6 pb-10">
-          <div className="w-full max-w-md">
+      <div className="relative z-10 flex-1 overflow-x-hidden overflow-y-auto scrollbar-hide">
+        <div className="min-h-full flex flex-col p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
+          <div className="w-full max-w-md m-auto">
             <div 
               className={`transition-all duration-300 ease-out ${getAnimationClass()}`}
             >

@@ -106,15 +106,17 @@ export function EditPlanView({
   return (
     <div className="min-h-screen bg-gray-950 pb-24 animate-in fade-in duration-300">
       <ViewHeader 
-        title="Edit Routine" 
+        title="Edit Plan" 
         onBack={handleBack}
-        action={
-          <button 
-            onClick={() => onDelete(plan.id)}
-            className="p-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+        rightAction={
+          <Button 
+            size="sm" 
+            icon={Save} 
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
           >
-            <Trash2 className="w-5 h-5" />
-          </button>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
         }
       />
 

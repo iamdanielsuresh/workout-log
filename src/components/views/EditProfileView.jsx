@@ -142,10 +142,20 @@ export function EditProfileView({
   ];
 
   return (
-    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gray-950">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gray-950 overflow-x-hidden">
       <ViewHeader 
         title="Edit Profile" 
         onBack={onBack}
+        rightAction={
+          <Button 
+            size="sm" 
+            icon={Save} 
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        }
       />
 
       <div className="p-6 space-y-8 pb-32">
@@ -214,13 +224,15 @@ export function EditProfileView({
 
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5">Date of Birth</label>
-                <Input
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                  icon={Calendar}
-                  error={errors.dateOfBirth}
-                />
+                <div className="w-full sm:w-2/3">
+                  <Input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => updateField('dateOfBirth', e.target.value)}
+                    icon={Calendar}
+                    error={errors.dateOfBirth}
+                  />
+                </div>
               </div>
             </div>
           </div>

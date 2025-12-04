@@ -508,7 +508,7 @@ export function HistoryView({
             variant="secondary"
             className="w-full py-3 border-dashed border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400"
             icon={PlusCircle}
-            onClick={onAddPastWorkout}
+            onClick={() => onAddPastWorkout(null)}
           >
             Log Past Workout
           </Button>

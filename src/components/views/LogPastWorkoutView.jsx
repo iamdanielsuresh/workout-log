@@ -191,6 +191,16 @@ export function LogPastWorkoutView({
       <ViewHeader 
         title="Log Past Workout" 
         onBack={onBack}
+        rightAction={
+          <Button 
+            size="sm" 
+            icon={Save} 
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        }
       />
 
       <div className="p-6 space-y-8 pb-32">

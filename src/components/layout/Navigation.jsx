@@ -1,4 +1,5 @@
-import { Home, History, Dumbbell, Settings, User, Sparkles } from 'lucide-react';
+import { Home, History, Dumbbell, Settings, User, Sparkles, ArrowLeft } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 /**
  * BottomNavigation - Main app navigation bar
@@ -74,6 +75,7 @@ export function ViewHeader({
   subtitle, 
   leftAction, 
   rightAction,
+  onBack,
   className = ''
 }) {
   return (
@@ -81,6 +83,16 @@ export function ViewHeader({
       <div className="px-6 py-4 max-w-lg mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onBack}
+                className="p-2 -ml-2 mr-1 text-gray-400 hover:text-white"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            )}
             {leftAction}
             <div>
               <h1 className="text-2xl font-display font-bold text-gray-100 tracking-tight">{title}</h1>

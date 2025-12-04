@@ -13,7 +13,8 @@ import { verifyApiKey } from '../../services/ai';
  */
 export function SettingsView({ 
   currentSettings, profile, isAnonymous, 
-  onSave, onEditProfile, onNotificationSettings, onSignOut, onDeleteAccount 
+  onSave, onEditProfile, onNotificationSettings, onSignOut, onDeleteAccount,
+  onBack
 }) {
   const [aiEnabled, setAiEnabled] = useState(currentSettings?.ai_enabled || false);
   const [apiKey, setApiKey] = useState(currentSettings?.google_api_key || '');
@@ -120,6 +121,7 @@ export function SettingsView({
       <ViewHeader 
         title="Settings" 
         subtitle="Manage your account"
+        onBack={onBack}
       />
 
       <div className="p-6 space-y-4">

@@ -161,7 +161,7 @@ export function ProfileSetup({ userPhoto, userName, onComplete }) {
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               Date of Birth <span className="text-red-400">*</span>
             </label>
-            <div className="max-w-[200px]">
+            <div>
               <Input
                 type="date"
                 value={profile.dateOfBirth}
