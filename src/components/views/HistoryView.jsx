@@ -21,6 +21,7 @@ const DEFAULT_EXERCISE_DURATION_MS = 15 * 60 * 1000;
  */
 function SwipeableHistoryCard({ 
   workout, 
+  index,
   isExpanded, 
   onToggleExpand, 
   onDelete,
@@ -117,7 +118,10 @@ function SwipeableHistoryCard({
     : (workout.timestamp ? new Date(workout.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
 
   return (
-    <div className="relative mb-3 select-none touch-pan-y">
+    <div 
+      className="relative mb-3 select-none touch-pan-y animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards duration-500"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       {/* Delete Background Layer */}
       <div className={`absolute inset-0 bg-red-500/20 rounded-2xl flex items-center justify-end px-6 transition-opacity duration-200 ${
         offset < 0 ? 'opacity-100' : 'opacity-0'
@@ -532,6 +536,8 @@ export function HistoryView({
 
             // Sort dates in descending order (most recent first)
             const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+            
+            let globalIndex = 0;
 
             return sortedDates.map((dateKey, dateIndex) => (
               <div key={dateKey} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards" style={{ animationDelay: `${dateIndex * 100}ms` }}>
@@ -541,21 +547,26 @@ export function HistoryView({
                 </h2>
                 
                 <div className="space-y-3">
-                  {groupedByDate[dateKey].map((session) => (
-                    <SwipeableHistoryCard
-                      key={session.id}
-                      workout={session}
-                      isExpanded={expandedId === session.id}
-                      onToggleExpand={() => setExpandedId(expandedId === session.id ? null : session.id)}
-                      onDelete={onDelete}
-                      deleteConfirm={deleteConfirm}
-                      setDeleteConfirm={setDeleteConfirm}
-                      selectionMode={selectionMode}
-                      isSelected={selectedIds.has(session.id)}
-                      onToggleSelection={toggleSelection}
-                      onLongPress={handleLongPress}
-                    />
-                  ))}
+                  {groupedByDate[dateKey].map((session) => {
+                    const currentIndex = globalIndex;
+                    globalIndex++;
+                    return (
+                      <SwipeableHistoryCard
+                        key={session.id}
+                        workout={session}
+                        index={currentIndex}
+                        isExpanded={expandedId === session.id}
+                        onToggleExpand={() => setExpandedId(expandedId === session.id ? null : session.id)}
+                        onDelete={onDelete}
+                        deleteConfirm={deleteConfirm}
+                        setDeleteConfirm={setDeleteConfirm}
+                        selectionMode={selectionMode}
+                        isSelected={selectedIds.has(session.id)}
+                        onToggleSelection={toggleSelection}
+                        onLongPress={handleLongPress}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             ));
@@ -587,10 +598,11 @@ export function HistoryView({
               </div>
               
               {filteredWorkouts.length > 0 ? (
-                filteredWorkouts.map(session => (
+                filteredWorkouts.map((session, index) => (
                   <SwipeableHistoryCard
                     key={session.id}
                     workout={session}
+                    index={index}
                     isExpanded={expandedId === session.id}
                     onToggleExpand={() => setExpandedId(expandedId === session.id ? null : session.id)}
                     onDelete={onDelete}
@@ -636,8 +648,13 @@ export function HistoryView({
             <div className="text-center py-8 text-gray-500">Loading exercises...</div>
           ) : (
             <div className="space-y-2">
-              {filteredExercises.map(ex => (
-                <Card key={ex.id} hover={false} className="p-3 flex justify-between items-center">
+              {filteredExercises.map((ex, index) => (
+                <Card 
+                  key={ex.id} 
+                  hover={false} 
+                  className="p-3 flex justify-between items-center animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
                   <div>
                     <div className="font-medium text-gray-200">{ex.name}</div>
                     <div className="text-xs text-gray-500 capitalize">{ex.muscle_group} • {ex.equipment}</div>

@@ -207,7 +207,7 @@ export function AddPastWorkoutModal({
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Past Workout">
+    <Modal isOpen={isOpen} onClose={onClose} title="Log Past Workout">
       <div className="space-y-8 pb-4">
         {/* Section: Date & Time */}
         <div className="space-y-4">
@@ -291,7 +291,7 @@ export function AddPastWorkoutModal({
             </h4>
             <button
               onClick={handleAddExercise}
-              className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20"
             >
               <Plus className="w-3 h-3" />
               Add Exercise
@@ -307,14 +307,14 @@ export function AddPastWorkoutModal({
 
           <div className="space-y-3">
             {exercises.map((exercise, exIndex) => (
-              <div key={exIndex} className="bg-gray-900/50 border border-white/5 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-3 mb-3">
+              <div key={exIndex} className="bg-gray-900/30 border border-white/5 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1">
                     <Input
                       value={exercise.name}
                       onChange={(e) => handleExerciseNameChange(exIndex, e.target.value)}
                       placeholder="Exercise name"
-                      className="bg-gray-800/50 border-gray-700"
+                      className="bg-gray-900 border-white/10 focus:border-emerald-500/50"
                     />
                   </div>
                   <button
@@ -325,62 +325,73 @@ export function AddPastWorkoutModal({
                   </button>
                 </div>
                 
+                {/* Sets Header */}
+                <div className="grid grid-cols-[24px_1fr_1fr_32px] gap-3 mb-2 px-1">
+                  <span className="text-[10px] font-bold text-gray-600 uppercase text-center">#</span>
+                  <span className="text-[10px] font-bold text-gray-600 uppercase text-center">Weight</span>
+                  <span className="text-[10px] font-bold text-gray-600 uppercase text-center">Reps</span>
+                  <span></span>
+                </div>
+
                 {/* Sets */}
-                <div className="space-y-2 pl-1">
+                <div className="space-y-2">
                   {exercise.sets.map((set, setIndex) => (
-                    <div key={setIndex} className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-gray-500 w-10 pt-1">#{setIndex + 1}</span>
-                      <div className="flex-1 flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <input
-                            type="number"
-                            value={set.weight}
-                            onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
-                            placeholder="0"
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center"
-                          />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600 pointer-events-none">kg</span>
-                        </div>
-                        <span className="text-gray-600">×</span>
-                        <div className="relative flex-1">
-                          <input
-                            type="number"
-                            value={set.reps}
-                            onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
-                            placeholder="0"
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center"
-                          />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600 pointer-events-none">reps</span>
-                        </div>
+                    <div key={setIndex} className="grid grid-cols-[24px_1fr_1fr_32px] gap-3 items-center">
+                      <span className="text-xs font-mono text-gray-500 text-center">{setIndex + 1}</span>
+                      
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={set.weight}
+                          onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
+                          placeholder="0"
+                          className="w-full bg-gray-900 border border-white/10 rounded-lg py-2 px-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center transition-colors"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none">kg</span>
                       </div>
+                      
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={set.reps}
+                          onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
+                          placeholder="0"
+                          className="w-full bg-gray-900 border border-white/10 rounded-lg py-2 px-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center transition-colors"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none">reps</span>
+                      </div>
+
                       <button
                         onClick={() => handleRemoveSet(exIndex, setIndex)}
-                        className="p-2 text-gray-600 hover:text-red-400 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         disabled={exercise.sets.length <= 1}
                       >
                         <Minus className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
+                  
                   <button
                     onClick={() => handleAddSet(exIndex)}
-                    className="w-full text-xs font-medium text-gray-500 hover:text-emerald-400 py-2 border border-dashed border-gray-800 hover:border-emerald-500/30 rounded-lg transition-all mt-2"
+                    className="w-full text-xs font-medium text-emerald-400 hover:text-emerald-300 py-2.5 border border-dashed border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-lg transition-all mt-3 flex items-center justify-center gap-1"
                   >
-                    + Add Set
+                    <Plus className="w-3 h-3" /> Add Set
                   </button>
                 </div>
               </div>
             ))}
 
             {exercises.length === 0 && (
-              <div className="text-center py-8 border-2 border-dashed border-gray-800 rounded-xl">
-                <Dumbbell className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No exercises added yet</p>
+              <div className="text-center py-12 border-2 border-dashed border-gray-800 rounded-2xl bg-gray-900/20">
+                <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Dumbbell className="w-6 h-6 text-gray-600" />
+                </div>
+                <p className="text-sm text-gray-500 mb-4">No exercises added yet</p>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
                   onClick={handleAddExercise}
-                  className="mt-2"
+                  icon={Plus}
                 >
                   Add First Exercise
                 </Button>
@@ -412,7 +423,7 @@ export function AddPastWorkoutModal({
             className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
             icon={Save}
           >
-            Save Workout
+            Log Past Workout
           </Button>
         </div>
       </div>

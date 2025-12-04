@@ -17,6 +17,7 @@ import { ViewHeader } from '../layout/Navigation';
 function FolderCard({ 
   folder, 
   plans, 
+  index,
   isExpanded, 
   onToggle, 
   selectionMode,
@@ -38,7 +39,10 @@ function FolderCard({
   };
 
   return (
-    <div className="mb-3">
+    <div 
+      className="mb-3 animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards duration-500"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
       <div 
         className={`
           relative overflow-hidden rounded-2xl transition-all duration-200
@@ -219,7 +223,10 @@ function SwipeablePlanCard({
   };
 
   return (
-    <div className="relative mb-3 select-none touch-pan-y">
+    <div 
+      className="relative mb-3 select-none touch-pan-y animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards duration-500"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       {/* Delete Background Layer */}
       <div className={`absolute inset-0 bg-red-500/20 rounded-2xl flex items-center justify-end px-6 transition-opacity duration-200 ${
         offset < 0 ? 'opacity-100' : 'opacity-0'
@@ -587,10 +594,11 @@ export function PlansView({
         )}
 
         {/* Folders */}
-        {foldersList.map(folder => (
+        {foldersList.map((folder, index) => (
           <FolderCard
             key={folder.id}
             folder={folder}
+            index={index}
             plans={plansByFolder[folder.id] || []}
             isExpanded={expandedFolders.has(folder.id)}
             onToggle={() => toggleFolder(folder.id)}
@@ -645,7 +653,7 @@ export function PlansView({
               <SwipeablePlanCard
                 key={plan.id}
                 plan={plan}
-                index={index}
+                index={index + (foldersList.length * 2)}
                 isExpanded={expandedPlan === plan.id}
                 onToggleExpand={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
                 onSelect={onSelectPlan}

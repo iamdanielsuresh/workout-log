@@ -177,7 +177,7 @@ export function EditProfileModal({
       <div className="space-y-8 pb-4">
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center justify-center">
-          <div className="relative group cursor-pointer">
+          <div className="relative">
             {(userPhoto || profile?.photo_url) ? (
               <img
                 src={userPhoto || profile?.photo_url}
@@ -189,11 +189,7 @@ export function EditProfileModal({
                 <User className="w-10 h-10 text-gray-500" />
               </div>
             )}
-            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="w-6 h-6 text-white" />
-            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">Tap to change photo</p>
         </div>
 
         {/* General error */}
@@ -224,15 +220,15 @@ export function EditProfileModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5">Gender</label>
-                <div className="flex bg-gray-900/50 p-1 rounded-xl border border-white/10">
+                <div className="flex gap-2">
                   {['male', 'female'].map((g) => (
                     <button
                       key={g}
                       onClick={() => updateField('gender', g)}
-                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all capitalize ${
+                      className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all capitalize border ${
                         formData.gender === g
-                          ? 'bg-gray-800 text-white shadow-sm'
-                          : 'text-gray-500 hover:text-gray-300'
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                          : 'bg-gray-900/50 border-white/10 text-gray-500 hover:bg-gray-800 hover:text-gray-300'
                       }`}
                     >
                       {g}
@@ -311,7 +307,7 @@ export function EditProfileModal({
                   onClick={() => updateField('experienceLevel', value)}
                   className={`p-3 rounded-xl border text-left transition-all ${
                     formData.experienceLevel === value
-                      ? 'border-emerald-500 bg-emerald-500/10'
+                      ? 'border-emerald-500 bg-emerald-500/20'
                       : 'border-white/10 bg-gray-900/30 hover:bg-gray-900/50'
                   }`}
                 >

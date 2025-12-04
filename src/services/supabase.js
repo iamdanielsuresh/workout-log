@@ -18,13 +18,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Exercises
-export const getExercises = async () => {
+let exercisesCache = null;
+
+export const getExercises = async (forceRefresh = false) => {
+  if (exercisesCache && !forceRefresh) return exercisesCache;
+
   const { data, error } = await supabase
     .from('exercises')
     .select('*')
     .order('name');
   
   if (error) throw error;
+  exercisesCache = data;
   return data;
 };
 
@@ -43,5 +48,11 @@ export const createExercise = async (exercise) => {
     .single();
 
   if (error) throw error;
+  
+  // Update cache
+  if (exercisesCache) {
+    exercisesCache = [...exercisesCache, data].sort((a, b) => a.name.localeCompare(b.name));
+  }
+  
   return data;
 };
