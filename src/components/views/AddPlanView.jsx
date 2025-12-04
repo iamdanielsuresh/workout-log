@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   X, Sparkles, ListChecks, ChevronRight, ChevronLeft, 
   Dumbbell, Key, Loader2, Check, Plus, Trash2, Zap, Clock, Target,
