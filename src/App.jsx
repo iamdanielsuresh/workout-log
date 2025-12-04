@@ -668,6 +668,7 @@ export default function App() {
                 savedExercisesCount={savedExercises.size}
                 workoutStartTime={workoutStartTime}
                 onResumeWorkout={() => setView('workout')}
+                onCancelWorkout={handleCancelWorkout}
                 onSelectWorkout={handleSelectWorkout}
                 onViewHistory={() => {
                   setHistoryTab('history');

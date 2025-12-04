@@ -1,7 +1,7 @@
 import { 
   User, History, Flame, Sparkles, Dumbbell, Settings, 
   Calendar, ChevronRight, Play, Plus, BarChart3, Zap,
-  Clock, Target, Battery, Activity
+  Clock, Target, Battery, Activity, X
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -14,7 +14,7 @@ export function HomeView({
   userName, userPhoto, isAnonymous, streak, workouts, plans,
   suggestedWorkout, nextWorkoutKey, lastWorkout, aiEnabled,
   recommendationLabel, nextActionHint,
-  activeWorkoutId, activeLog, savedExercisesCount = 0, workoutStartTime, onResumeWorkout,
+  activeWorkoutId, activeLog, savedExercisesCount = 0, workoutStartTime, onResumeWorkout, onCancelWorkout,
   onSelectWorkout, onViewHistory, onSettings, onQuickLog, onBuddy, onQuickAction
 }) {
   const isFirstTime = workouts.length === 0;
@@ -60,24 +60,33 @@ export function HomeView({
       
       {/* Active Workout Banner (Floating) */}
       {activeWorkoutId && (
-        <div className="fixed bottom-[5.5rem] left-4 right-4 z-30 animate-in slide-in-from-bottom-10 fade-in duration-500">
-           <Card className="p-4 bg-emerald-950/90 border-emerald-500/50 backdrop-blur-md shadow-2xl shadow-black/50 ring-1 ring-emerald-500/30">
-             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                 <div className="relative">
+        <div className="fixed bottom-[5.5rem] left-4 right-4 z-[90] animate-in slide-in-from-bottom-10 fade-in duration-500">
+           <Card className="p-3 sm:p-4 bg-emerald-950/95 border-emerald-500/50 backdrop-blur-xl shadow-2xl shadow-black/50 ring-1 ring-emerald-500/30">
+             <div className="flex items-center justify-between gap-3">
+               <div className="flex items-center gap-3 min-w-0">
+                 <div className="relative shrink-0">
                    <div className="absolute inset-0 bg-emerald-500 rounded-lg animate-ping opacity-20" />
                    <div className="relative p-2 bg-emerald-500 rounded-lg">
                      <Activity className="w-5 h-5 text-white" />
                    </div>
                  </div>
-                 <div>
-                   <h3 className="font-bold text-white text-sm">Workout in Progress</h3>
-                   <p className="text-xs text-emerald-200/80">{activeWorkoutName} • {activeExercisesCount} exercises</p>
+                 <div className="min-w-0">
+                   <h3 className="font-bold text-white text-sm truncate">Workout in Progress</h3>
+                   <p className="text-xs text-emerald-200/80 truncate">{activeWorkoutName} • {activeExercisesCount} exercises</p>
                  </div>
                </div>
-               <Button size="sm" onClick={onResumeWorkout} className="bg-white text-emerald-950 hover:bg-gray-100 font-bold shadow-lg">
-                 Resume
-               </Button>
+               <div className="flex items-center gap-2 shrink-0">
+                 <button 
+                   onClick={onCancelWorkout}
+                   className="p-2 text-emerald-200/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                   title="End Session"
+                 >
+                   <X className="w-5 h-5" />
+                 </button>
+                 <Button size="sm" onClick={onResumeWorkout} className="bg-white text-emerald-950 hover:bg-gray-100 font-bold shadow-lg whitespace-nowrap">
+                   Resume
+                 </Button>
+               </div>
              </div>
            </Card>
         </div>
