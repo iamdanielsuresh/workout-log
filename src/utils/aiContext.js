@@ -284,6 +284,10 @@ export function buildUserContextForAI({ profile, workouts = [], streak = 0, plan
     
     // Muscle focus
     muscleGroupDistribution: patterns.muscleGroupDistribution,
+    mostFrequentMuscles: Object.entries(patterns.muscleGroupDistribution || {})
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([muscle]) => muscle),
     weeklyVolume,
     
     // Performance
@@ -327,8 +331,8 @@ export function formatContextForPrompt(context) {
     Last Workout: ${lastWorkout ? `${lastWorkout.workoutName} (${new Date(lastWorkout.timestamp).toLocaleDateString()})` : 'None'}
     Workouts this week: ${workoutsThisWeek}
     Avg Duration: ${avgSessionDuration} min
-    Focus: ${mostFrequentMuscles.join(', ')}
-    Recent PRs: ${recentPRs.length > 0 ? recentPRs.map(pr => `${pr.exercise} (${pr.weight}kg)`).join(', ') : 'None'}
+    Focus: ${mostFrequentMuscles?.join(', ') || 'None'}
+    Recent PRs: ${recentPRs?.length > 0 ? recentPRs.map(pr => `${pr.exercise} (${pr.weight}kg)`).join(', ') : 'None'}
     
     CAPABILITIES:
     1. You can generate workout plans. If the user asks for a routine OR mentions their mood/energy (e.g., "I'm tired", "feeling energetic", "need a quick pump"), return a JSON widget block:

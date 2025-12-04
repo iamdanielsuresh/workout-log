@@ -88,7 +88,7 @@ export function AIChatView({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950">
+    <div className="flex flex-col h-screen bg-gray-950 fixed inset-0 z-[200]">
       {/* Header */}
       <ViewHeader 
         title={persona.name} 
