@@ -187,9 +187,9 @@ export function LogPastWorkoutView({
   const maxDate = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gray-950">
+    <div className="pb-nav max-w-lg mx-auto min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gray-950 overflow-x-hidden">
       <ViewHeader 
-        title="Log Past Workout" 
+        title="Log Exercise" 
         onBack={onBack}
         rightAction={
           <Button 
@@ -203,9 +203,9 @@ export function LogPastWorkoutView({
         }
       />
 
-      <div className="p-6 space-y-8 pb-32">
+      <div className="p-4 space-y-6 pb-32">
         {/* Section: Date & Time */}
-        <div className="space-y-4">
+        <Card className="p-4 space-y-4">
           <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <Calendar className="w-4 h-4" /> When was it?
           </h4>
@@ -220,6 +220,7 @@ export function LogPastWorkoutView({
                 max={maxDate}
                 icon={Calendar}
                 error={errors.date}
+                className="bg-gray-900 border-gray-800"
               />
             </div>
             <div>
@@ -229,13 +230,14 @@ export function LogPastWorkoutView({
                 value={workoutTime}
                 onChange={(e) => setWorkoutTime(e.target.value)}
                 icon={Clock}
+                className="bg-gray-900 border-gray-800"
               />
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Section: Workout Details */}
-        <div className="space-y-4">
+        <Card className="p-4 space-y-4">
           <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <Dumbbell className="w-4 h-4" /> Workout Details
           </h4>
@@ -250,6 +252,7 @@ export function LogPastWorkoutView({
                 icon={LayoutList}
                 placeholder="Custom workout"
                 options={planOptions.map(p => ({ value: p.id, label: p.name }))}
+                className="bg-gray-900 border-gray-800"
               />
             </div>
           )}
@@ -263,6 +266,7 @@ export function LogPastWorkoutView({
                 placeholder="e.g., Push Day"
                 icon={Dumbbell}
                 error={errors.name}
+                className="bg-gray-900 border-gray-800"
               />
             </div>
             <div>
@@ -273,14 +277,15 @@ export function LogPastWorkoutView({
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="30"
                 icon={Timer}
+                className="bg-gray-900 border-gray-800"
               />
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Section: Exercises */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-1">
             <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
               <LayoutList className="w-4 h-4" /> Exercises
             </h4>
@@ -294,7 +299,7 @@ export function LogPastWorkoutView({
           </div>
           
           {errors.exercises && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-2">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-2 mx-1">
               <AlertCircle className="w-4 h-4 text-red-400" />
               <p className="text-xs text-red-400">{errors.exercises}</p>
             </div>
@@ -302,14 +307,14 @@ export function LogPastWorkoutView({
 
           <div className="space-y-3">
             {exercises.map((exercise, exIndex) => (
-              <div key={exIndex} className="bg-gray-900/30 border border-white/5 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
+              <Card key={exIndex} className="p-4 animate-in fade-in slide-in-from-bottom-2 border-gray-800 bg-gray-900/50">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1">
                     <Input
                       value={exercise.name}
                       onChange={(e) => handleExerciseNameChange(exIndex, e.target.value)}
                       placeholder="Exercise name"
-                      className="bg-gray-900 border-white/10 focus:border-emerald-500/50"
+                      className="bg-gray-950 border-gray-800 focus:border-emerald-500/50 font-medium"
                     />
                   </div>
                   <button
@@ -322,9 +327,9 @@ export function LogPastWorkoutView({
                 
                 {/* Sets Header */}
                 <div className="grid grid-cols-[24px_1fr_1fr_32px] gap-3 mb-2 px-1">
-                  <span className="text-[10px] font-bold text-gray-600 uppercase text-center">#</span>
-                  <span className="text-[10px] font-bold text-gray-600 uppercase text-center">Weight</span>
-                  <span className="text-[10px] font-bold text-gray-600 uppercase text-center">Reps</span>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase text-center">#</span>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase text-center">Weight</span>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase text-center">Reps</span>
                   <span></span>
                 </div>
 
@@ -340,7 +345,7 @@ export function LogPastWorkoutView({
                           value={set.weight}
                           onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
                           placeholder="0"
-                          className="w-full bg-gray-900 border border-white/10 rounded-lg py-2 px-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center transition-colors"
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg py-2.5 px-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center transition-colors"
                         />
                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none">kg</span>
                       </div>
@@ -351,7 +356,7 @@ export function LogPastWorkoutView({
                           value={set.reps}
                           onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
                           placeholder="0"
-                          className="w-full bg-gray-900 border border-white/10 rounded-lg py-2 px-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center transition-colors"
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg py-2.5 px-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center transition-colors"
                         />
                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none">reps</span>
                       </div>
@@ -368,16 +373,16 @@ export function LogPastWorkoutView({
                   
                   <button
                     onClick={() => handleAddSet(exIndex)}
-                    className="w-full text-xs font-medium text-emerald-400 hover:text-emerald-300 py-2.5 border border-dashed border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-lg transition-all mt-3 flex items-center justify-center gap-1"
+                    className="w-full text-xs font-medium text-emerald-400 hover:text-emerald-300 py-3 border border-dashed border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-lg transition-all mt-3 flex items-center justify-center gap-1"
                   >
                     <Plus className="w-3 h-3" /> Add Set
                   </button>
                 </div>
-              </div>
+              </Card>
             ))}
 
             {exercises.length === 0 && (
-              <div className="text-center py-12 border-2 border-dashed border-gray-800 rounded-2xl bg-gray-900/20">
+              <Card className="text-center py-12 border-dashed border-gray-800 bg-gray-900/20">
                 <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Dumbbell className="w-6 h-6 text-gray-600" />
                 </div>
@@ -390,13 +395,13 @@ export function LogPastWorkoutView({
                 >
                   Add First Exercise
                 </Button>
-              </div>
+              </Card>
             )}
           </div>
         </div>
 
         {/* Section: Notes */}
-        <div className="space-y-4">
+        <Card className="p-4 space-y-4">
           <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
             <FileText className="w-4 h-4" /> Notes
           </h4>
@@ -405,9 +410,9 @@ export function LogPastWorkoutView({
             onChange={(e) => setNote(e.target.value)}
             placeholder="How did the workout feel? Any PRs?"
             rows={3}
-            className="bg-gray-900/50 border-white/10"
+            className="bg-gray-900 border-gray-800"
           />
-        </div>
+        </Card>
 
         {/* Save Button */}
         <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur p-4 border-t border-white/5 z-10">
