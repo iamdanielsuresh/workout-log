@@ -11,22 +11,26 @@ export const Input = forwardRef(function Input({
   ...props
 }, ref) {
   return (
-    <div className="relative">
+    <div className={`
+      relative flex items-center gap-3 px-4
+      w-full bg-gray-900/50 border border-white/10
+      rounded-xl transition-all duration-200
+      focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500/50
+      ${error ? 'border-red-500/50 focus-within:ring-red-500/20' : ''}
+      ${className}
+    `}>
       {Icon && (
-        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+        <Icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
       )}
       <input
         ref={ref}
         type={type}
         className={`
-          w-full bg-gray-900/50 border border-white/10
+          flex-1 min-w-0 bg-transparent border-none
           text-gray-100 placeholder:text-gray-600
-          rounded-xl transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
+          focus:outline-none
           disabled:opacity-50 disabled:cursor-not-allowed
-          ${Icon ? 'pl-10 pr-4' : 'px-4'} py-3
-          ${error ? 'border-red-500/50 focus:ring-red-500/20' : ''}
-          ${className}
+          py-3
         `}
         {...props}
       />
