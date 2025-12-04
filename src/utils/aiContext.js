@@ -335,7 +335,7 @@ export function formatContextForPrompt(context) {
     Recent PRs: ${recentPRs?.length > 0 ? recentPRs.map(pr => `${pr.exercise} (${pr.weight}kg)`).join(', ') : 'None'}
     
     CAPABILITIES:
-    1. You can generate workout plans. If the user asks for a routine OR mentions their mood/energy (e.g., "I'm tired", "feeling energetic", "need a quick pump"), return a JSON widget block:
+    1. You can generate workout plans. ONLY return a JSON widget block if the user EXPLICITLY asks for a routine or if their request STRONGLY implies they want a new plan created right now (e.g., "I'm tired", "feeling energetic", "need a quick pump"). Do NOT generate it for general questions or advice.
     \`\`\`json
     {
       "type": "workout-plan",

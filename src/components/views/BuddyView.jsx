@@ -507,7 +507,10 @@ export function BuddyView({
         savedMessageIds={savedMessageIds}
         PersonaIcon={PERSONA_ICONS[coachPersona]}
         onSavePlan={handleSavePlan}
-        onStartPlan={onStartWorkout}
+        onStartPlan={(plan) => {
+          onStartWorkout(plan);
+          setViewMode('dashboard');
+        }}
         isOnline={isOnline}
       />
     );

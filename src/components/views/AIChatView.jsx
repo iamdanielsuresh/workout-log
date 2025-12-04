@@ -88,21 +88,23 @@ export function AIChatView({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 fixed inset-0 z-[200]">
+    <div className="flex flex-col h-[100dvh] fixed inset-0 z-[200] bg-gray-950">
       {/* Header */}
-      <ViewHeader 
-        title={persona.name} 
-        subtitle={persona.role}
-        onBack={onBack}
-        rightAction={
-          <div className={`p-2 rounded-full ${theme.bgLow}`}>
-            <PersonaIcon className={`w-5 h-5 ${theme.text}`} />
-          </div>
-        }
-      />
+      <div className="flex-none">
+        <ViewHeader 
+          title={persona.name} 
+          subtitle={persona.role}
+          onBack={onBack}
+          rightAction={
+            <div className={`p-2 rounded-full ${theme.bgLow}`}>
+              <PersonaIcon className={`w-5 h-5 ${theme.text}`} />
+            </div>
+          }
+        />
+      </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Welcome Message */}
         {messages.length === 0 && (
           <div className="text-center space-y-4 mt-8">
@@ -209,7 +211,7 @@ export function AIChatView({
       </div>
 
       {/* Input Area - Fixed at bottom */}
-      <div className="p-4 bg-gray-950 border-t border-gray-800 safe-area-bottom">
+      <div className="flex-none p-4 bg-gray-950 border-t border-gray-800 safe-area-bottom">
         {!isOnline && (
           <div className="mb-2 flex items-center justify-center gap-2 text-xs text-red-400 bg-red-500/10 py-1 px-2 rounded-full w-fit mx-auto">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
