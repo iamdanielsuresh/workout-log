@@ -31,8 +31,7 @@ import {
   getAverageSessionDuration,
   getRecentFocusDistribution
 } from '../../utils/workoutStats';
-import DeepAnalysisModal from './DeepAnalysisModal';
-import { AIChatOverlay } from './AIChatOverlay';
+import { AIChatView } from './AIChatView';
 
 /**
  * AI Buddy View - Interactive AI coaching with reports, insights, tips
@@ -55,10 +54,12 @@ export function BuddyView({
   onStartWorkout,
   isOnline = true
 }) {
+  const [viewMode, setViewMode] = useState('dashboard'); // 'dashboard' | 'chat'
+
   // Handle initial prompt from Quick Actions
   useEffect(() => {
     if (initialPrompt) {
-      setIsChatOpen(true);
+      setViewMode('chat');
       handleChat(initialPrompt);
     }
   }, [initialPrompt]);
@@ -78,7 +79,6 @@ export function BuddyView({
   const [chatLoading, setChatLoading] = useState(false);
   const [coachPersona, setCoachPersona] = useState('supportive'); // 'supportive', 'sergeant', 'scientist', 'stoic'
   const [showDeepAnalysis, setShowDeepAnalysis] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const chatEndRef = useRef(null);
 
   // Persona icons mapping
@@ -180,7 +180,10 @@ export function BuddyView({
   };
 
   const generateInsights = async () => {
-    if (!aiAvailability.available) return;
+    if (!aiAvailability.available) {
+      setErrors(prev => ({ ...prev, insights: 'AI is not available.' }));
+      return;
+    }
     setLoading(prev => ({ ...prev, insights: true }));
     clearError('insights');
     
@@ -211,14 +214,25 @@ export function BuddyView({
   };
 
   const generateMotivation = async () => {
-    if (!aiAvailability.available) return;
+    if (!aiAvailability.available) {
+      setErrors(prev => ({ ...prev, motivation: 'AI is not available. Check settings.' }));
+      return;
+    }
     setLoading(prev => ({ ...prev, motivation: true }));
     clearError('motivation');
 
     try {
       const prompt = buildMotivationPrompt(userContext, coachPersona);
       const response = await makeAIRequest(apiKey, prompt);
-      // Contextual fallback
+      
+      if (response) {
+        setMotivation(response.replace(/^"|"$/g, '')); // Remove quotes if present
+      } else {
+        throw new Error('No response from AI');
+      }
+    } catch (error) {
+      console.error('Error generating motivation:', error);
+      // Contextual fallback on error
       if (streak > 0) {
         setMotivation(`${streak} days strong! Your consistency is building something amazing. Keep pushing!`);
       } else if (workouts.length > 0) {
@@ -226,16 +240,17 @@ export function BuddyView({
       } else {
         setMotivation("Every champion was once a beginner. Today is your day to start!");
       }
-    } catch (error) {
-      console.error('Error generating motivation:', error);
-      setErrors(prev => ({ ...prev, motivation: error.message || 'Failed to get motivation' }));
+      // Only show error if we couldn't even provide a fallback (unlikely here)
     } finally {
       setLoading(prev => ({ ...prev, motivation: false }));
     }
   };
 
   const generateTips = async () => {
-    if (!aiAvailability.available) return;
+    if (!aiAvailability.available) {
+      setErrors(prev => ({ ...prev, tips: 'AI is not available.' }));
+      return;
+    }
     setLoading(prev => ({ ...prev, tips: true }));
     clearError('tips');
 
@@ -253,8 +268,29 @@ export function BuddyView({
   };
 
   const handleChat = async (text) => {
-    if (!text.trim() || !aiAvailability.available) return;
+    if (!text.trim()) return;
+    
+    if (!aiAvailability.available) {
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm not available right now. Please check your API key and settings.", 
+        id: Date.now().toString(),
+        error: true
+      }]);
+      return;
+    }
 
+    if (!isOnline) {
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm offline right now. Please check your internet connection.", 
+        id: Date.now().toString(),
+        error: true
+      }]);
+      return;
+    }
+
+    setViewMode('chat');
     const userMsg = { role: 'user', content: text, id: Date.now().toString() };
     setChatMessages(prev => [...prev, userMsg]);
     setChatLoading(true);
@@ -455,6 +491,26 @@ export function BuddyView({
       console.error('Error saving plan:', error);
     }
   };
+
+  if (viewMode === 'chat') {
+    return (
+      <AIChatView
+        onBack={() => setViewMode('dashboard')}
+        messages={chatMessages}
+        onSendMessage={handleChat}
+        loading={chatLoading}
+        persona={PERSONA_DEFINITIONS[coachPersona]}
+        theme={currentTheme}
+        suggestedPrompts={suggestedPrompts}
+        onSaveNote={handleSaveNote}
+        savedMessageIds={savedMessageIds}
+        PersonaIcon={PERSONA_ICONS[coachPersona]}
+        onSavePlan={handleSavePlan}
+        onStartPlan={onStartWorkout}
+        isOnline={isOnline}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 bg-gray-950">
@@ -794,27 +850,9 @@ export function BuddyView({
           workouts={workouts}
         />
 
-        {/* Chat Overlay */}
-        <AIChatOverlay
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
-          messages={chatMessages}
-          onSendMessage={handleChat}
-          loading={chatLoading}
-          persona={PERSONA_DEFINITIONS[coachPersona]}
-          theme={currentTheme}
-          suggestedPrompts={suggestedPrompts}
-          onSaveNote={handleSaveNote}
-          savedMessageIds={savedMessageIds}
-          PersonaIcon={PERSONA_ICONS[coachPersona]}
-          onSavePlan={handleSavePlan}
-          onStartPlan={onStartWorkout}
-          isOnline={isOnline}
-        />
-
         {/* Floating Chat Button */}
         <button
-          onClick={() => setIsChatOpen(true)}
+          onClick={() => setViewMode('chat')}
           className={`fixed bottom-24 right-4 z-40 p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${currentTheme.bg} text-gray-950`}
         >
           <MessageCircle className="w-6 h-6" />
