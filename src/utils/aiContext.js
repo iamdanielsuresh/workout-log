@@ -18,25 +18,22 @@ export const PERSONAS = {
     name: 'Buddy',
     role: 'supportive, knowledgeable gym buddy',
     tone: 'encouraging, practical, friendly',
-    style: 'Reference their data positively. Be like a good friend.'
+    style: 'Reference their data positively. Be like a good friend.',
+    themeColor: 'emerald'
   },
   sergeant: {
     name: 'Drill Sgt',
     role: 'tough, no-nonsense drill sergeant',
     tone: 'strict, demanding, intense',
-    style: 'Use tough love, demand discipline, no excuses. Use military slang occasionally.'
+    style: 'Use tough love, demand discipline, no excuses. Use military slang occasionally. Use ALL CAPS for emphasis. Keep sentences short and punchy.',
+    themeColor: 'amber'
   },
   scientist: {
     name: 'Prof. Lift',
     role: 'sports scientist',
     tone: 'precise, analytical, academic',
-    style: 'Focus on biomechanics, physiology, and data. Cite principles of hypertrophy/strength.'
-  },
-  stoic: {
-    name: 'Mentor',
-    role: 'stoic mentor',
-    tone: 'brief, wise, calm',
-    style: 'Focus on discipline, consistency, and mental fortitude. Speak in aphorisms.'
+    style: 'Focus on biomechanics, physiology, and data. Cite principles of hypertrophy/strength. Use structured formatting.',
+    themeColor: 'blue'
   }
 };
 
@@ -316,104 +313,58 @@ export function buildUserContextForAI({ profile, workouts = [], streak = 0, plan
  * @returns {string} Formatted context string
  */
 export function formatContextForPrompt(context) {
-  const lines = [
-    `User: ${context.userName} (${context.experienceLevel} level)`,
-    `Stats: ${context.totalWorkouts} total workouts, ${context.currentStreak}-day streak`,
-    `Recent activity: ${context.last7DaysWorkouts} workouts in last 7 days (avg ${context.weeklyAverage}/week)`,
-    `Typical session: ${context.avgSessionDuration} minutes, ${context.avgExercisesPerSession} exercises`
-  ];
-  
-  // Add locale-aware time context (Task 1)
-  if (context.localTime && context.localDate) {
-    lines.push(`Current time: ${context.localTime} on ${context.dayOfWeek} (${context.localDate})`);
-  } else {
-    lines.push(`Time: ${context.dayOfWeek} ${context.timeOfDay}`);
-  }
-  
-  if (context.recentExercises.length > 0) {
-    lines.push(`Recent exercises: ${context.recentExercises.slice(0, 6).join(', ')}`);
-  }
-  
-  // Add extended health context (Task 6)
-  if (context.goals) {
-    lines.push(`Goals: ${context.goals}`);
-  }
-  
-  if (context.injuries) {
-    lines.push(`Injuries/Limitations: ${context.injuries}`);
-  }
-  
-  if (context.activityLevel) {
-    const activityLabels = {
-      sedentary: 'Sedentary',
-      light: 'Lightly Active',
-      moderate: 'Moderately Active',
-      active: 'Active',
-      very_active: 'Very Active'
-    };
-    lines.push(`Activity Level: ${activityLabels[context.activityLevel] || context.activityLevel}`);
-  }
-  
-  if (context.height || context.weight) {
-    const metrics = [];
-    if (context.height) metrics.push(`${context.height}cm`);
-    if (context.weight) metrics.push(`${context.weight}kg`);
-    if (context.bodyFat) metrics.push(`${context.bodyFat}% BF`);
-    lines.push(`Body Metrics: ${metrics.join(', ')}`);
-  }
-  
-  // Add Strength Trends
-  const trendKeys = Object.keys(context.strengthTrends || {});
-  if (trendKeys.length > 0) {
-    const topTrends = trendKeys
-      .sort((a, b) => context.strengthTrends[b].current1RM - context.strengthTrends[a].current1RM)
-      .slice(0, 3)
-      .map(name => {
-        const t = context.strengthTrends[name];
-        const sign = t.improvement > 0 ? '+' : '';
-        return `${name} 1RM: ${t.current1RM}kg (${sign}${t.improvement}%)`;
-      });
-    lines.push(`Strength Trends: ${topTrends.join(', ')}`);
-  }
+  const { 
+    streak, 
+    lastWorkout, 
+    workoutsThisWeek, 
+    avgSessionDuration,
+    mostFrequentMuscles,
+    recentPRs
+  } = context;
 
-  // Add PRs
-  const prKeys = Object.keys(context.prs || {});
-  if (prKeys.length > 0) {
-    const recentPRs = prKeys
-      .filter(k => {
-        const date = new Date(context.prs[k].date);
-        const daysAgo = (Date.now() - date) / (1000 * 60 * 60 * 24);
-        return daysAgo < 30; // Only show PRs from last 30 days
-      })
-      .slice(0, 3)
-      .map(k => `${context.prs[k].name} (${context.prs[k].weight}kg)`);
-      
-    if (recentPRs.length > 0) {
-      lines.push(`Recent PRs: ${recentPRs.join(', ')}`);
+  return `
+    Streak: ${streak} days
+    Last Workout: ${lastWorkout ? `${lastWorkout.workoutName} (${new Date(lastWorkout.timestamp).toLocaleDateString()})` : 'None'}
+    Workouts this week: ${workoutsThisWeek}
+    Avg Duration: ${avgSessionDuration} min
+    Focus: ${mostFrequentMuscles.join(', ')}
+    Recent PRs: ${recentPRs.length > 0 ? recentPRs.map(pr => `${pr.exercise} (${pr.weight}kg)`).join(', ') : 'None'}
+    
+    CAPABILITIES:
+    1. You can generate workout plans. If the user asks for a routine OR mentions their mood/energy (e.g., "I'm tired", "feeling energetic", "need a quick pump"), return a JSON widget block:
+    \`\`\`json
+    {
+      "type": "workout-plan",
+      "data": {
+        "name": "Workout Name",
+        "duration": "45",
+        "difficulty": "Intermediate",
+        "reason": "Why this fits your mood/energy",
+        "exercises": [
+          {"name": "Exercise", "sets": 3, "reps": "10"}
+        ]
+      }
     }
-  }
-  
-  if (context.muscleGroupDistribution && Object.keys(context.muscleGroupDistribution).length > 0) {
-    const topGroups = Object.entries(context.muscleGroupDistribution)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([group, count]) => `${group} (${count})`);
-    lines.push(`Most worked: ${topGroups.join(', ')}`);
-  }
-  
-  if (context.weakAreas.length > 0 && context.weakAreas[0] !== 'Maintaining good balance!') {
-    lines.push(`Areas to improve: ${context.weakAreas[0]}`);
-  }
-  
-  if (context.lastWorkout) {
-    lines.push(`Last workout: ${context.lastWorkout.name} (${context.lastWorkout.daysAgo} days ago)`);
-  }
-  
-  return lines.join('\n');
+    \`\`\`
+    
+    2. You can show stats. If asked for progress/stats, return:
+    \`\`\`json
+    {
+      "type": "stats",
+      "data": {
+        "title": "Weekly Progress",
+        "metrics": [
+          {"label": "Volume", "value": "12,500kg"},
+          {"label": "Workouts", "value": "4"}
+        ]
+      }
+    }
+    \`\`\`
+  `;
 }
 
 /**
- * Generate an enhanced motivation prompt with full context
+ * Build prompt for daily motivation
  * @param {Object} context - User context
  * @param {string} persona - AI persona key
  * @returns {string} AI prompt for motivation
@@ -512,4 +463,42 @@ Rules:
 - Be specific and actionable, not generic
 - If they've been training frequently, include a recovery tip
 - If sessions are short, include an efficiency tip`;
+}
+
+/**
+ * Get suggested chat prompts based on user context
+ * @param {Object} context - User context (streak, lastWorkout, etc)
+ * @returns {Array<string>} List of suggested prompts
+ */
+export function getSuggestedPrompts(context) {
+  const { streak, lastWorkout, timeSinceLastWorkout } = context;
+  const prompts = [];
+
+  // Time-based suggestions
+  if (timeSinceLastWorkout < 2) { // Less than 2 hours ago
+    prompts.push("Analyze my last session");
+    prompts.push("How was my volume?");
+    prompts.push("Rate my intensity");
+  } else if (timeSinceLastWorkout > 72) { // More than 3 days
+    prompts.push("Give me a 15min home workout");
+    prompts.push("Motivation to get back");
+    prompts.push("Why am I unmotivated?");
+  } else {
+    prompts.push("Suggest a workout for today");
+    prompts.push("How is my consistency?");
+  }
+  
+  // Streak-based suggestions
+  if (streak > 7) {
+    prompts.push("How to maintain my streak?");
+  } else if (streak === 0) {
+    prompts.push("Help me start a habit");
+  }
+
+  // General knowledge
+  prompts.push("Explain progressive overload");
+  prompts.push("Best recovery tips");
+  
+  // Return random 4 from the list to keep it fresh
+  return prompts.sort(() => 0.5 - Math.random()).slice(0, 4);
 }

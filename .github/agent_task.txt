@@ -1,0 +1,234 @@
+# Agent Instruction: Fix Date and Time Input Field Alignment
+
+## Problem Description
+
+The date and time input fields in the React web app show misalignment between icons (calendar/clock) and text content. This creates an unprofessional appearance and poor user experience.
+
+## Root Causes
+
+1. Inconsistent vertical alignment of inline elements
+1. Icon and text baseline mismatch
+1. Improper flexbox/grid configuration
+1. Missing or incorrect CSS properties for centering
+
+## Solution Implementation
+
+### Step 1: Identify the Component Structure
+
+Locate your date/time input components. They likely follow this pattern:
+
+```jsx
+<div className="input-container">
+  <CalendarIcon />
+  <input type="text" value="4 Dec 2025" />
+</div>
+```
+
+### Step 2: Apply CSS Fix (Primary Solution)
+
+Add these styles to your component or global CSS:
+
+```css
+/* Container alignment */
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  min-height: 56px;
+}
+
+/* Icon styling */
+.input-container svg {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: #4ade80;
+}
+
+/* Input field styling */
+.input-container input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  line-height: 24px;
+  outline: none;
+}
+```
+
+### Step 3: React Component Example (Tailwind CSS)
+
+If using Tailwind CSS (as your app appears to):
+
+```jsx
+import { Calendar, Clock } from 'lucide-react';
+
+const DateInput = ({ value, onChange }) => {
+  return (
+    <div className="flex items-center gap-3 px-4 py-4 bg-zinc-900 rounded-lg border border-zinc-800">
+      <Calendar className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        className="flex-1 bg-transparent border-none text-white text-base outline-none"
+        placeholder="Select date"
+      />
+    </div>
+  );
+};
+
+const TimeInput = ({ value, onChange }) => {
+  return (
+    <div className="flex items-center gap-3 px-4 py-4 bg-zinc-900 rounded-lg border border-zinc-800">
+      <Clock className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        className="flex-1 bg-transparent border-none text-white text-base outline-none"
+        placeholder="Select time"
+      />
+    </div>
+  );
+};
+```
+
+### Step 4: Alternative Grid Solution
+
+If you prefer CSS Grid:
+
+```css
+.input-container {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  min-height: 56px;
+}
+
+.input-container svg {
+  width: 24px;
+  height: 24px;
+  justify-self: center;
+}
+```
+
+### Step 5: Inline Styles Approach (Quick Fix)
+
+If you need immediate inline styling:
+
+```jsx
+<div style={{
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '16px',
+  minHeight: '56px'
+}}>
+  <CalendarIcon style={{ flexShrink: 0 }} />
+  <input style={{ flex: 1, background: 'transparent' }} />
+</div>
+```
+
+## Critical CSS Properties Explained
+
+### `display: flex`
+
+Creates a flex container allowing child elements to align properly.
+
+### `align-items: center`
+
+Vertically centers all items along the cross axis (vertical in row direction).
+
+### `gap: 12px`
+
+Provides consistent spacing between icon and input without margin hacks.
+
+### `flex-shrink: 0`
+
+Prevents icons from shrinking when space is limited.
+
+### `line-height: 24px`
+
+Ensures text baseline aligns with icon height (should match icon height).
+
+## Testing Checklist
+
+- [ ] Icons and text are vertically centered
+- [ ] Layout works on different screen sizes
+- [ ] Alignment consistent across all date/time inputs
+- [ ] No layout shift when content changes
+- [ ] Touch targets are adequate (min 44px height)
+- [ ] Works with different text lengths
+
+## Browser Compatibility
+
+The flexbox solution works in all modern browsers:
+
+- Chrome/Edge 29+
+- Firefox 28+
+- Safari 9+
+- iOS Safari 9+
+- Android Chrome 29+
+
+## Common Pitfalls to Avoid
+
+1. **Don’t use `vertical-align: middle`** on flex items (it doesn’t work)
+1. **Don’t use absolute positioning** for icons (breaks responsiveness)
+1. **Don’t forget `flex-shrink: 0`** on icons (they’ll squish)
+1. **Don’t mix inline-block with flexbox** in the same container
+1. **Ensure parent has defined height** for proper centering
+
+## Debugging Tips
+
+If alignment still looks off:
+
+1. Add temporary border to container:
+   
+   ```css
+   .input-container { border: 2px solid red; }
+   ```
+1. Check icon actual size:
+   
+   ```css
+   .input-container svg { border: 1px solid blue; }
+   ```
+1. Verify no conflicting global styles affecting the container
+1. Use browser DevTools to inspect computed styles
+1. Check for inherited line-height from parent elements
+
+## Performance Considerations
+
+- Flexbox is hardware-accelerated in modern browsers
+- Avoid nested flex containers when possible
+- Use `will-change: transform` sparingly if animating
+
+## Accessibility Notes
+
+- Ensure inputs have proper labels (use `<label>` or `aria-label`)
+- Icons should have `aria-hidden="true"` if decorative
+- Maintain sufficient color contrast (WCAG AA: 4.5:1)
+- Touch targets should be minimum 44x44px
+
+## Additional Resources
+
+- MDN Flexbox Guide: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout
+- CSS-Tricks Flexbox: https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+- Tailwind Flexbox: https://tailwindcss.com/docs/flex
+
+## Version Control Note
+
+When implementing this fix:
+
+- Create a feature branch: `fix/date-time-input-alignment`
+- Test thoroughly before merging
+- Document changes in commit message
+- Consider adding visual regression tests

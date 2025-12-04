@@ -124,12 +124,17 @@ Return ONLY valid JSON (no markdown):
 /**
  * Generate a single day workout plan from a prompt
  */
-export async function generateSingleDayPlan(apiKey, userPrompt, profile) {
+export async function generateSingleDayPlan(apiKey, userPrompt, profile, context = {}) {
+  const { mood, energyLevel, timeAvailable } = context;
+  
   const systemPrompt = `You are an expert fitness coach. Generate a single-day workout plan based on the user's request.
 
 User Request: "${userPrompt}"
 ${profile?.experience_level ? `Experience Level: ${profile.experience_level}` : ''}
 ${profile?.injuries ? `Injuries/Limitations: ${profile.injuries}` : ''}
+${mood ? `User Mood: ${mood}` : ''}
+${energyLevel ? `Energy Level: ${energyLevel}` : ''}
+${timeAvailable ? `Time Available: ${timeAvailable} min` : ''}
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -489,5 +494,63 @@ Return JSON with:
     return JSON.parse(cleanedText);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Generate a deep analysis report ("The War Room" / "Lab Analysis")
+ */
+export async function generateDeepAnalysis(apiKey, history, persona, userProfile) {
+  const { name, role, tone, style } = persona;
+  
+  // Construct a rich history summary
+  const historySummary = history.slice(0, 20).map(w => 
+    `- ${new Date(w.timestamp).toLocaleDateString()}: ${w.workoutName} (${w.exercises.length} exercises)`
+  ).join('\n');
+
+  const prompt = `
+  IDENTITY: You are ${name}, a ${role}. Your tone is ${tone}.
+  STYLE GUIDE: ${style}
+  
+  TASK: Perform a DEEP DIVE ANALYSIS on the user's workout history. This is a high-level strategic review.
+  
+  USER PROFILE:
+  - Experience: ${userProfile.experience_level}
+  - Goals: ${userProfile.goals?.join(', ') || 'General Fitness'}
+  - Injuries: ${userProfile.injuries || 'None'}
+  
+  RECENT HISTORY (Last 20 sessions):
+  ${historySummary}
+  
+  INSTRUCTIONS:
+  1. Analyze consistency and volume trends.
+  2. Identify potential plateaus or overtraining risks.
+  3. Suggest a specific focus for the next 4 weeks.
+  4. If the user has injuries, check if their history aligns with rehab protocols.
+  
+  OUTPUT FORMAT:
+  Return a Markdown formatted report. Use headers (##), bullet points, and bold text.
+  
+  Structure:
+  ## 🚨 SITUATION REPORT (or LAB FINDINGS)
+  [Executive summary of current status]
+  
+  ## 📉 TREND ANALYSIS
+  [Detailed breakdown of consistency and intensity]
+  
+  ## 🎯 STRATEGIC DIRECTIVES
+  [3-4 specific actionable items for the next month]
+  
+  ## 🔮 PROJECTED OUTCOME
+  [What will happen if they follow this advice]
+  
+  Make it immersive and strictly adhere to your persona's voice.
+  `;
+
+  try {
+    return await makeAIRequest(apiKey, prompt);
+  } catch (error) {
+    console.error('Deep Analysis failed:', error);
+    throw error;
   }
 }

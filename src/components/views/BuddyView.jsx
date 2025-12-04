@@ -16,6 +16,7 @@ import {
   buildMotivationPrompt,
   buildInsightsPrompt,
   buildTipsPrompt,
+  getSuggestedPrompts,
   PERSONAS as PERSONA_DEFINITIONS
 } from '../../utils/aiContext';
 import { 
@@ -30,6 +31,9 @@ import {
   getAverageSessionDuration,
   getRecentFocusDistribution
 } from '../../utils/workoutStats';
+import DeepAnalysisModal from './DeepAnalysisModal';
+import { AIChatOverlay } from './AIChatOverlay';
+import { useWorkoutPlans } from '../../hooks/useWorkoutPlans';
 
 /**
  * AI Buddy View - Interactive AI coaching with reports, insights, tips
@@ -48,6 +52,7 @@ export function BuddyView({
   onDeleteNote,
   onNavigate 
 }) {
+  const { savePlan } = useWorkoutPlans();
   const [activeSection, setActiveSection] = useState(null);
   const [insights, setInsights] = useState(null);
   const [motivation, setMotivation] = useState(null);
@@ -63,22 +68,60 @@ export function BuddyView({
   const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [coachPersona, setCoachPersona] = useState('supportive'); // 'supportive', 'sergeant', 'scientist', 'stoic'
+  const [showDeepAnalysis, setShowDeepAnalysis] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const chatEndRef = useRef(null);
 
   // Persona icons mapping
   const PERSONA_ICONS = {
     supportive: Sparkles,
     sergeant: Flame,
-    scientist: Brain,
-    stoic: Award
+    scientist: Brain
   };
 
-  const QUICK_PROMPTS = [
-    "Analyze my week",
-    "Why am I sore?",
-    "Suggest a warm-up",
-    "Give me a challenge"
-  ];
+  // Theme colors mapping
+  const THEME_COLORS = {
+    emerald: {
+      text: 'text-emerald-400',
+      bg: 'bg-emerald-500',
+      bgLow: 'bg-emerald-500/10',
+      border: 'border-emerald-500',
+      shadow: 'shadow-emerald-500/10',
+      hoverText: 'hover:text-emerald-400'
+    },
+    amber: {
+      text: 'text-amber-400',
+      bg: 'bg-amber-500',
+      bgLow: 'bg-amber-500/10',
+      border: 'border-amber-500',
+      shadow: 'shadow-amber-500/10',
+      hoverText: 'hover:text-amber-400'
+    },
+    blue: {
+      text: 'text-blue-400',
+      bg: 'bg-blue-500',
+      bgLow: 'bg-blue-500/10',
+      border: 'border-blue-500',
+      shadow: 'shadow-blue-500/10',
+      hoverText: 'hover:text-blue-400'
+    }
+  };
+
+  const currentTheme = THEME_COLORS[PERSONA_DEFINITIONS[coachPersona].themeColor] || THEME_COLORS.emerald;
+
+  // Calculate suggested prompts based on context
+  const suggestedPrompts = useMemo(() => {
+    const lastWorkout = workouts[0];
+    const timeSinceLastWorkout = lastWorkout 
+      ? (new Date() - new Date(lastWorkout.timestamp)) / (1000 * 60 * 60) 
+      : 999;
+      
+    return getSuggestedPrompts({
+      streak,
+      lastWorkout,
+      timeSinceLastWorkout
+    });
+  }, [workouts, streak]);
 
   // Check AI availability using centralized config
   const aiAvailability = useMemo(() => 
@@ -200,12 +243,11 @@ export function BuddyView({
     }
   };
 
-  const handleChat = async (text = chatInput) => {
+  const handleChat = async (text) => {
     if (!text.trim() || !aiAvailability.available) return;
 
     const userMsg = { role: 'user', content: text, id: Date.now().toString() };
     setChatMessages(prev => [...prev, userMsg]);
-    setChatInput('');
     setChatLoading(true);
 
     try {
@@ -389,51 +431,70 @@ export function BuddyView({
     );
   }
 
+  const handleSavePlan = async (planData) => {
+    try {
+      await savePlan(planData);
+      // Show success toast or feedback
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `✅ Saved "${planData.name}" to your plans!`,
+        id: Date.now().toString()
+      }]);
+    } catch (error) {
+      console.error('Error saving plan:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-950 pb-24">
+    <div className="min-h-screen pb-24 bg-gray-950">
       <ViewHeader 
         title="AI Coach" 
-        subtitle="Your personal fitness companion"
-        onBack={() => onNavigate('home')}
         rightAction={
-          <div className="p-2 bg-emerald-500/10 rounded-full">
-            {(() => {
-              const Icon = PERSONA_ICONS[coachPersona] || Sparkles;
-              return <Icon className="w-5 h-5 text-emerald-400" />;
-            })()}
-          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowDeepAnalysis(true)}
+            className={`${currentTheme.text} hover:bg-gray-800`}
+          >
+            <Brain className="w-6 h-6" />
+          </Button>
         }
       />
 
-      <div className="p-4 space-y-6 max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto px-4 space-y-6 pt-4">
         {/* Persona Selector */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {Object.entries(PERSONA_DEFINITIONS).map(([key, def]) => {
             const Icon = PERSONA_ICONS[key] || Sparkles;
             const isActive = coachPersona === key;
+            const isBusy = Object.values(loading).some(Boolean) || chatLoading;
+            const theme = THEME_COLORS[def.themeColor] || THEME_COLORS.emerald;
+            
             return (
               <button
                 key={key}
                 onClick={() => setCoachPersona(key)}
+                disabled={isBusy}
                 className={`
                   relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all duration-300
                   ${isActive 
-                    ? 'bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/10' 
+                    ? `${theme.bgLow} ${theme.border} shadow-lg ${theme.shadow}` 
                     : 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-800'
                   }
+                  ${isBusy ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
               >
                 <div className={`
                   p-2.5 rounded-xl transition-all duration-300
-                  ${isActive ? 'bg-emerald-500 text-gray-950' : 'bg-gray-800 text-gray-500'}
+                  ${isActive ? `${theme.bg} text-gray-950` : 'bg-gray-800 text-gray-500'}
                 `}>
                   <Icon className="w-6 h-6" />
                 </div>
-                <span className={`text-xs font-medium transition-colors ${isActive ? 'text-emerald-400' : 'text-gray-500'}`}>
+                <span className={`text-xs font-medium transition-colors ${isActive ? theme.text : 'text-gray-500'}`}>
                   {def.name}
                 </span>
                 {isActive && (
-                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500" />
+                  <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${theme.bg}`} />
                 )}
               </button>
             );
@@ -448,10 +509,10 @@ export function BuddyView({
           
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
-              <div className="p-1.5 bg-emerald-500/10 rounded-lg">
-                <Zap className="w-4 h-4 text-emerald-400" />
+              <div className={`p-1.5 rounded-lg ${currentTheme.bgLow}`}>
+                <Zap className={`w-4 h-4 ${currentTheme.text}`} />
               </div>
-              <h3 className="text-sm font-display font-bold text-emerald-400 uppercase tracking-wider">Daily Motivation</h3>
+              <h3 className={`text-sm font-display font-bold uppercase tracking-wider ${currentTheme.text}`}>Daily Motivation</h3>
             </div>
             
             <div className="min-h-[60px] flex items-center">
@@ -461,25 +522,26 @@ export function BuddyView({
                   <span>{PERSONA_DEFINITIONS[coachPersona].name} is thinking...</span>
                 </div>
               ) : motivation ? (
-                <div className="animate-in fade-in slide-in-from-bottom-2">
+                <div className="animate-in fade-in slide-in-from-bottom-2 w-full">
                   <p className="text-lg font-medium text-gray-100 leading-relaxed">"{motivation}"</p>
                   <div className="flex items-center gap-2 mt-3">
                     <button 
                       onClick={() => handleSaveNote(motivation, 'daily-motivation', 'motivation')}
-                      className="text-xs text-gray-500 hover:text-emerald-400 flex items-center gap-1 transition-colors"
+                      className={`text-xs text-gray-500 ${currentTheme.hoverText} flex items-center gap-1 transition-colors`}
                     >
                       <Bookmark className="w-3 h-3" /> Save
                     </button>
                   </div>
                 </div>
               ) : (
-                <button 
+                <Button 
                   onClick={generateMotivation}
-                  className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 transition-colors text-sm"
+                  variant="secondary"
+                  className="w-full justify-center mt-2 bg-gray-800/50 hover:bg-gray-800 border-gray-700"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className={`w-4 h-4 mr-2 ${currentTheme.text}`} />
                   Get motivation from {PERSONA_DEFINITIONS[coachPersona].name}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -713,133 +775,40 @@ export function BuddyView({
           </div>
         )}
 
-        {/* Chat Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider">Ask {PERSONA_DEFINITIONS[coachPersona].name}</h3>
-          </div>
+        {/* Deep Analysis Modal */}
+        <DeepAnalysisModal 
+          isOpen={showDeepAnalysis} 
+          onClose={() => setShowDeepAnalysis(false)} 
+          persona={PERSONA_DEFINITIONS[coachPersona]}
+          workouts={workouts}
+        />
 
-          <Card hover={false} className="overflow-hidden flex flex-col h-[400px]">
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
-              {chatMessages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mb-3">
-                    {(() => {
-                      const Icon = PERSONA_ICONS[coachPersona];
-                      return <Icon className="w-6 h-6 text-emerald-400" />;
-                    })()}
-                  </div>
-                  <p className="text-gray-300 font-medium mb-1">
-                    {PERSONA_DEFINITIONS[coachPersona].name} is ready!
-                  </p>
-                  <p className="text-gray-500 text-xs max-w-[200px]">
-                    {coachPersona === 'sergeant' ? "Ready to sweat, recruit?" : 
-                     coachPersona === 'scientist' ? "Let's analyze the data." :
-                     coachPersona === 'stoic' ? "Discipline equals freedom." :
-                     "Ask anything about fitness!"}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {chatMessages.map((msg, i) => {
-                    const isSaved = msg.id && savedMessageIds.has(msg.id);
-                    return (
-                      <div
-                        key={msg.id || i}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 group`}
-                      >
-                        <div className={`max-w-[80%] ${msg.role === 'assistant' ? 'relative' : ''}`}>
-                          <div className={`p-3 rounded-2xl ${
-                            msg.role === 'user'
-                              ? 'bg-emerald-500 text-gray-950 rounded-br-md'
-                              : 'bg-gray-800 text-gray-200 rounded-bl-md'
-                          }`}>
-                            <p className="text-sm">{msg.content}</p>
-                          </div>
-                          {/* Task 2: Save Note button for AI messages */}
-                          {msg.role === 'assistant' && onSaveNote && (
-                            <button
-                              onClick={() => handleSaveNote(msg.content, msg.id, 'chat')}
-                              disabled={isSaved}
-                              className={`absolute -right-8 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${
-                                isSaved 
-                                  ? 'text-emerald-400 bg-emerald-500/10' 
-                                  : 'text-gray-500 hover:text-emerald-400 hover:bg-gray-700 opacity-0 group-hover:opacity-100'
-                              }`}
-                              title={isSaved ? 'Saved!' : 'Save as note'}
-                            >
-                              {isSaved ? (
-                                <BookmarkCheck className="w-4 h-4" />
-                              ) : (
-                                <Bookmark className="w-4 h-4" />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {chatLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-800 p-3 rounded-2xl rounded-bl-md">
-                        <div className="flex gap-1">
-                          {[0, 1, 2].map(i => (
-                            <div 
-                              key={i} 
-                              className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                              style={{ animationDelay: `${i * 150}ms` }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </>
-              )}
-            </div>
+        {/* Chat Overlay */}
+        <AIChatOverlay
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          messages={chatMessages}
+          onSendMessage={handleChat}
+          loading={chatLoading}
+          persona={PERSONA_DEFINITIONS[coachPersona]}
+          theme={currentTheme}
+          suggestedPrompts={suggestedPrompts}
+          onSaveNote={handleSaveNote}
+          savedMessageIds={savedMessageIds}
+          PersonaIcon={PERSONA_ICONS[coachPersona]}
+          onSavePlan={handleSavePlan}
+        />
 
-            {/* Quick Prompts */}
-            <div className="px-4 pb-2">
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {QUICK_PROMPTS.map((prompt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleChat(prompt)}
-                    disabled={chatLoading}
-                    className="flex-shrink-0 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-xs text-gray-300 transition-colors whitespace-nowrap"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Input Area */}
-            <div className="p-3 bg-gray-900/50 border-t border-gray-800">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleChat()}
-                  placeholder={`Ask ${PERSONA_DEFINITIONS[coachPersona].name}...`}
-                  className="flex-1 bg-gray-800 border-transparent focus:border-emerald-500/50 focus:ring-0 rounded-xl text-sm text-gray-100 placeholder-gray-500 px-4 py-3"
-                  disabled={chatLoading}
-                />
-                <Button 
-                  size="sm" 
-                  onClick={() => handleChat()} 
-                  disabled={!chatInput.trim() || chatLoading}
-                  className="px-3"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
+        {/* Floating Chat Button */}
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className={`fixed bottom-24 right-4 z-40 p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${currentTheme.bg} text-gray-950`}
+        >
+          <MessageCircle className="w-6 h-6" />
+          {chatMessages.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-gray-950" />
+          )}
+        </button>
       </div>
     </div>
   );
