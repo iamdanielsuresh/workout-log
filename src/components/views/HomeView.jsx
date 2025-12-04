@@ -14,7 +14,7 @@ export function HomeView({
   userName, userPhoto, isAnonymous, streak, workouts, plans,
   suggestedWorkout, nextWorkoutKey, lastWorkout, aiEnabled,
   recommendationLabel, nextActionHint,
-  activeWorkoutId, activeLog, workoutStartTime, onResumeWorkout,
+  activeWorkoutId, activeLog, savedExercisesCount = 0, workoutStartTime, onResumeWorkout,
   onSelectWorkout, onViewHistory, onSettings, onQuickLog, onBuddy, onQuickAction
 }) {
   const isFirstTime = workouts.length === 0;
@@ -53,7 +53,7 @@ export function HomeView({
   const activeWorkoutName = activeWorkoutId === 'quick-log' 
     ? 'Quick Workout' 
     : plans[activeWorkoutId]?.name || 'Current Workout';
-  const activeExercisesCount = activeLog ? Object.keys(activeLog).length : 0;
+  const activeExercisesCount = (activeLog ? Object.keys(activeLog).length : 0) + savedExercisesCount;
 
   return (
     <div className="p-6 pb-nav max-w-lg mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 safe-area-top">

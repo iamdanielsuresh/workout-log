@@ -215,7 +215,8 @@ export default function App() {
     // Scroll to top on navigation
     window.scrollTo(0, 0);
 
-    // If in workout, confirm before leaving
+    // If in workout view, confirm before leaving (cancelling)
+    // Note: This is mostly for safety if we ever expose nav during workout
     if (view === 'workout' && Object.keys(activeLog).length > 0) {
       setConfirmModal({
         isOpen: true,
@@ -226,10 +227,8 @@ export default function App() {
         }
       });
     } else {
+      // Just change view, preserving any active workout state
       setView(newView === 'home' ? 'home' : newView);
-      if (newView !== 'workout') {
-        setActiveWorkoutId(null);
-      }
     }
   };
 
@@ -666,6 +665,7 @@ export default function App() {
                 nextActionHint={nextActionHint}
                 activeWorkoutId={activeWorkoutId}
                 activeLog={activeLog}
+                savedExercisesCount={savedExercises.size}
                 workoutStartTime={workoutStartTime}
                 onResumeWorkout={() => setView('workout')}
                 onSelectWorkout={handleSelectWorkout}
