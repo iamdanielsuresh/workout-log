@@ -43,6 +43,15 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   min-height: 100dvh;
+  /* Disable text selection globally for app-like feel */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection in inputs and textareas */
+input, textarea, [contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Safe area handling for iOS */
