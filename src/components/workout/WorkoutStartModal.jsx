@@ -123,186 +123,171 @@ export function WorkoutStartModal({
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-500"
         onClick={!isStarting ? onClose : undefined}
       />
       
       {/* Modal */}
-      <div className={`relative w-full sm:max-w-md mx-auto animate-in ${
+      <div className={`relative w-full sm:max-w-md mx-auto animate-in slide-in-from-bottom-10 fade-in duration-500 ${
         isStarting ? 'scale-105 opacity-0' : ''
       } transition-all duration-300`}>
         <Card 
           hover={false} 
-          className="p-6 pt-8 rounded-t-3xl sm:rounded-3xl border-t border-gray-700 sm:border select-none"
+          className="p-0 overflow-hidden rounded-t-[2.5rem] sm:rounded-[2.5rem] border-t border-gray-700/50 sm:border bg-gray-900/95 backdrop-blur-xl shadow-2xl shadow-black/50"
         >
-          {/* Close button */}
-          {!isStarting && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-300 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-
-          {/* Workout icon */}
-          <div className={`mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 ${
-            isStarting 
-              ? 'bg-emerald-500 scale-110 shadow-[0_0_40px_rgba(16,185,129,0.4)]'
-              : 'bg-emerald-500/20'
-          }`}>
-            {isStarting ? (
-              <Zap className="w-10 h-10 text-gray-950" />
-            ) : (
-              <Dumbbell className="w-10 h-10 text-emerald-400" />
+          {/* Header Image/Icon Area */}
+          <div className="relative h-48 bg-gradient-to-br from-emerald-900/40 via-gray-900 to-gray-900 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900/95" />
+            
+            {/* Close button */}
+            {!isStarting && (
+              <button
+                onClick={onClose}
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-all z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
             )}
-          </div>
 
-          {/* Workout details */}
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-display font-bold text-gray-100 mb-2">
-              {isStarting ? 'Starting...' : workout.name}
-            </h2>
-            {!isStarting && workout.desc && (
-              <p className="text-gray-500 text-sm">{workout.desc}</p>
-            )}
-            {!isStarting && lastWorkout && (
-              <p className="text-xs text-gray-600 mt-2">
-                Last performed: {formatLastWorkout(lastWorkout)}
-              </p>
-            )}
-          </div>
-
-          {/* No exercises warning */}
-          {noExercisesMessage && !isStarting && (
-            <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-amber-300">No exercises in this routine</p>
-                <p className="text-xs text-amber-400/70 mt-1">
-                  Edit this routine to add exercises before starting.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Stats row */}
-          {!isStarting && canStart && (
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="text-center p-3 bg-gray-800/50 rounded-xl">
-                <Target className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                <p className="text-lg font-display font-bold text-gray-100">{workout.exercises?.length || 0}</p>
-                <p className="text-xs text-gray-500">Exercises</p>
-              </div>
-              <div className="text-center p-3 bg-gray-800/50 rounded-xl">
-                <Clock className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                <p className="text-lg font-display font-bold text-gray-100">{workout.estTime || '~45 min'}</p>
-                <p className="text-xs text-gray-500">Est. Time</p>
-              </div>
-              <div className="text-center p-3 bg-gray-800/50 rounded-xl">
-                <Flame className={`w-5 h-5 mx-auto mb-1 ${
-                  intensity.level === 'Low' ? 'text-blue-400' :
-                  intensity.level === 'Moderate' ? 'text-emerald-400' :
-                  intensity.level === 'High' ? 'text-amber-400' :
-                  'text-red-400'
-                }`} />
-                <p className="text-lg font-display font-bold text-gray-100">{intensity.level}</p>
-                <p className="text-xs text-gray-500">Intensity</p>
-              </div>
-            </div>
-          )}
-
-          {/* Exercise preview */}
-          {!isStarting && canStart && workout.exercises && (
-            <div className="mb-8">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                Exercises Preview
-              </h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide">
-                {workout.exercises.slice(0, 5).map((ex, i) => (
-                  <div 
-                    key={i} 
-                    className="flex items-center justify-between py-2 px-3 bg-gray-800/30 rounded-lg"
-                  >
-                    <span className="text-sm text-gray-300 font-medium">{ex.name}</span>
-                    <span className="text-xs text-gray-500">{ex.sets} sets</span>
-                  </div>
-                ))}
-                {workout.exercises.length > 5 && (
-                  <p className="text-xs text-gray-600 text-center pt-2">
-                    +{workout.exercises.length - 5} more exercises
-                  </p>
+            <div className={`relative z-10 flex flex-col items-center transition-all duration-500 ${isStarting ? 'scale-110' : ''}`}>
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-2xl shadow-emerald-500/20 ring-1 ring-white/10 backdrop-blur-md ${
+                isStarting ? 'bg-emerald-500 text-gray-950' : 'bg-gray-800/50 text-emerald-400'
+              }`}>
+                {isStarting ? (
+                  <Zap className="w-10 h-10 animate-pulse" />
+                ) : (
+                  <Dumbbell className="w-10 h-10" />
                 )}
               </div>
+              <h2 className="text-3xl font-display font-bold text-white text-center px-6 leading-tight">
+                {isStarting ? 'Let\'s Crush It!' : workout.name}
+              </h2>
             </div>
-          )}
+          </div>
 
-          {/* Slide to Start - only show when we can start */}
-          {!isStarting && canStart && (
-            <div
-              ref={containerRef}
-              className="relative h-16 bg-gray-800/50 rounded-full border-2 border-emerald-500/30 overflow-hidden"
-            >
-              {/* Progress fill */}
-              <div 
-                className="absolute inset-y-0 left-0 bg-emerald-500/20 transition-all"
-                style={{ 
-                  width: `${slideProgress * 100}%`,
-                  transition: isDragging ? 'none' : 'width 0.3s ease-out'
-                }}
-              />
+          <div className="px-6 pb-8 -mt-4 relative z-20">
+            {/* Description */}
+            {!isStarting && workout.desc && (
+              <p className="text-gray-400 text-center text-sm mb-6 px-4 leading-relaxed">
+                {workout.desc}
+              </p>
+            )}
 
-              {/* Text */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className={`text-sm font-display font-semibold transition-opacity ${
-                  slideProgress > 0.3 ? 'opacity-0' : 'text-gray-400'
-                }`}>
-                  Slide to Start Workout →
-                </span>
+            {/* Stats Grid */}
+            {!isStarting && canStart && (
+              <div className="grid grid-cols-3 gap-3 mb-8">
+                <div className="flex flex-col items-center justify-center p-3 bg-gray-800/40 rounded-2xl border border-white/5">
+                  <Target className="w-5 h-5 text-emerald-400 mb-1.5" />
+                  <span className="text-lg font-display font-bold text-white">{workout.exercises?.length || 0}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Exercises</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-3 bg-gray-800/40 rounded-2xl border border-white/5">
+                  <Clock className="w-5 h-5 text-blue-400 mb-1.5" />
+                  <span className="text-lg font-display font-bold text-white">{workout.estTime || '45m'}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Duration</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-3 bg-gray-800/40 rounded-2xl border border-white/5">
+                  <Flame className={`w-5 h-5 mb-1.5 ${
+                    intensity.level === 'Low' ? 'text-blue-400' :
+                    intensity.level === 'Moderate' ? 'text-emerald-400' :
+                    intensity.level === 'High' ? 'text-amber-400' :
+                    'text-red-400'
+                  }`} />
+                  <span className="text-lg font-display font-bold text-white">{intensity.level}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Intensity</span>
+                </div>
               </div>
+            )}
 
-              {/* Slider thumb */}
-              <div
-                ref={sliderRef}
-                onMouseDown={handleStart}
-                onTouchStart={handleStart}
-                className={`absolute top-2 left-2 w-12 h-12 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing transition-all ${
-                  isDragging ? 'scale-110 shadow-lg shadow-emerald-500/50' : ''
-                } ${slideProgress > 0.9 ? 'bg-emerald-400' : 'bg-emerald-500'}`}
-                style={{
-                  transform: `translateX(${slideProgress * (containerRef.current?.offsetWidth - 64 - 16 || 0)}px)`,
-                  transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-                }}
-              >
-                <ChevronRight className={`w-6 h-6 text-gray-950 transition-transform ${
-                  slideProgress > 0.5 ? 'translate-x-0.5' : ''
-                }`} />
+            {/* Exercise Preview List */}
+            {!isStarting && canStart && workout.exercises && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Workout Plan</h4>
+                  <span className="text-xs text-gray-600">{workout.exercises.length} movements</span>
+                </div>
+                <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+                  {workout.exercises.map((ex, i) => (
+                    <div 
+                      key={i} 
+                      className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-xl border border-white/5 hover:bg-gray-800/50 transition-colors"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gray-700/50 flex items-center justify-center text-xs font-bold text-gray-400">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-200 truncate">{ex.name}</p>
+                        <p className="text-xs text-gray-500">{ex.sets} sets × {ex.range || '8-12'} reps</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Loading dots when starting */}
-          {isStarting && (
-            <div className="flex justify-center gap-1.5 py-4">
-              {[0, 1, 2].map((i) => (
+            {/* Modern Slide to Start */}
+            {!isStarting && canStart && (
+              <div className="relative h-16 mt-auto">
                 <div
-                  key={i}
-                  className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 150}ms` }}
-                />
-              ))}
-            </div>
-          )}
+                  ref={containerRef}
+                  className="relative h-16 bg-gray-800 rounded-full overflow-hidden ring-1 ring-white/10 shadow-inner"
+                >
+                  {/* Animated Background Gradient */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 via-emerald-500/10 to-transparent opacity-50"
+                    style={{ 
+                      width: `${(slideProgress * 100) + 20}%`,
+                      transition: isDragging ? 'none' : 'width 0.3s ease-out'
+                    }}
+                  />
 
-          {/* Cancel button */}
-          {!isStarting && (
-            <button
-              onClick={onClose}
-              className="w-full mt-4 py-3 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-          )}
+                  {/* Shimmer Text */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className={`text-sm font-display font-bold tracking-wide bg-gradient-to-r from-gray-500 via-white to-gray-500 bg-[length:200%_auto] animate-shimmer bg-clip-text text-transparent transition-opacity duration-300 ${
+                      slideProgress > 0.2 ? 'opacity-0' : 'opacity-100'
+                    }`}>
+                      SLIDE TO START
+                    </span>
+                  </div>
+
+                  {/* Slider Thumb */}
+                  <div
+                    ref={sliderRef}
+                    onMouseDown={handleStart}
+                    onTouchStart={handleStart}
+                    className={`absolute top-1 left-1 bottom-1 w-14 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg transition-all z-10 ${
+                      isDragging ? 'scale-105' : ''
+                    } ${slideProgress > 0.9 ? 'bg-emerald-400' : 'bg-emerald-500'}`}
+                    style={{
+                      transform: `translateX(${slideProgress * (containerRef.current?.offsetWidth - 64 || 0)}px)`,
+                      transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                    }}
+                  >
+                    <ChevronRight className={`w-6 h-6 text-gray-950 transition-transform duration-300 ${
+                      slideProgress > 0.5 ? 'translate-x-1 scale-110' : ''
+                    }`} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isStarting && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                <div className="flex gap-2">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 150}ms` }}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-emerald-400 font-medium animate-pulse">Preparing workout...</p>
+              </div>
+            )}
+          </div>
         </Card>
       </div>
     </div>

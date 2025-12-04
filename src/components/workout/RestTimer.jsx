@@ -1,20 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Pause, Minus, Plus } from 'lucide-react';
 import { useRestTimer } from '../../hooks/useTimer';
 
 /**
  * Rest timer component with countdown and controls
  */
-export function RestTimer({ onComplete }) {
+export function RestTimer({ onComplete, trigger }) {
   const {
     isActive,
     timeLeft,
     duration,
     progress,
+    start,
     toggle,
     adjustDuration,
     formatTimeLeft,
   } = useRestTimer(90);
+
+  // Auto-start when trigger changes
+  useEffect(() => {
+    if (trigger) {
+      start();
+    }
+  }, [trigger, start]);
 
   // Trigger completion callback
   if (timeLeft === 0 && !isActive && onComplete) {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowLeft, Timer, Save, StickyNote } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -15,6 +16,8 @@ export function WorkoutView({
   onBack, onFinish, onUpdateLog, onUpdateNote, onRequestTip, onSuggestWeight,
   savedExercises, onSaveExercise
 }) {
+  const [timerTrigger, setTimerTrigger] = useState(0);
+
   const completedCount = Object.keys(activeLog).filter(name => {
     const log = activeLog[name];
     return log?.sets?.some(s => s.weight && s.reps);
@@ -56,7 +59,7 @@ export function WorkoutView({
       </div>
 
       <div className="p-6 space-y-6">
-        <RestTimer />
+        <RestTimer trigger={timerTrigger} />
 
         {visibleExercises.map((ex, idx) => (
           <ExerciseLogger
@@ -65,6 +68,7 @@ export function WorkoutView({
             lastLog={history[ex.name]}
             onUpdate={(sets) => onUpdateLog(ex.name, sets)}
             onSave={(sets) => onSaveExercise(ex.name, sets)}
+            onSetComplete={() => setTimerTrigger(Date.now())}
             aiTip={aiTips[ex.name]}
             onRequestTip={aiEnabled ? () => onRequestTip(ex.name) : null}
             onSuggestWeight={aiEnabled ? (targetReps) => onSuggestWeight(ex.name, targetReps) : null}

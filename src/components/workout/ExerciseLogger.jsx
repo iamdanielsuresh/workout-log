@@ -12,6 +12,7 @@ export function ExerciseLogger({
   lastLog, 
   onUpdate,
   onSave,
+  onSetComplete,
   aiTip,
   onRequestTip,
   onShowInfo,
@@ -40,8 +41,17 @@ export function ExerciseLogger({
     setSets(newSets);
     onUpdate?.(newSets);
 
+    // Check completion status
+    const isNowComplete = newSets[idx].weight && newSets[idx].reps;
+    const wasComplete = sets[idx].weight && sets[idx].reps;
+
+    // Trigger rest timer if set just completed
+    if (isNowComplete && !wasComplete && onSetComplete) {
+      onSetComplete();
+    }
+
     // Haptic feedback when set is completed (both fields filled)
-    if (sanitizedValue && newSets[idx].weight && newSets[idx].reps) {
+    if (isNowComplete) {
       const otherField = field === 'weight' ? 'reps' : 'weight';
       // Only vibrate if the other field was already present (meaning we just completed the set)
       if (sets[idx][otherField] && navigator.vibrate) {
@@ -260,14 +270,14 @@ export function ExerciseLogger({
       </div>
 
       {/* Sets */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-4">
         {sets.map((set, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <span className={`w-6 text-sm font-display font-bold text-center select-none ${
+          <div key={i} className="flex items-center gap-4">
+            <span className={`w-8 text-sm font-display font-bold text-center select-none ${
               set.weight && set.reps ? 'text-emerald-400' : 'text-gray-600'
             }`}>
               {set.weight && set.reps ? (
-                <Check className="w-4 h-4 mx-auto" />
+                <Check className="w-5 h-5 mx-auto" />
               ) : (
                 i + 1
               )}
@@ -277,22 +287,22 @@ export function ExerciseLogger({
             <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden group focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/50 transition-all">
               <button
                 onClick={() => handleIncrement(i, 'weight', -1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
+                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-5 h-5" />
               </button>
               <input
                 type="number"
                 placeholder="kg"
                 value={set.weight}
                 onChange={(e) => handleChange(i, 'weight', e.target.value)}
-                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
+                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-xl placeholder:text-gray-600 focus:outline-none min-w-0 py-3"
               />
               <button
                 onClick={() => handleIncrement(i, 'weight', 1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
+                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
               </button>
             </div>
 
@@ -300,22 +310,22 @@ export function ExerciseLogger({
             <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
               <button
                 onClick={() => handleIncrement(i, 'reps', -1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
+                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-5 h-5" />
               </button>
               <input
                 type="number"
                 placeholder="reps"
                 value={set.reps}
                 onChange={(e) => handleChange(i, 'reps', e.target.value)}
-                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg placeholder:text-gray-600 focus:outline-none min-w-0 py-2"
+                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-xl placeholder:text-gray-600 focus:outline-none min-w-0 py-3"
               />
               <button
                 onClick={() => handleIncrement(i, 'reps', 1)}
-                className="p-2.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none"
+                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
               </button>
             </div>
 

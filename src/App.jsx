@@ -329,6 +329,11 @@ export default function App() {
   };
 
   const handleBackFromWorkout = () => {
+    // Minimize workout instead of cancelling
+    setView('home');
+  };
+
+  const handleCancelWorkout = () => {
     if (Object.keys(activeLog).length > 0) {
       setConfirmModal({
         isOpen: true,
@@ -336,11 +341,13 @@ export default function App() {
           setConfirmModal({ isOpen: false });
           setView('home');
           setActiveWorkoutId(null);
+          setTempPlan(null);
         }
       });
     } else {
       setView('home');
       setActiveWorkoutId(null);
+      setTempPlan(null);
     }
   };
 
@@ -657,6 +664,10 @@ export default function App() {
                 aiEnabled={aiEnabled}
                 recommendationLabel={recommendationLabel}
                 nextActionHint={nextActionHint}
+                activeWorkoutId={activeWorkoutId}
+                activeLog={activeLog}
+                workoutStartTime={workoutStartTime}
+                onResumeWorkout={() => setView('workout')}
                 onSelectWorkout={handleSelectWorkout}
                 onViewHistory={() => {
                   setHistoryTab('history');

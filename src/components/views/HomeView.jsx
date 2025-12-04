@@ -14,6 +14,7 @@ export function HomeView({
   userName, userPhoto, isAnonymous, streak, workouts, plans,
   suggestedWorkout, nextWorkoutKey, lastWorkout, aiEnabled,
   recommendationLabel, nextActionHint,
+  activeWorkoutId, activeLog, workoutStartTime, onResumeWorkout,
   onSelectWorkout, onViewHistory, onSettings, onQuickLog, onBuddy, onQuickAction
 }) {
   const isFirstTime = workouts.length === 0;
@@ -48,9 +49,40 @@ export function HomeView({
            date.getFullYear() === today.getFullYear();
   };
 
+  // Active Workout Info
+  const activeWorkoutName = activeWorkoutId === 'quick-log' 
+    ? 'Quick Workout' 
+    : plans[activeWorkoutId]?.name || 'Current Workout';
+  const activeExercisesCount = activeLog ? Object.keys(activeLog).length : 0;
+
   return (
     <div className="p-6 pb-nav max-w-lg mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 safe-area-top">
       
+      {/* Active Workout Banner (Floating) */}
+      {activeWorkoutId && (
+        <div className="fixed bottom-[5.5rem] left-4 right-4 z-30 animate-in slide-in-from-bottom-10 fade-in duration-500">
+           <Card className="p-4 bg-emerald-950/90 border-emerald-500/50 backdrop-blur-md shadow-2xl shadow-black/50 ring-1 ring-emerald-500/30">
+             <div className="flex items-center justify-between">
+               <div className="flex items-center gap-3">
+                 <div className="relative">
+                   <div className="absolute inset-0 bg-emerald-500 rounded-lg animate-ping opacity-20" />
+                   <div className="relative p-2 bg-emerald-500 rounded-lg">
+                     <Activity className="w-5 h-5 text-white" />
+                   </div>
+                 </div>
+                 <div>
+                   <h3 className="font-bold text-white text-sm">Workout in Progress</h3>
+                   <p className="text-xs text-emerald-200/80">{activeWorkoutName} • {activeExercisesCount} exercises</p>
+                 </div>
+               </div>
+               <Button size="sm" onClick={onResumeWorkout} className="bg-white text-emerald-950 hover:bg-gray-100 font-bold shadow-lg">
+                 Resume
+               </Button>
+             </div>
+           </Card>
+        </div>
+      )}
+
       {/* 1. Dynamic Hero Header */}
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
