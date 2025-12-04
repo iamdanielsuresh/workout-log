@@ -58,6 +58,7 @@ export function BuddyView({
   const [showNotes, setShowNotes] = useState(false);
   const [notesSearchQuery, setNotesSearchQuery] = useState('');
   const [notesCategoryFilter, setNotesCategoryFilter] = useState(null);
+  const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [coachPersona, setCoachPersona] = useState('supportive'); // 'supportive', 'sergeant', 'scientist', 'stoic'
   const chatEndRef = useRef(null);
@@ -718,31 +719,49 @@ Give a helpful, concise response (under 60 words).`;
                   {filteredNotes.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center py-4">No notes found</p>
                   ) : (
-                    filteredNotes.map((note) => (
-                      <Card key={note.id} hover={false} className="p-3 group">
-                        <div className="flex justify-between items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-200 line-clamp-3">{note.text}</p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded text-gray-500 capitalize">
-                                {note.category}
-                              </span>
-                              <span className="text-[10px] text-gray-600">
-                                {note.createdAt?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </span>
+                    filteredNotes.map((note) => {
+                      const isExpanded = expandedNoteId === note.id;
+                      return (
+                        <Card 
+                          key={note.id} 
+                          hover={false} 
+                          className="p-3 group cursor-pointer transition-all"
+                          onClick={() => setExpandedNoteId(isExpanded ? null : note.id)}
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm text-gray-200 ${isExpanded ? '' : 'line-clamp-3'}`}>
+                                {note.text}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded text-gray-500 capitalize">
+                                  {note.category}
+                                </span>
+                                <span className="text-[10px] text-gray-600">
+                                  {note.createdAt?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                                {note.text.length > 100 && (
+                                  <span className="text-[10px] text-emerald-500/50 ml-auto">
+                                    {isExpanded ? 'Show less' : 'Read more'}
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                            {onDeleteNote && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteNote(note.id);
+                                }}
+                                className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
-                          {onDeleteNote && (
-                            <button
-                              onClick={() => onDeleteNote(note.id)}
-                              className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </Card>
-                    ))
+                        </Card>
+                      );
+                    })
                   )}
                 </div>
               </div>

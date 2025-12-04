@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { User, Calendar, Ruler, Scale, Percent, X, Save, Camera, Globe, Clock, Target, AlertTriangle, Activity } from 'lucide-react';
+import { 
+  User, Calendar, Ruler, Scale, Percent, X, Save, Camera, Globe, Clock, 
+  Target, AlertTriangle, Activity, ChevronDown, Dumbbell, Heart 
+} from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -8,6 +11,7 @@ import { COUNTRIES, TIMEZONES, getDefaultTimezone, detectUserTimezone } from '..
 
 /**
  * Edit Profile Modal - Allows editing profile after onboarding
+ * Revamped for premium aesthetic and better mobile experience
  */
 export function EditProfileModal({ 
   isOpen, 
@@ -26,7 +30,6 @@ export function EditProfileModal({
     experienceLevel: 'intermediate',
     country: '',
     timezone: '',
-    // Extended health metrics (Task 6)
     goals: '',
     trainingAge: '',
     injuries: '',
@@ -48,7 +51,6 @@ export function EditProfileModal({
         experienceLevel: profile.experience_level || 'intermediate',
         country: profile.country || '',
         timezone: profile.timezone || detectUserTimezone(),
-        // Extended health metrics
         goals: profile.goals || '',
         trainingAge: profile.training_age ? String(profile.training_age) : '',
         injuries: profile.injuries || '',
@@ -114,7 +116,6 @@ export function EditProfileModal({
         experience_level: formData.experienceLevel,
         country: formData.country || null,
         timezone: formData.timezone || null,
-        // Extended health metrics
         goals: formData.goals || null,
         training_age: formData.trainingAge ? parseInt(formData.trainingAge) : null,
         injuries: formData.injuries || null,
@@ -141,261 +142,290 @@ export function EditProfileModal({
     { value: 'professional', label: 'Professional', desc: '3+ years' }
   ];
 
+  // Custom Select Component for consistent styling
+  const Select = ({ value, onChange, options, icon: Icon, placeholder, className = '' }) => (
+    <div className="relative">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />}
+      <select
+        value={value}
+        onChange={onChange}
+        className={`
+          w-full bg-gray-900/50 border border-white/10
+          text-gray-100 placeholder:text-gray-600
+          rounded-xl transition-all duration-200
+          focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
+          appearance-none
+          ${Icon ? 'pl-10 pr-10' : 'px-4 pr-10'} py-3
+          ${className}
+        `}
+      >
+        <option value="">{placeholder || 'Select'}</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+        <ChevronDown className="w-4 h-4" />
+      </div>
+    </div>
+  );
+
   if (!isOpen) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile">
-      <div className="space-y-5">
-        {/* Profile Picture */}
-        <div className="flex justify-center">
-          <div className="relative">
+      <div className="space-y-8 pb-4">
+        {/* Profile Picture Section */}
+        <div className="flex flex-col items-center justify-center">
+          <div className="relative group cursor-pointer">
             {(userPhoto || profile?.photo_url) ? (
               <img
                 src={userPhoto || profile?.photo_url}
                 alt="Profile"
-                className="w-20 h-20 rounded-full border-4 border-emerald-500/30"
+                className="w-24 h-24 rounded-full border-4 border-emerald-500/20 object-cover shadow-xl"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center">
-                <User className="w-8 h-8 text-gray-600" />
+              <div className="w-24 h-24 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-xl">
+                <User className="w-10 h-10 text-gray-500" />
               </div>
             )}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
           </div>
+          <p className="text-xs text-gray-500 mt-2">Tap to change photo</p>
         </div>
 
         {/* General error */}
         {errors.general && (
-          <p className="text-sm text-red-400 text-center">{errors.general}</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+            <p className="text-sm text-red-400">{errors.general}</p>
+          </div>
         )}
 
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Name <span className="text-red-400">*</span>
-          </label>
-          <Input
-            value={formData.displayName}
-            onChange={(e) => updateField('displayName', e.target.value)}
-            placeholder="Your name"
-            icon={User}
-            error={errors.displayName}
-          />
-        </div>
+        {/* Section: Basic Info */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <User className="w-4 h-4" /> Basic Info
+          </h4>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Display Name</label>
+              <Input
+                value={formData.displayName}
+                onChange={(e) => updateField('displayName', e.target.value)}
+                placeholder="Your name"
+                icon={User}
+                error={errors.displayName}
+              />
+            </div>
 
-        {/* Gender */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Gender <span className="text-red-400">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            {['male', 'female'].map((g) => (
-              <button
-                key={g}
-                onClick={() => updateField('gender', g)}
-                className={`p-3 rounded-xl border transition-all ${
-                  formData.gender === g
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                    : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:bg-gray-800'
-                }`}
-              >
-                <span className="capitalize font-medium">{g}</span>
-              </button>
-            ))}
-          </div>
-          {errors.gender && <p className="text-xs text-red-400 mt-1">{errors.gender}</p>}
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Gender</label>
+                <div className="flex bg-gray-900/50 p-1 rounded-xl border border-white/10">
+                  {['male', 'female'].map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => updateField('gender', g)}
+                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all capitalize ${
+                        formData.gender === g
+                          ? 'bg-gray-800 text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-300'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+                {errors.gender && <p className="text-xs text-red-400 mt-1">{errors.gender}</p>}
+              </div>
 
-        {/* Date of Birth */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Date of Birth <span className="text-red-400">*</span>
-          </label>
-          <Input
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={(e) => updateField('dateOfBirth', e.target.value)}
-            icon={Calendar}
-            error={errors.dateOfBirth}
-          />
-          {age && !errors.dateOfBirth && (
-            <p className="text-xs text-gray-500 mt-1">{age} years old</p>
-          )}
-        </div>
-
-        {/* Experience Level */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Experience Level
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {experienceLevels.map(({ value, label, desc }) => (
-              <button
-                key={value}
-                onClick={() => updateField('experienceLevel', value)}
-                className={`p-3 rounded-xl border transition-all text-center ${
-                  formData.experienceLevel === value
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'
-                }`}
-              >
-                <p className="text-sm font-medium">{label}</p>
-                <p className="text-xs opacity-70">{desc}</p>
-              </button>
-            ))}
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => updateField('dateOfBirth', e.target.value)}
+                  icon={Calendar}
+                  error={errors.dateOfBirth}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Optional Fields */}
-        <div className="pt-2 border-t border-gray-800">
-          <p className="text-xs text-gray-500 mb-3">Optional Information</p>
+        {/* Section: Body Metrics */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <Activity className="w-4 h-4" /> Body Metrics
+          </h4>
+          
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Height (cm)</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Height (cm)</label>
               <Input
                 type="number"
                 value={formData.height}
                 onChange={(e) => updateField('height', e.target.value)}
                 placeholder="175"
-                className="text-center"
+                className="text-center px-2"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Weight (kg)</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Weight (kg)</label>
               <Input
                 type="number"
                 value={formData.weight}
                 onChange={(e) => updateField('weight', e.target.value)}
                 placeholder="70"
-                className="text-center"
+                className="text-center px-2"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Body Fat %</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Body Fat %</label>
               <Input
                 type="number"
                 value={formData.bodyFat}
                 onChange={(e) => updateField('bodyFat', e.target.value)}
                 placeholder="15"
-                className="text-center"
+                className="text-center px-2"
               />
             </div>
           </div>
         </div>
 
-        {/* Location & Timezone (Task 1) */}
-        <div className="pt-2 border-t border-gray-800">
-          <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-            <Globe className="w-3 h-3" />
-            Location & Timezone
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Country</label>
-              <select
-                value={formData.country}
-                onChange={(e) => handleCountryChange(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
-              >
-                <option value="">Select Country</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Timezone</label>
-              <select
-                value={formData.timezone}
-                onChange={(e) => updateField('timezone', e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
-              >
-                <option value="">Select Timezone</option>
-                {TIMEZONES.map((tz) => (
-                  <option key={tz.value} value={tz.value}>{tz.label}</option>
-                ))}
-              </select>
+        {/* Section: Fitness Profile */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <Dumbbell className="w-4 h-4" /> Fitness Profile
+          </h4>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Experience Level</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {experienceLevels.map(({ value, label, desc }) => (
+                <button
+                  key={value}
+                  onClick={() => updateField('experienceLevel', value)}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    formData.experienceLevel === value
+                      ? 'border-emerald-500 bg-emerald-500/10'
+                      : 'border-white/10 bg-gray-900/30 hover:bg-gray-900/50'
+                  }`}
+                >
+                  <p className={`text-sm font-bold ${formData.experienceLevel === value ? 'text-emerald-400' : 'text-gray-300'}`}>
+                    {label}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Extended Health Metrics (Task 6) */}
-        <div className="pt-2 border-t border-gray-800">
-          <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-            <Target className="w-3 h-3" />
-            Health & Fitness Goals (Helps AI personalization)
-          </p>
-          
-          {/* Goals */}
-          <div className="mb-3">
-            <label className="block text-xs text-gray-400 mb-1">Fitness Goals</label>
-            <textarea
-              value={formData.goals}
-              onChange={(e) => updateField('goals', e.target.value)}
-              placeholder="e.g., Build muscle, lose fat, improve strength..."
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm resize-none"
-              rows={2}
-            />
-          </div>
-
-          {/* Training Age & Activity Level */}
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Training Age (years)</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Training Age (years)</label>
               <Input
                 type="number"
                 value={formData.trainingAge}
                 onChange={(e) => updateField('trainingAge', e.target.value)}
-                placeholder="2"
-                className="text-center"
+                placeholder="e.g. 2"
+                icon={Clock}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Activity Level</label>
-              <select
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Activity Level</label>
+              <Select
                 value={formData.activityLevel}
                 onChange={(e) => updateField('activityLevel', e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm"
-              >
-                <option value="">Select Level</option>
-                <option value="sedentary">Sedentary (Desk Job)</option>
-                <option value="light">Light (1-2 days/week)</option>
-                <option value="moderate">Moderate (3-5 days/week)</option>
-                <option value="active">Active (6-7 days/week)</option>
-                <option value="very_active">Very Active (Athlete)</option>
-              </select>
+                icon={Activity}
+                placeholder="Select Level"
+                options={[
+                  { value: 'sedentary', label: 'Sedentary' },
+                  { value: 'light', label: 'Light' },
+                  { value: 'moderate', label: 'Moderate' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'very_active', label: 'Very Active' }
+                ]}
+              />
             </div>
           </div>
+        </div>
 
-          {/* Injuries/Limitations */}
+        {/* Section: Goals & Health */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <Target className="w-4 h-4" /> Goals & Health
+          </h4>
+
           <div>
-            <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              Injuries or Limitations
-            </label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Fitness Goals</label>
+            <textarea
+              value={formData.goals}
+              onChange={(e) => updateField('goals', e.target.value)}
+              placeholder="What do you want to achieve?"
+              className="w-full bg-gray-900/50 border border-white/10 rounded-xl p-3 text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-sm resize-none min-h-[80px]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Injuries / Limitations</label>
             <textarea
               value={formData.injuries}
               onChange={(e) => updateField('injuries', e.target.value)}
-              placeholder="e.g., Lower back pain, shoulder mobility issues..."
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none text-sm resize-none"
-              rows={2}
+              placeholder="Any injuries we should know about?"
+              className="w-full bg-gray-900/50 border border-white/10 rounded-xl p-3 text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-sm resize-none min-h-[80px]"
             />
           </div>
         </div>
 
+        {/* Section: Location */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <Globe className="w-4 h-4" /> Location
+          </h4>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Country</label>
+              <Select
+                value={formData.country}
+                onChange={(e) => handleCountryChange(e.target.value)}
+                icon={Globe}
+                placeholder="Select Country"
+                options={COUNTRIES.map(c => ({ value: c.code, label: c.name }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Timezone</label>
+              <Select
+                value={formData.timezone}
+                onChange={(e) => updateField('timezone', e.target.value)}
+                icon={Clock}
+                placeholder="Select Timezone"
+                options={TIMEZONES}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Save Button */}
-        <Button
-          onClick={handleSubmit}
-          loading={saving}
-          disabled={saving}
-          className="w-full"
-          icon={Save}
-        >
-          Save Changes
-        </Button>
+        <div className="pt-4 sticky bottom-0 bg-gray-900/95 backdrop-blur pb-2 -mx-4 px-4 border-t border-white/5 mt-8">
+          <Button
+            onClick={handleSubmit}
+            loading={saving}
+            disabled={saving}
+            className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
+            icon={Save}
+          >
+            Save Profile
+          </Button>
+        </div>
       </div>
     </Modal>
   );
 }
-
 
 export default EditProfileModal;

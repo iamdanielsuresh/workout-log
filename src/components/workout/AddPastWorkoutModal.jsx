@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
-  Calendar, Clock, Dumbbell, Plus, Minus, Save, X, AlertCircle
+  Calendar, Clock, Dumbbell, Plus, Minus, Save, X, AlertCircle, 
+  ChevronDown, FileText, LayoutList, Timer
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -10,6 +11,7 @@ import { Modal } from '../ui/Modal';
 /**
  * Add Past Workout Modal
  * Task 10: Allow users to log past workouts by selecting a date
+ * Revamped for premium aesthetic and better mobile experience
  */
 export function AddPastWorkoutModal({ 
   isOpen, 
@@ -176,103 +178,120 @@ export function AddPastWorkoutModal({
   // Get max date (today)
   const maxDate = new Date().toISOString().split('T')[0];
 
+  // Custom Select Component
+  const Select = ({ value, onChange, options, icon: Icon, placeholder, className = '' }) => (
+    <div className="relative">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />}
+      <select
+        value={value}
+        onChange={onChange}
+        className={`
+          w-full bg-gray-900/50 border border-white/10
+          text-gray-100 placeholder:text-gray-600
+          rounded-xl transition-all duration-200
+          focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50
+          appearance-none
+          ${Icon ? 'pl-10 pr-10' : 'px-4 pr-10'} py-3
+          ${className}
+        `}
+      >
+        <option value="">{placeholder || 'Select'}</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+        <ChevronDown className="w-4 h-4" />
+      </div>
+    </div>
+  );
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Add Past Workout">
-      <div className="space-y-5 max-h-[70vh] overflow-y-auto">
-        {/* Date & Time Selection */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              Date <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="date"
-              value={workoutDate}
-              onChange={(e) => setWorkoutDate(e.target.value)}
-              max={maxDate}
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none"
-            />
-            {errors.date && (
-              <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                {errors.date}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              Time (optional)
-            </label>
-            <input
-              type="time"
-              value={workoutTime}
-              onChange={(e) => setWorkoutTime(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none"
-            />
+      <div className="space-y-8 pb-4">
+        {/* Section: Date & Time */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <Calendar className="w-4 h-4" /> When was it?
+          </h4>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Date <span className="text-red-400">*</span></label>
+              <Input
+                type="date"
+                value={workoutDate}
+                onChange={(e) => setWorkoutDate(e.target.value)}
+                max={maxDate}
+                icon={Calendar}
+                error={errors.date}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Time</label>
+              <Input
+                type="time"
+                value={workoutTime}
+                onChange={(e) => setWorkoutTime(e.target.value)}
+                icon={Clock}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Load from Plan */}
-        {planOptions.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              Load from routine (optional)
-            </label>
-            <select
-              value={selectedPlan || ''}
-              onChange={(e) => setSelectedPlan(e.target.value || null)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:border-emerald-500 outline-none"
-            >
-              <option value="">Custom workout</option>
-              {planOptions.map(plan => (
-                <option key={plan.id} value={plan.id}>{plan.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Section: Workout Details */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <Dumbbell className="w-4 h-4" /> Workout Details
+          </h4>
 
-        {/* Workout Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Workout Name <span className="text-red-400">*</span>
-          </label>
-          <Input
-            value={workoutName}
-            onChange={(e) => setWorkoutName(e.target.value)}
-            placeholder="e.g., Push Day, Leg Workout"
-            icon={Dumbbell}
-          />
-          {errors.name && (
-            <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              {errors.name}
-            </p>
+          {/* Load from Plan */}
+          {planOptions.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Load from routine</label>
+              <Select
+                value={selectedPlan || ''}
+                onChange={(e) => setSelectedPlan(e.target.value || null)}
+                icon={LayoutList}
+                placeholder="Custom workout"
+                options={planOptions.map(p => ({ value: p.id, label: p.name }))}
+              />
+            </div>
           )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Workout Name <span className="text-red-400">*</span></label>
+              <Input
+                value={workoutName}
+                onChange={(e) => setWorkoutName(e.target.value)}
+                placeholder="e.g., Push Day"
+                icon={Dumbbell}
+                error={errors.name}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Duration (min)</label>
+              <Input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="30"
+                icon={Timer}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Duration */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Duration (minutes)
-          </label>
-          <Input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            placeholder="30"
-            icon={Clock}
-          />
-        </div>
-
-        {/* Exercises */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-400">
-              Exercises <span className="text-red-400">*</span>
-            </label>
+        {/* Section: Exercises */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+              <LayoutList className="w-4 h-4" /> Exercises
+            </h4>
             <button
               onClick={handleAddExercise}
-              className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+              className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors"
             >
               <Plus className="w-3 h-3" />
               Add Exercise
@@ -280,53 +299,63 @@ export function AddPastWorkoutModal({
           </div>
           
           {errors.exercises && (
-            <p className="text-xs text-red-400 mb-2 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              {errors.exercises}
-            </p>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-400" />
+              <p className="text-xs text-red-400">{errors.exercises}</p>
+            </div>
           )}
 
           <div className="space-y-3">
             {exercises.map((exercise, exIndex) => (
-              <Card key={exIndex} hover={false} className="p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Input
-                    value={exercise.name}
-                    onChange={(e) => handleExerciseNameChange(exIndex, e.target.value)}
-                    placeholder="Exercise name"
-                    className="flex-1"
-                  />
+              <div key={exIndex} className="bg-gray-900/50 border border-white/5 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1">
+                    <Input
+                      value={exercise.name}
+                      onChange={(e) => handleExerciseNameChange(exIndex, e.target.value)}
+                      placeholder="Exercise name"
+                      className="bg-gray-800/50 border-gray-700"
+                    />
+                  </div>
                   <button
                     onClick={() => handleRemoveExercise(exIndex)}
-                    className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="p-3 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
                 
                 {/* Sets */}
-                <div className="space-y-2">
+                <div className="space-y-2 pl-1">
                   {exercise.sets.map((set, setIndex) => (
-                    <div key={setIndex} className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 w-12">Set {setIndex + 1}</span>
-                      <input
-                        type="number"
-                        value={set.weight}
-                        onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
-                        placeholder="kg"
-                        className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center"
-                      />
-                      <span className="text-gray-600">×</span>
-                      <input
-                        type="number"
-                        value={set.reps}
-                        onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
-                        placeholder="reps"
-                        className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center"
-                      />
+                    <div key={setIndex} className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-gray-500 w-10 pt-1">#{setIndex + 1}</span>
+                      <div className="flex-1 flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="number"
+                            value={set.weight}
+                            onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
+                            placeholder="0"
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600 pointer-events-none">kg</span>
+                        </div>
+                        <span className="text-gray-600">×</span>
+                        <div className="relative flex-1">
+                          <input
+                            type="number"
+                            value={set.reps}
+                            onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
+                            placeholder="0"
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-gray-200 text-sm focus:border-emerald-500 outline-none text-center"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600 pointer-events-none">reps</span>
+                        </div>
+                      </div>
                       <button
                         onClick={() => handleRemoveSet(exIndex, setIndex)}
-                        className="p-1 text-gray-500 hover:text-red-400 transition-colors"
+                        className="p-2 text-gray-600 hover:text-red-400 transition-colors"
                         disabled={exercise.sets.length <= 1}
                       >
                         <Minus className="w-4 h-4" />
@@ -335,17 +364,17 @@ export function AddPastWorkoutModal({
                   ))}
                   <button
                     onClick={() => handleAddSet(exIndex)}
-                    className="w-full text-xs text-gray-500 hover:text-emerald-400 py-1 transition-colors"
+                    className="w-full text-xs font-medium text-gray-500 hover:text-emerald-400 py-2 border border-dashed border-gray-800 hover:border-emerald-500/30 rounded-lg transition-all mt-2"
                   >
                     + Add Set
                   </button>
                 </div>
-              </Card>
+              </div>
             ))}
 
             {exercises.length === 0 && (
-              <Card hover={false} className="p-6 text-center">
-                <Dumbbell className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+              <div className="text-center py-8 border-2 border-dashed border-gray-800 rounded-xl">
+                <Dumbbell className="w-8 h-8 text-gray-700 mx-auto mb-2" />
                 <p className="text-sm text-gray-500">No exercises added yet</p>
                 <Button
                   variant="ghost"
@@ -353,36 +382,39 @@ export function AddPastWorkoutModal({
                   onClick={handleAddExercise}
                   className="mt-2"
                 >
-                  Add Exercise
+                  Add First Exercise
                 </Button>
-              </Card>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Note */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Note (optional)
-          </label>
+        {/* Section: Notes */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <FileText className="w-4 h-4" /> Notes
+          </h4>
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="How did the workout feel?"
-            rows={2}
+            placeholder="How did the workout feel? Any PRs?"
+            rows={3}
+            className="bg-gray-900/50 border-white/10"
           />
         </div>
 
         {/* Save Button */}
-        <Button
-          onClick={handleSave}
-          loading={saving}
-          disabled={saving}
-          className="w-full"
-          icon={Save}
-        >
-          Save Workout
-        </Button>
+        <div className="pt-4 sticky bottom-0 bg-gray-900/95 backdrop-blur pb-2 -mx-4 px-4 border-t border-white/5 mt-8">
+          <Button
+            onClick={handleSave}
+            loading={saving}
+            disabled={saving}
+            className="w-full py-4 text-base font-bold shadow-lg shadow-emerald-500/20"
+            icon={Save}
+          >
+            Save Workout
+          </Button>
+        </div>
       </div>
     </Modal>
   );
