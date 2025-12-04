@@ -94,7 +94,7 @@ export function WorkoutCompleteModal({
           </div>
 
           {/* AI Analysis */}
-          {analysis && (
+          {analysis && (analysis.summary || analysis.highlight || analysis.tip) && (
             <div className="mb-8 text-left bg-gray-900/50 rounded-2xl p-4 border border-gray-800 space-y-3 animate-in fade-in slide-in-from-bottom-2 delay-300">
               <div className="flex items-center justify-between border-b border-gray-800 pb-2">
                 <div className="flex items-center gap-2 text-emerald-400">
@@ -109,9 +109,11 @@ export function WorkoutCompleteModal({
                 )}
               </div>
               
-              <p className="text-sm text-gray-300 leading-relaxed">
-                {analysis.summary}
-              </p>
+              {analysis.summary && (
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  {analysis.summary}
+                </p>
+              )}
 
               {analysis.highlight && (
                 <div className="flex items-start gap-2 text-xs bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">

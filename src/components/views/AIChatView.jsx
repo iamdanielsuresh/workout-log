@@ -71,13 +71,17 @@ export function AIChatView({
 
   // Auto-scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, loading, inputValue]); // Added inputValue to scroll when typing
 
   const handleSend = () => {
     if (!inputValue.trim() || (!isOnline && !inputValue.trim())) return;
     onSendMessage(inputValue);
     setInputValue('');
+    // Keep focus on input for desktop, maybe not for mobile to avoid keyboard flickering?
+    // Actually, keeping focus is usually good for chat apps.
   };
 
   const handleKeyDown = (e) => {
@@ -88,9 +92,9 @@ export function AIChatView({
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] fixed inset-0 z-[200] bg-gray-950">
+    <div className="fixed inset-0 z-[200] bg-gray-950 flex flex-col h-[100dvh] supports-[height:100dvh]:h-[100dvh]">
       {/* Header */}
-      <div className="flex-none">
+      <div className="flex-none bg-gray-950 z-10">
         <ViewHeader 
           title={persona.name} 
           subtitle={persona.role}
@@ -104,7 +108,7 @@ export function AIChatView({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain scroll-smooth">
         {/* Welcome Message */}
         {messages.length === 0 && (
           <div className="text-center space-y-4 mt-8">
@@ -207,11 +211,11 @@ export function AIChatView({
           </div>
         )}
         
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
       {/* Input Area - Fixed at bottom */}
-      <div className="flex-none p-4 bg-gray-950 border-t border-gray-800 safe-area-bottom">
+      <div className="flex-none p-4 bg-gray-950 border-t border-gray-800 safe-area-bottom z-20">
         {!isOnline && (
           <div className="mb-2 flex items-center justify-center gap-2 text-xs text-red-400 bg-red-500/10 py-1 px-2 rounded-full w-fit mx-auto">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -234,7 +238,7 @@ export function AIChatView({
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || loading || !isOnline}
-            className={`w-11 h-11 rounded-xl flex items-center justify-center p-0 shrink-0 ${theme.bg} hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-11 h-11 rounded-xl flex items-center justify-center p-0 shrink-0 ${theme.bg} hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95`}
           >
             <Send className="w-5 h-5 text-gray-950" />
           </Button>

@@ -252,6 +252,7 @@ export default function App() {
     try {
       // 1. Find or create AI folder
       let aiFolder = folders.find(f => f.name === 'AI Workouts');
+      
       if (!aiFolder) {
         try {
           aiFolder = await createFolder('AI Workouts', 'purple');
@@ -270,13 +271,12 @@ export default function App() {
           folderId: aiFolder?.id || null
         }
       };
-      await savePlans(mergedPlans, 'ai-generated');
-      setToast({ message: 'Plan saved to "AI Workouts"!', type: 'success' });
-      return planId;
+
+      await savePlans(mergedPlans, 'ai');
+      setToast({ message: `Saved "${newPlan.name}" to ${aiFolder ? 'AI Workouts' : 'Plans'}`, type: 'success' });
     } catch (error) {
       log.error('Error saving AI plan:', error);
       setToast({ message: 'Failed to save plan', type: 'error' });
-      throw error;
     }
   };
 

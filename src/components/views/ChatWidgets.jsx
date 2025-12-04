@@ -8,6 +8,21 @@ import { Button } from '../ui/Button';
  */
 export function WorkoutPlanWidget({ data, onSave, onStart }) {
   const { name, duration, difficulty, exercises, reason } = data;
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [isSaved, setIsSaved] = React.useState(false);
+
+  const handleSave = async () => {
+    if (isSaving || isSaved) return;
+    setIsSaving(true);
+    try {
+      await onSave(data);
+      setIsSaved(true);
+    } catch (error) {
+      console.error("Failed to save plan", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <Card hover={false} className="w-full max-w-sm bg-gray-800 border-gray-700 overflow-hidden">
@@ -49,11 +64,12 @@ export function WorkoutPlanWidget({ data, onSave, onStart }) {
         <Button 
           size="sm" 
           variant="secondary"
-          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
-          onClick={() => onSave(data)}
-          icon={Plus}
+          className={`flex-1 ${isSaved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-700 hover:bg-gray-600 text-white'}`}
+          onClick={handleSave}
+          disabled={isSaving || isSaved}
+          icon={isSaved ? undefined : Plus}
         >
-          Save
+          {isSaving ? 'Saving...' : isSaved ? 'Saved' : 'Save'}
         </Button>
         <Button 
           size="sm" 
