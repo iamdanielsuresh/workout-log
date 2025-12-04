@@ -32,6 +32,7 @@ import {
   getRecentFocusDistribution
 } from '../../utils/workoutStats';
 import { AIChatView } from './AIChatView';
+import DeepAnalysisModal from './DeepAnalysisModal';
 
 /**
  * AI Buddy View - Interactive AI coaching with reports, insights, tips
@@ -321,7 +322,7 @@ export function BuddyView({
       console.error('Chat error:', error);
       setChatMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Sorry, I'm having trouble connecting right now. Try again?", 
+        content: `Sorry, I'm having trouble connecting right now. (${error.message})`, 
         id: (Date.now() + 1).toString(),
         error: true
       }]);

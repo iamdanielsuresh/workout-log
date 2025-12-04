@@ -76,7 +76,9 @@ export async function makeAIRequest(apiKey, prompt) {
   });
 
   if (!response.ok) {
-    throw new Error('AI request failed');
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData?.error?.message || `AI request failed with status ${response.status}`;
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
