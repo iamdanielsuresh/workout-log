@@ -131,12 +131,19 @@ export function ExerciseLogger({
   // Check if exercise has detailed tips (from AI-generated plans)
   const hasDetailedTips = exercise.tips && typeof exercise.tips === 'object';
   const quickTip = exercise.tip || exercise.tips?.form?.split('.')[0] || '';
+  
+  // Check if at least one set is completed for save button
+  const hasCompletedSet = sets.some(s => s.weight && s.reps);
 
   return (
     <Card 
       variant={isCompleted ? 'accent' : 'default'} 
       hover={false}
-      className={`${isCompleted ? 'ring-1 ring-emerald-500/30' : ''} ${isExiting ? 'opacity-0 translate-x-full transition-all duration-500 ease-in-out' : ''}`}
+      className={`${isCompleted ? 'ring-1 ring-emerald-500/30' : ''} ${
+        isExiting 
+          ? 'opacity-0 translate-x-full max-h-0 my-0 py-0 overflow-hidden transition-all duration-500 ease-in-out' 
+          : 'max-h-[800px] transition-all duration-500 ease-in-out'
+      }`}
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-800/50 flex justify-between items-start select-none">
@@ -270,67 +277,67 @@ export function ExerciseLogger({
       </div>
 
       {/* Sets */}
-      <div className="p-4 space-y-4">
+      <div className="p-3 sm:p-4 space-y-3">
         {sets.map((set, i) => (
-          <div key={i} className="flex items-center gap-4">
-            <span className={`w-8 text-sm font-display font-bold text-center select-none ${
+          <div key={i} className="flex items-center gap-2">
+            <span className={`w-6 text-sm font-display font-bold text-center select-none shrink-0 ${
               set.weight && set.reps ? 'text-emerald-400' : 'text-gray-600'
             }`}>
               {set.weight && set.reps ? (
-                <Check className="w-5 h-5 mx-auto" />
+                <Check className="w-4 h-4 mx-auto" />
               ) : (
                 i + 1
               )}
             </span>
 
             {/* Weight input */}
-            <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden group focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/50 transition-all">
+            <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden group focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/50 transition-all h-12">
               <button
                 onClick={() => handleIncrement(i, 'weight', -1)}
-                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
+                className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700 shrink-0"
               >
-                <Minus className="w-5 h-5" />
+                <Minus className="w-4 h-4" />
               </button>
               <input
                 type="number"
                 placeholder="kg"
                 value={set.weight}
                 onChange={(e) => handleChange(i, 'weight', e.target.value)}
-                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-xl placeholder:text-gray-600 focus:outline-none min-w-0 py-3"
+                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg placeholder:text-gray-600 focus:outline-none min-w-0 h-full"
               />
               <button
                 onClick={() => handleIncrement(i, 'weight', 1)}
-                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
+                className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700 shrink-0"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
 
             {/* Reps input */}
-            <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
+            <div className="flex-1 flex items-center bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden h-12">
               <button
                 onClick={() => handleIncrement(i, 'reps', -1)}
-                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
+                className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700 shrink-0"
               >
-                <Minus className="w-5 h-5" />
+                <Minus className="w-4 h-4" />
               </button>
               <input
                 type="number"
                 placeholder="reps"
                 value={set.reps}
                 onChange={(e) => handleChange(i, 'reps', e.target.value)}
-                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-xl placeholder:text-gray-600 focus:outline-none min-w-0 py-3"
+                className="flex-1 bg-transparent text-center text-gray-100 font-display font-bold text-lg placeholder:text-gray-600 focus:outline-none min-w-0 h-full"
               />
               <button
                 onClick={() => handleIncrement(i, 'reps', 1)}
-                className="p-3.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700"
+                className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors select-none active:bg-gray-700 shrink-0"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
 
             {/* Weight comparison */}
-            <div className="w-10">
+            <div className="w-8 shrink-0 flex justify-center">
               <WeightComparison 
                 current={set.weight} 
                 previous={lastLog?.sets?.[i]?.weight || lastLog?.sets?.[0]?.weight} 
@@ -341,7 +348,7 @@ export function ExerciseLogger({
             {sets.length > 1 && (
               <button
                 onClick={() => handleRemoveSet(i)}
-                className="p-2 text-gray-600 hover:text-red-400 transition-colors"
+                className="p-1.5 text-gray-600 hover:text-red-400 transition-colors shrink-0"
                 aria-label="Remove set"
               >
                 <Trash2 className="w-4 h-4" />
@@ -363,7 +370,12 @@ export function ExerciseLogger({
           {onSave && (
             <button
               onClick={handleSave}
-              className="flex-1 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-100 bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
+              disabled={!hasCompletedSet}
+              className={`flex-1 py-3 flex items-center justify-center gap-2 text-sm font-semibold rounded-xl shadow-lg transition-all active:scale-95 ${
+                hasCompletedSet 
+                  ? 'text-emerald-100 bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' 
+                  : 'text-gray-500 bg-gray-800 cursor-not-allowed opacity-50 shadow-none'
+              }`}
             >
               <Check className="w-4 h-4" />
               Save
