@@ -13,6 +13,9 @@ import { Calendar } from '../ui/Calendar';
 import { getExercises, createExercise } from '../../services/supabase';
 import { formatDuration } from '../../utils/localeFormatters';
 
+// Default exercise duration estimate (15 minutes in milliseconds)
+const DEFAULT_EXERCISE_DURATION_MS = 15 * 60 * 1000;
+
 /**
  * HistoryView - Workout history and Exercise Library
  * Task 3: Shows time details
@@ -186,7 +189,7 @@ export function HistoryView({
       </div>
 
       {activeTab === 'history' ? (
-        <div className="p-6 pt-0 space-y-3">
+        <div className="p-6 pt-0 space-y-6">
           {workouts.length === 0 && (
             <Card hover={false} className="p-8 text-center animate-in fade-in zoom-in-95 duration-500">
               <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -198,93 +201,136 @@ export function HistoryView({
             </Card>
           )}
 
-          {workouts.map((session, index) => {
-            const isExpanded = expandedId === session.id;
-            const date = session.timestamp;
-            const startTime = session.startTime;
+          {/* Group workouts by date */}
+          {(() => {
+            // Group workouts by date (YYYY-MM-DD)
+            const groupedByDate = workouts.reduce((acc, session) => {
+              const dateKey = session.workoutDate || (session.timestamp ? 
+                session.timestamp.toISOString().split('T')[0] : 
+                'Unknown Date');
+              if (!acc[dateKey]) {
+                acc[dateKey] = [];
+              }
+              acc[dateKey].push(session);
+              return acc;
+            }, {});
 
-            return (
-              <Card 
-                key={session.id} 
-                hover={false} 
-                className="overflow-hidden animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div
-                  className="p-4 cursor-pointer"
-                  onClick={() => setExpandedId(isExpanded ? null : session.id)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-display font-bold text-lg text-gray-200 tracking-tight">{session.workoutName}</h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-500">
-                          {date?.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </span>
-                        {/* Task 3: Show start time */}
-                        {startTime && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatTimeDisplay(startTime)}
-                          </span>
-                        )}
-                        {session.duration && (
-                          <span className="text-xs bg-gray-800 px-2 py-0.5 rounded text-gray-500">
-                            {formatDuration(session.duration)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500">
-                        {session.exercises?.length || 0} exercises
-                      </span>
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-gray-600" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-600" />
-                      )}
-                    </div>
-                  </div>
-                </div>
+            // Sort dates in descending order (most recent first)
+            const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
 
-                {isExpanded && (
-                  <div className="border-t border-gray-800 bg-gray-900/50 p-4 animate-in fade-in slide-in-from-top-2">
-                    <div className="space-y-3 mb-4">
-                      {session.exercises?.map((ex, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-400 font-medium">{ex.name}</span>
-                          <div className="flex gap-1 flex-wrap justify-end">
-                            {ex.sets?.map((s, si) => (
-                              <span key={si} className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">
-                                {s.weight}kg×{s.reps}
-                              </span>
-                            ))}
+            return sortedDates.map((dateKey, dateIndex) => (
+              <div key={dateKey} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards" style={{ animationDelay: `${dateIndex * 100}ms` }}>
+                {/* Date Header */}
+                <h2 className="font-display font-bold text-lg text-emerald-400 mb-3 tracking-tight">
+                  {dateKey}
+                </h2>
+                
+                <div className="space-y-3">
+                  {groupedByDate[dateKey].map((session) => {
+                    const isExpanded = expandedId === session.id;
+                    const startTime = session.startTime 
+                      ? formatTimeDisplay(session.startTime)
+                      : (session.timestamp ? formatTimeDisplay(session.timestamp) : '');
+
+                    return (
+                      <Card 
+                        key={session.id} 
+                        hover={false} 
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className="p-4 cursor-pointer"
+                          onClick={() => setExpandedId(isExpanded ? null : session.id)}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-mono text-gray-500">{startTime}</span>
+                              <div>
+                                <h3 className="font-display font-bold text-lg text-gray-200 tracking-tight">{session.workoutName}</h3>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-gray-500">
+                                    {session.exercises?.length || 0} exercises
+                                  </span>
+                                  {session.duration && (
+                                    <span className="text-xs bg-gray-800 px-2 py-0.5 rounded text-gray-500">
+                                      {formatDuration(session.duration)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-gray-600 mt-1" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-600 mt-1" />
+                            )}
+                          </div>
+                          
+                          {/* Exercise list with timestamps */}
+                          <div className="space-y-4 mt-4 border-t border-gray-800 pt-4">
+                            {session.exercises?.map((ex, i) => {
+                              // Calculate approximate time for each exercise based on workout duration
+                              const exerciseDurationMs = session.duration 
+                                ? (session.duration * 1000 / (session.exercises?.length || 1)) 
+                                : DEFAULT_EXERCISE_DURATION_MS;
+                              const exerciseTime = session.timestamp ? new Date(
+                                session.timestamp.getTime() + (i * exerciseDurationMs)
+                              ).toLocaleTimeString('en-US', { 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                hour12: false 
+                              }) : '--:--';
+
+                              return (
+                                <div key={i} className="flex gap-3">
+                                  <span className="text-xs font-mono text-gray-600 w-12 shrink-0 pt-0.5">
+                                    {exerciseTime}
+                                  </span>
+                                  <div className="flex-1">
+                                    <div className="text-sm text-gray-300 font-medium mb-1">
+                                      {i + 1}. {ex.name}
+                                    </div>
+                                    <div className="space-y-0.5">
+                                      {ex.sets?.map((s, si) => (
+                                        <div key={si} className="text-xs text-gray-500">
+                                          Set {si + 1}: <span className="text-gray-400">{s.weight}kg × {s.reps}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    {session.note && (
-                      <div className="bg-gray-800/50 p-3 rounded-lg mb-4">
-                        <p className="text-xs text-gray-500 italic">"{session.note}"</p>
-                      </div>
-                    )}
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      icon={Trash2}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteConfirm(session.id);
-                      }}
-                    >
-                      Delete Session
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+
+                        {isExpanded && (
+                          <div className="border-t border-gray-800 bg-gray-900/50 p-4 animate-in fade-in slide-in-from-top-2">
+                            {session.note && (
+                              <div className="bg-gray-800/50 p-3 rounded-lg mb-4">
+                                <p className="text-xs text-gray-500 italic">"{session.note}"</p>
+                              </div>
+                            )}
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              icon={Trash2}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirm(session.id);
+                              }}
+                            >
+                              Delete Session
+                            </Button>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       ) : activeTab === 'calendar' ? (
         /* Task 4: Calendar View */
