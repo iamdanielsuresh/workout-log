@@ -265,6 +265,7 @@ export default function App() {
     setTempPlan(quickPlan);
     setActiveWorkoutId('quick-log');
     setWorkoutStartTime(Date.now());
+    resetTimer();
     setActiveLog({});
     setWorkoutNote('');
     setView('workout');
