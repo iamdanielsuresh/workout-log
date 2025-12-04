@@ -33,7 +33,6 @@ import {
 } from '../../utils/workoutStats';
 import DeepAnalysisModal from './DeepAnalysisModal';
 import { AIChatOverlay } from './AIChatOverlay';
-import { useWorkoutPlans } from '../../hooks/useWorkoutPlans';
 
 /**
  * AI Buddy View - Interactive AI coaching with reports, insights, tips
@@ -50,9 +49,18 @@ export function BuddyView({
   notes = [],
   onSaveNote,
   onDeleteNote,
-  onNavigate 
+  onNavigate,
+  initialPrompt,
+  onSavePlan,
+  onStartWorkout
 }) {
-  const { savePlan } = useWorkoutPlans();
+  // Handle initial prompt from Quick Actions
+  useEffect(() => {
+    if (initialPrompt) {
+      setIsChatOpen(true);
+      handleChat(initialPrompt);
+    }
+  }, [initialPrompt]);
   const [activeSection, setActiveSection] = useState(null);
   const [insights, setInsights] = useState(null);
   const [motivation, setMotivation] = useState(null);
@@ -433,13 +441,15 @@ export function BuddyView({
 
   const handleSavePlan = async (planData) => {
     try {
-      await savePlan(planData);
-      // Show success toast or feedback
-      setChatMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `✅ Saved "${planData.name}" to your plans!`,
-        id: Date.now().toString()
-      }]);
+      if (onSavePlan) {
+        await onSavePlan(planData);
+        // Show success toast or feedback
+        setChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `✅ Saved "${planData.name}" to your plans!`,
+          id: Date.now().toString()
+        }]);
+      }
     } catch (error) {
       console.error('Error saving plan:', error);
     }
@@ -797,6 +807,7 @@ export function BuddyView({
           savedMessageIds={savedMessageIds}
           PersonaIcon={PERSONA_ICONS[coachPersona]}
           onSavePlan={handleSavePlan}
+          onStartPlan={onStartWorkout}
         />
 
         {/* Floating Chat Button */}

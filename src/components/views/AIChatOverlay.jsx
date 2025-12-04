@@ -16,7 +16,8 @@ export function AIChatOverlay({
   onSaveNote,
   savedMessageIds,
   PersonaIcon,
-  onSavePlan // New prop for saving plans
+  onSavePlan,
+  onStartPlan
 }) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -43,7 +44,10 @@ export function AIChatOverlay({
                 data={widgetData.data} 
                 onSave={(plan) => {
                   if (onSavePlan) onSavePlan(plan);
-                }} 
+                }}
+                onStart={(plan) => {
+                  if (onStartPlan) onStartPlan(plan);
+                }}
               />
             )}
             

@@ -238,6 +238,45 @@ export default function App() {
     setShowStartModal(true);
   };
 
+  // AI Buddy state
+  const [initialAiPrompt, setInitialAiPrompt] = useState(null);
+
+  // Handle Quick Actions from Home
+  const handleQuickAction = (prompt) => {
+    setInitialAiPrompt(prompt);
+    setView('buddy');
+  };
+
+  // Handle saving AI plan
+  const handleAiSavePlan = async (newPlan) => {
+    try {
+      const existingPlans = plans || {};
+      const planId = newPlan.id || `ai-${Date.now()}`;
+      const mergedPlans = {
+        ...existingPlans,
+        [planId]: { ...newPlan, id: planId }
+      };
+      await savePlans(mergedPlans, 'ai-generated');
+      setToast({ message: 'Plan saved successfully!', type: 'success' });
+      return planId;
+    } catch (error) {
+      log.error('Error saving AI plan:', error);
+      setToast({ message: 'Failed to save plan', type: 'error' });
+      throw error;
+    }
+  };
+
+  // Handle starting AI plan immediately
+  const handleAiStartWorkout = async (plan) => {
+    try {
+      const planId = await handleAiSavePlan(plan);
+      setSelectedWorkoutId(planId);
+      setShowStartModal(true);
+    } catch (error) {
+      // Error handled in handleAiSavePlan
+    }
+  };
+
   // Handle actual workout start (after slide confirmation)
   const handleStartWorkout = () => {
     setShowStartModal(false);
@@ -556,7 +595,8 @@ export default function App() {
                   handleNavigate('history');
                 }}
                 onSettings={() => handleNavigate('settings')}
-                onBuddy={() => handleNavigate('buddy')}
+                onBuddy={() => setView('buddy')}
+                onQuickAction={handleQuickAction}
               />
             )}
 
@@ -732,6 +772,9 @@ export default function App() {
                 onSaveNote={saveNote}
                 onDeleteNote={deleteNote}
                 onNavigate={handleNavigate}
+                initialPrompt={initialAiPrompt}
+                onSavePlan={handleAiSavePlan}
+                onStartWorkout={handleAiStartWorkout}
               />
             )}
 

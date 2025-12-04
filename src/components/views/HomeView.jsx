@@ -1,7 +1,7 @@
 import { 
   User, History, Flame, Sparkles, Dumbbell, Settings, 
   Calendar, ChevronRight, Play, Plus, BarChart3, Zap,
-  Clock, Target
+  Clock, Target, Battery, Activity
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -14,7 +14,7 @@ export function HomeView({
   userName, userPhoto, isAnonymous, streak, workouts, plans,
   suggestedWorkout, nextWorkoutKey, lastWorkout, aiEnabled,
   recommendationLabel, nextActionHint,
-  onSelectWorkout, onViewHistory, onSettings, onQuickLog, onBuddy
+  onSelectWorkout, onViewHistory, onSettings, onQuickLog, onBuddy, onQuickAction
 }) {
   const isFirstTime = workouts.length === 0;
 
@@ -119,6 +119,33 @@ export function HomeView({
           })}
         </div>
       </div>
+
+      {/* Quick Actions (AI) */}
+      {aiEnabled && (
+        <Card className="p-4 bg-gradient-to-br from-emerald-900/20 to-gray-900 border-emerald-500/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-bold text-white">Quick Start</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: '15 Min', icon: Clock, prompt: 'I only have 15 minutes for a workout.' },
+              { label: 'Recovery', icon: Battery, prompt: 'I need a recovery workout, I am feeling sore.' },
+              { label: 'Full Body', icon: Activity, prompt: 'Give me a full body workout.' },
+              { label: 'Core', icon: Target, prompt: 'I want to focus on core strength today.' }
+            ].map((action, i) => (
+              <button
+                key={i}
+                onClick={() => onQuickAction(action.prompt)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-xs font-medium text-gray-300 transition-colors"
+              >
+                <action.icon className="w-3 h-3" />
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* 3. "Up Next" Feature Card */}
       <div>

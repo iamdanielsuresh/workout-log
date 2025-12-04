@@ -23,9 +23,9 @@ Enable users to instantly generate and save a workout routine based on their cur
 - [x] **Update `generateSingleDayPlan`**: Ensure it can handle "mood" or "energy level" inputs explicitly.
 - [x] **Refine Widget Prompt**: Ensure the AI *always* uses the widget format when a plan is requested, not just text.
 
-### Phase 2: UI Enhancements
-- [ ] **"Start Now" Option**: Update `WorkoutPlanWidget` to have two buttons: "Save" and "Start Now".
-- [ ] **Homescreen "Quick Action"**:
+### Phase 2: UI Enhancements (Completed)
+- [x] **"Start Now" Option**: Update `WorkoutPlanWidget` to have two buttons: "Save" and "Start Now".
+- [x] **Homescreen "Quick Action"**:
     - Add a `QuickRoutineCard` to `HomeView.jsx`.
     - It should have chips like "⏱️ 15 Min", "🤕 Recovery", "💪 Full Body".
     - Clicking a chip sends a hidden prompt to the AI and opens the Chat Overlay with the result.

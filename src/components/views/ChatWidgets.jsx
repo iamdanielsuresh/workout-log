@@ -1,12 +1,12 @@
 import React from 'react';
-import { Dumbbell, Plus, TrendingUp, Calendar } from 'lucide-react';
+import { Dumbbell, Plus, TrendingUp, Calendar, Play } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
 /**
  * Widget to display a suggested workout plan
  */
-export function WorkoutPlanWidget({ data, onSave }) {
+export function WorkoutPlanWidget({ data, onSave, onStart }) {
   const { name, duration, difficulty, exercises, reason } = data;
 
   return (
@@ -45,14 +45,23 @@ export function WorkoutPlanWidget({ data, onSave }) {
         )}
       </div>
 
-      <div className="p-3 bg-gray-900/50 border-t border-gray-700">
+      <div className="p-3 bg-gray-900/50 border-t border-gray-700 flex gap-2">
         <Button 
           size="sm" 
-          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+          variant="secondary"
+          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
           onClick={() => onSave(data)}
           icon={Plus}
         >
-          Save to Plans
+          Save
+        </Button>
+        <Button 
+          size="sm" 
+          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white"
+          onClick={() => onStart && onStart(data)}
+          icon={Play}
+        >
+          Start Now
         </Button>
       </div>
     </Card>
