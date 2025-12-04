@@ -13,6 +13,33 @@ import {
 } from './workoutStats';
 import { getDateTimeContext } from './localeFormatters';
 
+export const PERSONAS = {
+  supportive: {
+    name: 'Buddy',
+    role: 'supportive, knowledgeable gym buddy',
+    tone: 'encouraging, practical, friendly',
+    style: 'Reference their data positively. Be like a good friend.'
+  },
+  sergeant: {
+    name: 'Drill Sgt',
+    role: 'tough, no-nonsense drill sergeant',
+    tone: 'strict, demanding, intense',
+    style: 'Use tough love, demand discipline, no excuses. Use military slang occasionally.'
+  },
+  scientist: {
+    name: 'Prof. Lift',
+    role: 'sports scientist',
+    tone: 'precise, analytical, academic',
+    style: 'Focus on biomechanics, physiology, and data. Cite principles of hypertrophy/strength.'
+  },
+  stoic: {
+    name: 'Mentor',
+    role: 'stoic mentor',
+    tone: 'brief, wise, calm',
+    style: 'Focus on discipline, consistency, and mental fortitude. Speak in aphorisms.'
+  }
+};
+
 /**
  * Calculate workout frequency for a given time period
  * @param {Array} workouts - Workout history array
@@ -388,10 +415,12 @@ export function formatContextForPrompt(context) {
 /**
  * Generate an enhanced motivation prompt with full context
  * @param {Object} context - User context
+ * @param {string} persona - AI persona key
  * @returns {string} AI prompt for motivation
  */
-export function buildMotivationPrompt(context) {
+export function buildMotivationPrompt(context, persona = 'supportive') {
   const contextStr = formatContextForPrompt(context);
+  const p = PERSONAS[persona] || PERSONAS.supportive;
   
   let situationalContext = '';
   
@@ -406,7 +435,7 @@ export function buildMotivationPrompt(context) {
     situationalContext = `This is a new user - welcome them and encourage them to start.`;
   }
   
-  return `You're a supportive, knowledgeable gym buddy AI. Generate a short motivational message (1-2 sentences, max 30 words).
+  return `You're a ${p.role} AI. Generate a short motivational message (1-2 sentences, max 30 words).
 
 User Context:
 ${contextStr}
@@ -414,25 +443,32 @@ ${contextStr}
 It's ${context.dayOfWeek} ${context.timeOfDay}.
 ${situationalContext}
 
+Tone: ${p.tone}
+Style: ${p.style}
 Be personal, specific to their situation, energizing but not cheesy. Reference something specific from their data.`;
 }
 
 /**
  * Generate an enhanced insights prompt with full context
  * @param {Object} context - User context
+ * @param {string} persona - AI persona key
  * @returns {string} AI prompt for insights
  */
-export function buildInsightsPrompt(context) {
+export function buildInsightsPrompt(context, persona = 'supportive') {
   const contextStr = formatContextForPrompt(context);
+  const p = PERSONAS[persona] || PERSONAS.supportive;
   
-  return `You're an analytical fitness coach AI. Analyze this user's workout data and provide personalized insights.
+  return `You're a ${p.role} AI. Analyze this user's workout data and provide personalized insights.
 
 User Context:
 ${contextStr}
 
+Tone: ${p.tone}
+Style: ${p.style}
+
 Provide analysis in JSON format:
 {
-  "summary": "One sentence overall assessment of their current fitness journey (positive tone, specific to their data)",
+  "summary": "One sentence overall assessment of their current fitness journey (in your persona's voice)",
   "strength": "One thing they're consistently doing well based on the data (be specific)",
   "improvement": "One specific, actionable area to improve (reference actual data patterns)",
   "nextGoal": "A specific, measurable short-term goal they can achieve in 1-2 weeks"
@@ -449,15 +485,20 @@ Rules:
 /**
  * Generate an enhanced tips prompt with full context
  * @param {Object} context - User context
+ * @param {string} persona - AI persona key
  * @returns {string} AI prompt for pro tips
  */
-export function buildTipsPrompt(context) {
+export function buildTipsPrompt(context, persona = 'supportive') {
   const contextStr = formatContextForPrompt(context);
+  const p = PERSONAS[persona] || PERSONAS.supportive;
   
-  return `You're a knowledgeable fitness coach AI. Generate 3 personalized tips for this user.
+  return `You're a ${p.role} AI. Generate 3 personalized tips for this user.
 
 User Context:
 ${contextStr}
+
+Tone: ${p.tone}
+Style: ${p.style}
 
 Generate tips in JSON array format:
 [

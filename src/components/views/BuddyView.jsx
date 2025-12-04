@@ -15,7 +15,8 @@ import {
   formatContextForPrompt,
   buildMotivationPrompt,
   buildInsightsPrompt,
-  buildTipsPrompt
+  buildTipsPrompt,
+  PERSONAS as PERSONA_DEFINITIONS
 } from '../../utils/aiContext';
 import { 
   checkAiAvailability, 
@@ -64,28 +65,12 @@ export function BuddyView({
   const [coachPersona, setCoachPersona] = useState('supportive'); // 'supportive', 'sergeant', 'scientist', 'stoic'
   const chatEndRef = useRef(null);
 
-  // Persona definitions
-  const PERSONAS = {
-    supportive: {
-      name: 'Buddy',
-      icon: Sparkles,
-      prompt: "You're a knowledgeable, friendly gym buddy AI assistant. Be encouraging, practical, and reference their data when relevant."
-    },
-    sergeant: {
-      name: 'Drill Sgt',
-      icon: Flame,
-      prompt: "You are a tough, no-nonsense drill sergeant. Push the user hard, use tough love, demand discipline, and don't accept excuses."
-    },
-    scientist: {
-      name: 'Prof. Lift',
-      icon: Brain,
-      prompt: "You are a sports scientist. Focus on biomechanics, physiology, and data. Be precise, analytical, and cite principles of hypertrophy/strength."
-    },
-    stoic: {
-      name: 'Mentor',
-      icon: Award,
-      prompt: "You are a stoic mentor. Focus on discipline, consistency, and mental fortitude. Keep responses brief, wise, and focused on the long game."
-    }
+  // Persona icons mapping
+  const PERSONA_ICONS = {
+    supportive: Sparkles,
+    sergeant: Flame,
+    scientist: Brain,
+    stoic: Award
   };
 
   const QUICK_PROMPTS = [
@@ -130,6 +115,14 @@ export function BuddyView({
     }
   }, [aiAvailability.available, workouts.length]);
 
+  // Clear content when persona changes to encourage regeneration
+  useEffect(() => {
+    setMotivation(null);
+    setInsights(null);
+    setTips([]);
+    setChatMessages([]);
+  }, [coachPersona]);
+
   const clearError = (key) => {
     setErrors(prev => ({ ...prev, [key]: null }));
   };
@@ -140,7 +133,7 @@ export function BuddyView({
     clearError('insights');
     
     try {
-      const prompt = buildInsightsPrompt(userContext);
+      const prompt = buildInsightsPrompt(userContext, coachPersona);
       const response = await makeAIRequest(apiKey, prompt);
       const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
       setInsights(JSON.parse(cleaned));
@@ -169,14 +162,10 @@ export function BuddyView({
     if (!aiAvailability.available) return;
     setLoading(prev => ({ ...prev, motivation: true }));
     clearError('motivation');
-    
+
     try {
-      const prompt = buildMotivationPrompt(userContext);
+      const prompt = buildMotivationPrompt(userContext, coachPersona);
       const response = await makeAIRequest(apiKey, prompt);
-      setMotivation(response);
-    } catch (error) {
-      console.error('Error generating motivation:', error);
-      setErrors(prev => ({ ...prev, motivation: error.message || 'Failed to get motivation' }));
       // Contextual fallback
       if (streak > 0) {
         setMotivation(`${streak} days strong! Your consistency is building something amazing. Keep pushing!`);
@@ -185,6 +174,9 @@ export function BuddyView({
       } else {
         setMotivation("Every champion was once a beginner. Today is your day to start!");
       }
+    } catch (error) {
+      console.error('Error generating motivation:', error);
+      setErrors(prev => ({ ...prev, motivation: error.message || 'Failed to get motivation' }));
     } finally {
       setLoading(prev => ({ ...prev, motivation: false }));
     }
@@ -194,65 +186,57 @@ export function BuddyView({
     if (!aiAvailability.available) return;
     setLoading(prev => ({ ...prev, tips: true }));
     clearError('tips');
-    
+
     try {
-      const prompt = buildTipsPrompt(userContext);
+      const prompt = buildTipsPrompt(userContext, coachPersona);
       const response = await makeAIRequest(apiKey, prompt);
       const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
       setTips(JSON.parse(cleaned));
     } catch (error) {
       console.error('Error generating tips:', error);
       setErrors(prev => ({ ...prev, tips: error.message || 'Failed to generate tips' }));
-      // Contextual fallback tips
-      const fallbackTips = [
-        { title: "Perfect Your Form", tip: "Quality reps beat quantity. Focus on controlled movements.", icon: "form" },
-        { title: "Fuel Your Gains", tip: "Protein within 30 mins post-workout maximizes muscle growth.", icon: "nutrition" },
-        { title: "Rest & Recover", tip: "Muscles grow during rest. Get 7-8 hours of sleep.", icon: "recovery" }
-      ];
-      
-      // Customize based on context
-      if (userContext.last7DaysWorkouts >= 5) {
-        fallbackTips[2] = { 
-          title: "Recovery Day", 
-          tip: "With your high frequency, consider an active recovery day.", 
-          icon: "recovery" 
-        };
-      }
-      
-      setTips(fallbackTips);
     } finally {
       setLoading(prev => ({ ...prev, tips: false }));
     }
   };
 
-  const handleChat = async (messageOverride = null) => {
-    const messageToSend = messageOverride || chatInput.trim();
-    if (!messageToSend || !aiAvailability.available || chatLoading) return;
-    
+  const handleChat = async (text = chatInput) => {
+    if (!text.trim() || !aiAvailability.available) return;
+
+    const userMsg = { role: 'user', content: text, id: Date.now().toString() };
+    setChatMessages(prev => [...prev, userMsg]);
     setChatInput('');
-    setChatMessages(prev => [...prev, { role: 'user', content: messageToSend }]);
     setChatLoading(true);
-    
+
     try {
-      const contextStr = formatContextForPrompt(userContext);
-      const personaPrompt = PERSONAS[coachPersona].prompt;
-      
-      const prompt = `${personaPrompt}
+      // Build system prompt based on persona
+      const personaDef = PERSONA_DEFINITIONS[coachPersona];
+      const systemPrompt = `You are ${personaDef.name}, a ${personaDef.role}. \nTone: ${personaDef.tone}. \nStyle: ${personaDef.style}\nUser Context: ${formatContextForPrompt(userContext)}`;
 
-User Context:
-${contextStr}
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...chatMessages.map(m => ({ role: m.role, content: m.content })),
+        { role: 'user', content: text }
+      ];
 
-User asks: "${messageToSend}"
-
-Give a helpful, concise response (under 60 words).`;
+      // Use the chat endpoint or standard completion
+      // For now using standard completion with history context
+      const prompt = `${systemPrompt}\n\nChat History:\n${chatMessages.map(m => `${m.role}: ${m.content}`).join('\n')}\nUser: ${text}\nAssistant:`;
       
       const response = await makeAIRequest(apiKey, prompt);
-      setChatMessages(prev => [...prev, { role: 'assistant', content: response, id: `msg-${Date.now()}` }]);
-    } catch (error) {
+      
       setChatMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Sorry, I couldn't process that right now. Try again in a moment!",
-        id: `msg-${Date.now()}`
+        content: response, 
+        id: (Date.now() + 1).toString() 
+      }]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "Sorry, I'm having trouble connecting right now. Try again?", 
+        id: (Date.now() + 1).toString(),
+        error: true
       }]);
     } finally {
       setChatLoading(false);
@@ -751,29 +735,7 @@ Give a helpful, concise response (under 60 words).`;
         {/* Chat Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider">Ask Your Buddy</h3>
-            
-            {/* Persona Selector */}
-            <div className="flex gap-1">
-              {Object.entries(PERSONAS).map(([key, persona]) => {
-                const Icon = persona.icon;
-                const isActive = coachPersona === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setCoachPersona(key)}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      isActive 
-                        ? 'bg-emerald-500 text-gray-950 shadow-lg shadow-emerald-500/20' 
-                        : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
-                    }`}
-                    title={persona.name}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </button>
-                );
-              })}
-            </div>
+            <h3 className="text-sm font-display font-bold text-gray-400 uppercase tracking-wider">Ask {PERSONA_DEFINITIONS[coachPersona].name}</h3>
           </div>
 
           <Card hover={false} className="overflow-hidden flex flex-col h-[400px]">
@@ -783,12 +745,12 @@ Give a helpful, concise response (under 60 words).`;
                 <div className="h-full flex flex-col items-center justify-center text-center">
                   <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mb-3">
                     {(() => {
-                      const Icon = PERSONAS[coachPersona].icon;
+                      const Icon = PERSONA_ICONS[coachPersona];
                       return <Icon className="w-6 h-6 text-emerald-400" />;
                     })()}
                   </div>
                   <p className="text-gray-300 font-medium mb-1">
-                    {PERSONAS[coachPersona].name} is ready!
+                    {PERSONA_DEFINITIONS[coachPersona].name} is ready!
                   </p>
                   <p className="text-gray-500 text-xs max-w-[200px]">
                     {coachPersona === 'sergeant' ? "Ready to sweat, recruit?" : 
@@ -881,7 +843,7 @@ Give a helpful, concise response (under 60 words).`;
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleChat()}
-                  placeholder={`Ask ${PERSONAS[coachPersona].name}...`}
+                  placeholder={`Ask ${PERSONA_DEFINITIONS[coachPersona].name}...`}
                   className="flex-1 bg-gray-800 border-transparent focus:border-emerald-500/50 focus:ring-0 rounded-xl text-sm text-gray-100 placeholder-gray-500 px-4 py-3"
                   disabled={chatLoading}
                 />
