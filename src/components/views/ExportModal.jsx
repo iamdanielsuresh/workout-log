@@ -121,11 +121,12 @@ export function ExportModal({
     const filtered = getFilteredWorkouts();
     
     // Dynamically import jsPDF with error handling
-    let jsPDF, doc;
+    let jsPDF, doc, autoTable;
     try {
       const jspdfModule = await import('jspdf');
       jsPDF = jspdfModule.jsPDF;
-      await import('jspdf-autotable');
+      const autoTableModule = await import('jspdf-autotable');
+      autoTable = autoTableModule.default;
       doc = new jsPDF();
     } catch (err) {
       console.error('Failed to load PDF library:', err);
@@ -183,7 +184,7 @@ export function ExportModal({
           return [ex.name, ex.sets?.length || 0, setsInfo];
         });
         
-        doc.autoTable({
+        autoTable(doc, {
           startY: yPos,
           head: [['Exercise', 'Sets', 'Weight × Reps']],
           body: tableData,

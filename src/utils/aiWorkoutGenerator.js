@@ -117,6 +117,9 @@ export function buildWorkoutGenerationPrompt({
   userContext = null,
   experienceLevel = 'intermediate'
 }) {
+  // Use experience level from userContext if available, otherwise use the passed/default value
+  const finalExperienceLevel = userContext?.experienceLevel || experienceLevel;
+
   // Base requirements
   const requirements = [
     `Days per week: ${daysPerWeek}`,
@@ -124,7 +127,7 @@ export function buildWorkoutGenerationPrompt({
     targetSplit ? `Target Split: ${targetSplit}` : null,
     `Session duration: ${duration} minutes`,
     `Equipment: ${equipment === 'full' ? 'Full gym' : equipment === 'minimal' ? 'Minimal (dumbbells, bands)' : 'Bodyweight only'}`,
-    `Experience Level: ${experienceLevel}`
+    `Experience Level: ${finalExperienceLevel}`
   ].filter(Boolean);
 
   // Add preferences section
